@@ -137,7 +137,7 @@ const News = () => {
 
   // Handle company filter selection
   const handleCompanyFilter = (value: string) => {
-    setSelectedCompanyFilter(value === 'all' ? null : parseInt(value));
+    setSelectedCompanyFilter(value);
   };
 
   // Clear company filter
