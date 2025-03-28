@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -142,8 +143,8 @@ const Documents = () => {
   
   const [formData, setFormData] = useState({
     file: null as File | null,
-    categoryId: '' as string | null,
-    productId: '' as string | null,
+    categoryId: null as string | null,
+    productId: null as string | null,
     companies: [] as number[],
   });
 
@@ -538,12 +539,12 @@ const Documents = () => {
               
               <div className="space-y-2">
                 <Label htmlFor="category">Categoría</Label>
-                <Select value={formData.categoryId || ""} onValueChange={handleCategoryChange}>
+                <Select value={formData.categoryId || "0"} onValueChange={handleCategoryChange}>
                   <SelectTrigger>
                     <SelectValue placeholder="Seleccionar categoría" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="">Sin categoría</SelectItem>
+                    <SelectItem value="0">Sin categoría</SelectItem>
                     {categories.map(category => (
                       <SelectItem key={category.id} value={category.id.toString()}>
                         {category.name}
@@ -555,12 +556,12 @@ const Documents = () => {
               
               <div className="space-y-2">
                 <Label htmlFor="product">Producto</Label>
-                <Select value={formData.productId || ""} onValueChange={handleProductChange}>
+                <Select value={formData.productId || "0"} onValueChange={handleProductChange}>
                   <SelectTrigger>
                     <SelectValue placeholder="Seleccionar producto" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="">Sin producto</SelectItem>
+                    <SelectItem value="0">Sin producto</SelectItem>
                     {products.map(product => (
                       <SelectItem key={product.id} value={product.id.toString()}>
                         {product.name}
@@ -607,3 +608,4 @@ const Documents = () => {
 };
 
 export default Documents;
+
