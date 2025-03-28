@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -13,7 +12,7 @@ import { toast } from 'sonner';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
-// Mock data for companies with explicit type definitions
+// Mock data for companies
 const mockCompanies: Company[] = [
   { id: 1, logo: '/placeholder.svg', name: 'Mapfre', website: 'mapfre.es', mediatorAccess: 'mapfre.es/mediadores', responsibleEmail: 'mediadores@mapfre.es', category: 'preferred' },
   { id: 2, logo: '/placeholder.svg', name: 'Allianz', website: 'allianz.es', mediatorAccess: 'allianz.es/mediadores', responsibleEmail: 'mediadores@allianz.es', category: 'specific' },
@@ -29,6 +28,15 @@ const mockSpecifications: Specification[] = [
   { id: 3, companyId: 2, title: 'Comisiones', content: 'Detalles sobre las comisiones por producto.', category: 'commercial' },
   { id: 4, companyId: 3, title: 'Contactos Clave', content: 'Listado de contactos clave para diferentes departamentos.', category: 'contacts' },
   { id: 5, companyId: 3, title: 'Procedimiento de Renovación', content: 'Información sobre el proceso de renovación de pólizas.', category: 'procedures' },
+];
+
+// Mock data for specification categories
+const mockSpecCategories: SpecCategory[] = [
+  { id: 1, name: 'Requisitos', slug: 'requirements' },
+  { id: 2, name: 'Procedimientos', slug: 'procedures' },
+  { id: 3, name: 'Comercial', slug: 'commercial' },
+  { id: 4, name: 'Contactos', slug: 'contacts' },
+  { id: 5, name: 'Otros', slug: 'other' },
 ];
 
 type Company = {
@@ -49,6 +57,12 @@ type Specification = {
   category: 'requirements' | 'procedures' | 'commercial' | 'contacts' | 'other';
 };
 
+type SpecCategory = {
+  id: number;
+  name: string;
+  slug: string;
+};
+
 type FormMode = 'create' | 'edit';
 type ViewMode = 'grid' | 'list';
 type CategoryFilter = 'all' | 'specific' | 'preferred';
@@ -66,7 +80,13 @@ const Companies = () => {
   const [categoryFilter, setCategoryFilter] = useState<CategoryFilter>('all');
   const [logoUrl, setLogoUrl] = useState<string>('/placeholder.svg');
   const [activeTab, setActiveTab] = useState<string>('info');
-  
+  const [specCategories, setSpecCategories] = useState<SpecCategory[]>(mockSpecCategories);
+  const [categoryDialogOpen, setCategoryDialogOpen] = useState(false);
+  const [categoryFormData, setCategoryFormData] = useState<Omit<SpecCategory, 'id'>>({
+    name: '',
+    slug: '',
+  });
+
   const [formData, setFormData] = useState<Omit<Company, 'id'>>({
     logo: '/placeholder.svg',
     name: '',
@@ -82,24 +102,20 @@ const Companies = () => {
     category: 'procedures',
   });
 
-  // Handle search input change
   const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setSearchTerm(e.target.value);
   };
 
-  // Filter companies based on search term and category
   const filteredCompanies = companies.filter(company => {
     const matchesSearch = company.name.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesCategory = categoryFilter === 'all' || company.category === categoryFilter;
     return matchesSearch && matchesCategory;
   });
 
-  // Filter specifications for the selected company
   const filteredSpecifications = specifications.filter(spec => {
     return selectedCompany ? spec.companyId === selectedCompany.id : false;
   });
 
-  // Handle form input changes
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
     setFormData({
@@ -108,7 +124,6 @@ const Companies = () => {
     });
   };
 
-  // Handle category change
   const handleCategoryChange = (value: string) => {
     setFormData({
       ...formData,
@@ -116,7 +131,6 @@ const Companies = () => {
     });
   };
 
-  // Handle specification form input changes
   const handleSpecInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
     setSpecFormData({
@@ -125,15 +139,13 @@ const Companies = () => {
     });
   };
 
-  // Handle specification category change
   const handleSpecCategoryChange = (value: string) => {
     setSpecFormData({
       ...specFormData,
-      category: value as 'requirements' | 'procedures' | 'commercial' | 'contacts' | 'other',
+      category: value,
     });
   };
 
-  // Reset form data
   const resetForm = () => {
     setFormData({
       logo: '/placeholder.svg',
@@ -146,7 +158,6 @@ const Companies = () => {
     setLogoUrl('/placeholder.svg');
   };
 
-  // Reset specification form data
   const resetSpecForm = () => {
     setSpecFormData({
       title: '',
@@ -155,14 +166,12 @@ const Companies = () => {
     });
   };
 
-  // Open dialog for creating a new company
   const openCreateDialog = () => {
     setFormMode('create');
     resetForm();
     setDialogOpen(true);
   };
 
-  // Open dialog for editing an existing company
   const openEditDialog = (company: Company) => {
     setFormMode('edit');
     setCurrentCompany(company);
@@ -178,30 +187,24 @@ const Companies = () => {
     setDialogOpen(true);
   };
 
-  // Open dialog for adding a new specification
   const openAddSpecDialog = () => {
     if (!selectedCompany) return;
     resetSpecForm();
     setSpecDialogOpen(true);
   };
 
-  // View company details and specifications
   const viewCompanyDetails = (company: Company) => {
     setSelectedCompany(company);
     setActiveTab('info');
   };
 
-  // Go back to company list
   const backToList = () => {
     setSelectedCompany(null);
   };
 
-  // Simulate file upload
   const handleLogoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
-      // In a real application, you would upload the file to a server
-      // and get a URL back. Here we're just creating a temporary URL.
       const url = URL.createObjectURL(file);
       setLogoUrl(url);
       setFormData({
@@ -211,19 +214,16 @@ const Companies = () => {
     }
   };
 
-  // Handle form submission
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     
     if (formMode === 'create') {
-      // Create new company
       const newCompany: Company = {
         id: Math.max(0, ...companies.map(c => c.id)) + 1,
         ...formData,
       };
       setCompanies([...companies, newCompany]);
     } else if (formMode === 'edit' && currentCompany) {
-      // Update existing company
       const updatedCompanies = companies.map(company => 
         company.id === currentCompany.id ? { ...company, ...formData } : company
       );
@@ -234,7 +234,6 @@ const Companies = () => {
     resetForm();
   };
 
-  // Handle specification form submission
   const handleSpecSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     
@@ -252,17 +251,14 @@ const Companies = () => {
     toast.success("Especificación añadida correctamente");
   };
 
-  // Handle company deletion
   const handleDelete = (id: number) => {
     if (window.confirm('¿Estás seguro de que quieres eliminar esta compañía?')) {
       setCompanies(companies.filter(company => company.id !== id));
       
-      // Also delete all specifications for this company
       setSpecifications(specifications.filter(spec => spec.companyId !== id));
     }
   };
 
-  // Handle specification deletion
   const handleDeleteSpec = (id: number) => {
     if (window.confirm('¿Estás seguro de que quieres eliminar esta especificación?')) {
       setSpecifications(specifications.filter(spec => spec.id !== id));
@@ -270,7 +266,72 @@ const Companies = () => {
     }
   };
 
-  // Get category label
+  const handleDeleteCategory = (id: number) => {
+    const categoryInUse = specifications.some(spec => {
+      const category = specCategories.find(c => c.id === id);
+      return category && spec.category === category.slug;
+    });
+    
+    if (categoryInUse) {
+      toast.error("No se puede eliminar esta categoría porque está en uso");
+      return;
+    }
+    
+    if (window.confirm('¿Estás seguro de que quieres eliminar esta categoría?')) {
+      setSpecCategories(specCategories.filter(category => category.id !== id));
+      toast.success("Categoría eliminada correctamente");
+    }
+  };
+
+  const handleCategoryInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target;
+    setCategoryFormData({
+      ...categoryFormData,
+      [name]: value,
+    });
+  };
+
+  const handleCategoryNameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const name = e.target.value;
+    const slug = name
+      .toLowerCase()
+      .replace(/[^\w\s-]/g, '')
+      .replace(/[\s_-]+/g, '-')
+      .replace(/^-+|-+$/g, '');
+    
+    setCategoryFormData({
+      ...categoryFormData,
+      name,
+      slug,
+    });
+  };
+
+  const resetCategoryForm = () => {
+    setCategoryFormData({
+      name: '',
+      slug: '',
+    });
+  };
+
+  const openAddCategoryDialog = () => {
+    resetCategoryForm();
+    setCategoryDialogOpen(true);
+  };
+
+  const handleCategorySubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    const newCategory: SpecCategory = {
+      id: Math.max(0, ...specCategories.map(c => c.id)) + 1,
+      ...categoryFormData,
+    };
+    
+    setSpecCategories([...specCategories, newCategory]);
+    setCategoryDialogOpen(false);
+    resetCategoryForm();
+    toast.success("Categoría añadida correctamente");
+  };
+
   const getCategoryLabel = (category: string) => {
     switch(category) {
       case 'specific': return 'Específica';
@@ -279,19 +340,11 @@ const Companies = () => {
     }
   };
 
-  // Get specification category label
-  const getSpecCategoryLabel = (category: string) => {
-    switch(category) {
-      case 'requirements': return 'Requisitos';
-      case 'procedures': return 'Procedimientos';
-      case 'commercial': return 'Comercial';
-      case 'contacts': return 'Contactos';
-      case 'other': return 'Otros';
-      default: return 'Desconocido';
-    }
+  const getSpecCategoryLabel = (categorySlug: string) => {
+    const category = specCategories.find(c => c.slug === categorySlug);
+    return category ? category.name : 'Desconocido';
   };
 
-  // Get specification category color
   const getSpecCategoryColor = (category: string) => {
     switch(category) {
       case 'requirements': return 'bg-blue-100 text-blue-800';
@@ -303,7 +356,6 @@ const Companies = () => {
     }
   };
 
-  // If a company is selected, show company details and specifications
   if (selectedCompany) {
     return (
       <div className="space-y-6 animate-slideInUp">
@@ -356,9 +408,10 @@ const Companies = () => {
           </CardHeader>
           
           <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-            <TabsList className="grid w-full grid-cols-2">
+            <TabsList className="grid w-full grid-cols-3">
               <TabsTrigger value="info">Información General</TabsTrigger>
               <TabsTrigger value="specs">Especificaciones</TabsTrigger>
+              <TabsTrigger value="categories">Categorías</TabsTrigger>
             </TabsList>
             
             <TabsContent value="info" className="p-6">
@@ -444,10 +497,56 @@ const Companies = () => {
                 </div>
               )}
             </TabsContent>
+            
+            <TabsContent value="categories" className="p-6">
+              <div className="flex justify-between items-center mb-4">
+                <h3 className="text-lg font-medium">Categorías de Especificaciones</h3>
+                <Button onClick={openAddCategoryDialog}>
+                  <Plus className="h-4 w-4 mr-2" />
+                  Añadir Categoría
+                </Button>
+              </div>
+              
+              {specCategories.length > 0 ? (
+                <div className="overflow-hidden rounded-md border">
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>Nombre</TableHead>
+                        <TableHead>Slug</TableHead>
+                        <TableHead className="text-right">Acciones</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {specCategories.map((category) => (
+                        <TableRow key={category.id}>
+                          <TableCell className="font-medium">{category.name}</TableCell>
+                          <TableCell className="text-muted-foreground">{category.slug}</TableCell>
+                          <TableCell className="text-right">
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => handleDeleteCategory(category.id)}
+                              className="h-8 w-8 p-0"
+                            >
+                              <span className="sr-only">Eliminar</span>
+                              <Trash className="h-4 w-4" />
+                            </Button>
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                </div>
+              ) : (
+                <div className="text-center py-10 text-muted-foreground">
+                  No hay categorías definidas. Haga clic en "Añadir Categoría" para crear una.
+                </div>
+              )}
+            </TabsContent>
           </Tabs>
         </Card>
         
-        {/* Add Specification Dialog */}
         <Dialog open={specDialogOpen} onOpenChange={setSpecDialogOpen}>
           <DialogContent className="sm:max-w-[600px]">
             <DialogHeader>
@@ -480,11 +579,11 @@ const Companies = () => {
                       <SelectValue placeholder="Seleccionar categoría" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="requirements">Requisitos</SelectItem>
-                      <SelectItem value="procedures">Procedimientos</SelectItem>
-                      <SelectItem value="commercial">Comercial</SelectItem>
-                      <SelectItem value="contacts">Contactos</SelectItem>
-                      <SelectItem value="other">Otros</SelectItem>
+                      {specCategories.map(category => (
+                        <SelectItem key={category.id} value={category.slug}>
+                          {category.name}
+                        </SelectItem>
+                      ))}
                     </SelectContent>
                   </Select>
                 </div>
@@ -513,14 +612,63 @@ const Companies = () => {
             </form>
           </DialogContent>
         </Dialog>
+        
+        <Dialog open={categoryDialogOpen} onOpenChange={setCategoryDialogOpen}>
+          <DialogContent className="sm:max-w-[500px]">
+            <DialogHeader>
+              <DialogTitle>Añadir Categoría de Especificación</DialogTitle>
+              <DialogDescription>
+                Cree una nueva categoría para organizar las especificaciones.
+              </DialogDescription>
+            </DialogHeader>
+            
+            <form onSubmit={handleCategorySubmit} className="space-y-4">
+              <div className="space-y-4">
+                <div className="space-y-2">
+                  <Label htmlFor="name">Nombre</Label>
+                  <Input
+                    id="name"
+                    name="name"
+                    value={categoryFormData.name}
+                    onChange={handleCategoryNameChange}
+                    required
+                  />
+                </div>
+                
+                <div className="space-y-2">
+                  <Label htmlFor="slug">Slug</Label>
+                  <Input
+                    id="slug"
+                    name="slug"
+                    value={categoryFormData.slug}
+                    onChange={handleCategoryInputChange}
+                    required
+                    placeholder="ejemplo-de-slug"
+                    className="font-mono text-sm"
+                  />
+                  <p className="text-xs text-muted-foreground">
+                    El slug se genera automáticamente a partir del nombre, pero puede editarlo si lo desea.
+                  </p>
+                </div>
+              </div>
+              
+              <DialogFooter>
+                <Button variant="outline" type="button" onClick={() => setCategoryDialogOpen(false)}>
+                  Cancelar
+                </Button>
+                <Button type="submit">
+                  Guardar
+                </Button>
+              </DialogFooter>
+            </form>
+          </DialogContent>
+        </Dialog>
       </div>
     );
   }
 
-  // Company list view
   return (
     <div className="space-y-6 animate-slideInUp">
-      {/* Search and filter bar */}
       <div className="flex flex-col md:flex-row gap-4 items-start md:items-center justify-between">
         <div className="relative w-full md:w-96">
           <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
@@ -569,7 +717,6 @@ const Companies = () => {
         </div>
       </div>
 
-      {/* Companies display */}
       {viewMode === 'grid' ? (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
           {filteredCompanies.length > 0 ? (
@@ -683,7 +830,6 @@ const Companies = () => {
         </Card>
       )}
 
-      {/* Create/Edit dialog */}
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
         <DialogContent className="sm:max-w-[600px]">
           <DialogHeader>
@@ -697,7 +843,6 @@ const Companies = () => {
           
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="space-y-4">
-              {/* Logo upload */}
               <div className="space-y-2">
                 <Label htmlFor="logo">Logo</Label>
                 <div className="flex flex-col items-center gap-4">
