@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -10,8 +9,8 @@ import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Search, Plus, Edit, Trash, Shield, User as UserIcon } from 'lucide-react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 
-// Mock data for users
-const mockUsers = [
+// Mock data for users with explicit type definitions
+const mockUsers: User[] = [
   { id: 1, name: 'Admin Usuario', email: 'admin@example.com', role: 'admin', lastLogin: '2023-05-01' },
   { id: 2, name: 'Usuario Normal', email: 'usuario@example.com', role: 'user', lastLogin: '2023-05-05' },
   { id: 3, name: 'María García', email: 'maria@example.com', role: 'user', lastLogin: '2023-05-10' },

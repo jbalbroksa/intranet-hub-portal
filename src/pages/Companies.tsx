@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -10,8 +9,8 @@ import { Search, Plus, Edit, Trash, Filter, LayoutGrid, List, Upload } from 'luc
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 
-// Mock data for companies
-const mockCompanies = [
+// Mock data for companies with explicit type definitions
+const mockCompanies: Company[] = [
   { id: 1, logo: '/placeholder.svg', name: 'Mapfre', website: 'mapfre.es', mediatorAccess: 'mapfre.es/mediadores', responsibleEmail: 'mediadores@mapfre.es', category: 'preferred' },
   { id: 2, logo: '/placeholder.svg', name: 'Allianz', website: 'allianz.es', mediatorAccess: 'allianz.es/mediadores', responsibleEmail: 'mediadores@allianz.es', category: 'specific' },
   { id: 3, logo: '/placeholder.svg', name: 'AXA', website: 'axa.es', mediatorAccess: 'axa.es/mediadores', responsibleEmail: 'mediadores@axa.es', category: 'preferred' },
