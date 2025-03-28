@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -7,7 +6,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Search, Plus, Download, Trash, Filter, Upload, FileText, FileImage, FilePdf } from 'lucide-react';
+import { Search, Plus, Download, Trash, Filter, Upload, FileText, File, Image } from 'lucide-react';
 import { format } from 'date-fns';
 
 // Mock data for categories
@@ -325,7 +324,7 @@ const Documents = () => {
   const getFileIcon = (type: string) => {
     switch (type.toLowerCase()) {
       case 'pdf':
-        return <FilePdf className="h-5 w-5 text-red-500" />;
+        return <File className="h-5 w-5 text-red-500" />;
       case 'docx':
       case 'doc':
         return <FileText className="h-5 w-5 text-blue-500" />;
@@ -333,7 +332,7 @@ const Documents = () => {
       case 'jpeg':
       case 'png':
       case 'gif':
-        return <FileImage className="h-5 w-5 text-green-500" />;
+        return <Image className="h-5 w-5 text-green-500" />;
       default:
         return <FileText className="h-5 w-5" />;
     }
