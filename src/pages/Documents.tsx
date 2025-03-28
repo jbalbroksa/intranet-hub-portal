@@ -167,17 +167,17 @@ const Documents = () => {
 
   // Handle category filter selection
   const handleCategoryFilter = (value: string) => {
-    setSelectedCategoryFilter(value ? parseInt(value) : null);
+    setSelectedCategoryFilter(value === 'all' ? null : parseInt(value));
   };
 
   // Handle product filter selection
   const handleProductFilter = (value: string) => {
-    setSelectedProductFilter(value ? parseInt(value) : null);
+    setSelectedProductFilter(value === 'all' ? null : parseInt(value));
   };
 
   // Handle company filter selection
   const handleCompanyFilter = (value: string) => {
-    setSelectedCompanyFilter(value ? parseInt(value) : null);
+    setSelectedCompanyFilter(value === 'all' ? null : parseInt(value));
   };
 
   // Clear all filters
@@ -368,12 +368,12 @@ const Documents = () => {
       {/* Filters */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         <div>
-          <Select value={selectedCategoryFilter?.toString() || ""} onValueChange={handleCategoryFilter}>
+          <Select value={selectedCategoryFilter?.toString() || "all"} onValueChange={handleCategoryFilter}>
             <SelectTrigger>
               <SelectValue placeholder="Filtrar por categoría" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="">Todas las categorías</SelectItem>
+              <SelectItem value="all">Todas las categorías</SelectItem>
               {categories.map(category => (
                 <SelectItem key={category.id} value={category.id.toString()}>
                   {category.name}
@@ -384,12 +384,12 @@ const Documents = () => {
         </div>
         
         <div>
-          <Select value={selectedProductFilter?.toString() || ""} onValueChange={handleProductFilter}>
+          <Select value={selectedProductFilter?.toString() || "all"} onValueChange={handleProductFilter}>
             <SelectTrigger>
               <SelectValue placeholder="Filtrar por producto" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="">Todos los productos</SelectItem>
+              <SelectItem value="all">Todos los productos</SelectItem>
               {products.map(product => (
                 <SelectItem key={product.id} value={product.id.toString()}>
                   {product.name}
@@ -400,12 +400,12 @@ const Documents = () => {
         </div>
         
         <div>
-          <Select value={selectedCompanyFilter?.toString() || ""} onValueChange={handleCompanyFilter}>
+          <Select value={selectedCompanyFilter?.toString() || "all"} onValueChange={handleCompanyFilter}>
             <SelectTrigger>
               <SelectValue placeholder="Filtrar por compañía" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="">Todas las compañías</SelectItem>
+              <SelectItem value="all">Todas las compañías</SelectItem>
               {companies.map(company => (
                 <SelectItem key={company.id} value={company.id.toString()}>
                   {company.name}

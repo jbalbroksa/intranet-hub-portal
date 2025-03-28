@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -528,7 +527,7 @@ const Products = () => {
                 <div className="space-y-2">
                   <Label htmlFor="category">Categoría</Label>
                   <Select 
-                    value={formData.categoryId ? formData.categoryId.toString() : ""} 
+                    value={formData.categoryId ? formData.categoryId.toString() : "0"} 
                     onValueChange={handleCategoryChange}
                   >
                     <SelectTrigger>
@@ -547,7 +546,7 @@ const Products = () => {
                 <div className="space-y-2">
                   <Label htmlFor="subcategory">Subcategoría</Label>
                   <Select 
-                    value={formData.subcategoryId ? formData.subcategoryId.toString() : ""} 
+                    value={formData.subcategoryId ? formData.subcategoryId.toString() : "0"} 
                     onValueChange={handleSubcategoryChange}
                     disabled={!formData.categoryId}
                   >

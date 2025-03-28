@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -109,7 +108,7 @@ const News = () => {
   const [currentNews, setCurrentNews] = useState<NewsItem | null>(null);
   const [viewMode, setViewMode] = useState<ViewMode>('grid');
   const [imageUrl, setImageUrl] = useState<string>('/placeholder.svg');
-  const [selectedCompanyFilter, setSelectedCompanyFilter] = useState<number | null>(null);
+  const [selectedCompanyFilter, setSelectedCompanyFilter] = useState<string>("all");
   
   const [formData, setFormData] = useState<Omit<NewsItem, 'id' | 'date' | 'author' | 'views'>>({
     title: '',
@@ -131,14 +130,14 @@ const News = () => {
       item.excerpt.toLowerCase().includes(searchTerm.toLowerCase()) ||
       item.content.toLowerCase().includes(searchTerm.toLowerCase());
     
-    const matchesCompany = selectedCompanyFilter === null || item.companies.includes(selectedCompanyFilter);
+    const matchesCompany = selectedCompanyFilter === "all" || item.companies.includes(parseInt(selectedCompanyFilter));
     
     return matchesSearch && matchesCompany;
   });
 
   // Handle company filter selection
-  const handleCompanyFilter = (companyId: number) => {
-    setSelectedCompanyFilter(prevCompany => prevCompany === companyId ? null : companyId);
+  const handleCompanyFilter = (value: string) => {
+    setSelectedCompanyFilter(value === 'all' ? null : parseInt(value));
   };
 
   // Clear company filter
@@ -285,12 +284,12 @@ const News = () => {
         </div>
         
         <div className="flex flex-wrap gap-2">
-          <Select value={selectedCompanyFilter?.toString() || ""} onValueChange={(v) => v ? handleCompanyFilter(parseInt(v)) : clearCompanyFilter()}>
+          <Select value={selectedCompanyFilter?.toString() || "all"} onValueChange={handleCompanyFilter}>
             <SelectTrigger className="w-[180px]">
               <SelectValue placeholder="Filtrar por compañía" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="">Todas las compañías</SelectItem>
+              <SelectItem value="all">Todas las compañías</SelectItem>
               {companies.map(company => (
                 <SelectItem key={company.id} value={company.id.toString()}>
                   {company.name}
