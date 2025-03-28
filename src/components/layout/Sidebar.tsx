@@ -11,7 +11,8 @@ import {
   Settings, 
   ChevronLeft, 
   ChevronRight,
-  Building
+  Building,
+  ExternalLink
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
@@ -39,6 +40,27 @@ const SidebarItem = ({ icon: Icon, label, to, isCollapsed, isActive }: SidebarIt
         {label}
       </span>
     </Link>
+  );
+};
+
+// External link component
+const ExternalSidebarItem = ({ icon: Icon, label, to, isCollapsed }: Omit<SidebarItemProps, 'isActive'>) => {
+  return (
+    <a
+      href={to}
+      target="_blank"
+      rel="noopener noreferrer"
+      className={cn(
+        "flex items-center gap-3 px-3 py-3 rounded-md transition-all duration-300 ease-in-out",
+        "text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
+      )}
+    >
+      <Icon className="h-5 w-5 flex-shrink-0" />
+      <span className={cn("transition-all duration-300 flex-1", isCollapsed ? "opacity-0 w-0 overflow-hidden" : "opacity-100")}>
+        {label}
+      </span>
+      {!isCollapsed && <ExternalLink className="h-3 w-3 opacity-50" />}
+    </a>
   );
 };
 
@@ -78,6 +100,14 @@ const Sidebar = ({ className }: SidebarProps) => {
     { icon: Settings, label: 'Configuración', path: '/configuracion' },
   ];
 
+  // External links
+  const externalLinks = [
+    { icon: ExternalLink, label: 'Tesis Broker Manager', url: 'https://broker.tesis.com' },
+    { icon: ExternalLink, label: 'Avant2', url: 'https://www.avant2.es' },
+    { icon: ExternalLink, label: 'Centro de Soporte', url: 'https://soporte.albroksa.com' },
+    { icon: ExternalLink, label: 'Club Albroksa', url: 'https://club.albroksa.com' },
+  ];
+
   return (
     <aside
       className={cn(
@@ -111,6 +141,28 @@ const Sidebar = ({ className }: SidebarProps) => {
             </li>
           ))}
         </ul>
+        
+        {/* External links section */}
+        {externalLinks.length > 0 && (
+          <div className="mt-6 pt-6 border-t border-sidebar-border">
+            <div className={cn("px-3 py-2 text-xs font-medium text-sidebar-foreground/50", 
+              isCollapsed ? "text-center" : "")}>
+              {!isCollapsed && "Accesos Externos"}
+            </div>
+            <ul className="mt-2 space-y-1">
+              {externalLinks.map((link, index) => (
+                <li key={index}>
+                  <ExternalSidebarItem
+                    icon={link.icon}
+                    label={link.label}
+                    to={link.url}
+                    isCollapsed={isCollapsed}
+                  />
+                </li>
+              ))}
+            </ul>
+          </div>
+        )}
       </nav>
 
       <button
