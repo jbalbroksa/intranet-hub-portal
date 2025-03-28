@@ -1,7 +1,23 @@
-
 import React, { useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
-import { Building, Briefcase, Package, FileText, FolderOpen, Bell, ChevronRight, ArrowRight, AlertTriangle, Calendar, Plus, Edit, Trash } from 'lucide-react';
+import { 
+  Building, 
+  Briefcase, 
+  Package, 
+  FileText, 
+  FolderOpen, 
+  Bell, 
+  ChevronRight, 
+  ArrowRight, 
+  AlertTriangle, 
+  Calendar, 
+  Plus, 
+  Edit, 
+  Trash,
+  Clock,
+  MapPin,
+  Users
+} from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
