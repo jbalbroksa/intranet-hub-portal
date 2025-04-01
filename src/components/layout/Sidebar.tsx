@@ -89,13 +89,13 @@ const Sidebar = () => {
   return (
     <>
       {/* Desktop Sidebar */}
-      <aside className="hidden lg:flex flex-col w-64 border-r bg-background h-screen">
+      <aside className="hidden lg:flex flex-col w-64 border-r bg-background h-screen sticky top-0">
         <div className="flex items-center justify-center h-16 border-b">
           <Link to="/" className="text-lg font-semibold">Intranet</Link>
         </div>
 
-        <nav className="flex-1 py-4">
-          <div className="space-y-1">
+        <nav className="flex-1 py-4 overflow-y-auto">
+          <div className="px-2 space-y-1">
             {mainNavItems.map((item) => (
               <SidebarNavItem
                 key={item.title}
@@ -107,7 +107,7 @@ const Sidebar = () => {
             ))}
           </div>
 
-          <div className="mt-6 pt-6 border-t space-y-1">
+          <div className="mt-6 pt-6 border-t px-2 space-y-1">
             {secondaryNavItems.map((item) => (
               <SidebarNavItem
                 key={item.title}
@@ -126,66 +126,68 @@ const Sidebar = () => {
       </aside>
 
       {/* Mobile Sidebar */}
-      <Sheet open={isMobileMenuOpen} onOpenChange={setIsMobileMenuOpen}>
-        <SheetTrigger asChild>
-          <Button variant="ghost" size="icon" className="lg:hidden">
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              width="24"
-              height="24"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              className="h-6 w-6"
-            >
-              <line x1="4" y1="12" x2="20" y2="12" />
-              <line x1="4" y1="6" x2="20" y2="6" />
-              <line x1="4" y1="18" x2="20" y2="18" />
-            </svg>
-            <span className="sr-only">Abrir menú</span>
-          </Button>
-        </SheetTrigger>
-        <SheetContent side="left" className="w-64">
-          <SheetHeader className="text-left">
-            <SheetTitle>Intranet</SheetTitle>
-          </SheetHeader>
+      <div className="lg:hidden">
+        <Sheet open={isMobileMenuOpen} onOpenChange={setIsMobileMenuOpen}>
+          <SheetTrigger asChild>
+            <Button variant="ghost" size="icon" className="fixed top-4 left-4 z-40">
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                width="24"
+                height="24"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                className="h-6 w-6"
+              >
+                <line x1="4" y1="12" x2="20" y2="12" />
+                <line x1="4" y1="6" x2="20" y2="6" />
+                <line x1="4" y1="18" x2="20" y2="18" />
+              </svg>
+              <span className="sr-only">Abrir menú</span>
+            </Button>
+          </SheetTrigger>
+          <SheetContent side="left" className="w-64 p-0">
+            <SheetHeader className="h-16 border-b flex items-center justify-center">
+              <SheetTitle className="text-lg">Intranet</SheetTitle>
+            </SheetHeader>
 
-          <nav className="flex-1 py-4">
-            <div className="space-y-1">
-              {mainNavItems.map((item) => (
-                <SidebarNavItem
-                  key={item.title}
-                  href={item.href}
-                  title={item.title}
-                  icon={item.icon}
-                  isActive={isActive(item.href)}
-                  onClick={() => setIsMobileMenuOpen(false)}
-                />
-              ))}
+            <nav className="py-4 overflow-y-auto h-[calc(100vh-8rem)]">
+              <div className="px-2 space-y-1">
+                {mainNavItems.map((item) => (
+                  <SidebarNavItem
+                    key={item.title}
+                    href={item.href}
+                    title={item.title}
+                    icon={item.icon}
+                    isActive={isActive(item.href)}
+                    onClick={() => setIsMobileMenuOpen(false)}
+                  />
+                ))}
+              </div>
+
+              <div className="mt-6 pt-6 border-t px-2 space-y-1">
+                {secondaryNavItems.map((item) => (
+                  <SidebarNavItem
+                    key={item.title}
+                    href={item.href}
+                    title={item.title}
+                    icon={item.icon}
+                    isActive={isActive(item.href)}
+                    onClick={() => setIsMobileMenuOpen(false)}
+                  />
+                ))}
+              </div>
+            </nav>
+
+            <div className="border-t p-4">
+              <UserDropdown onCloseMenu={() => setIsMobileMenuOpen(false)} />
             </div>
-
-            <div className="mt-6 pt-6 border-t space-y-1">
-              {secondaryNavItems.map((item) => (
-                <SidebarNavItem
-                  key={item.title}
-                  href={item.href}
-                  title={item.title}
-                  icon={item.icon}
-                  isActive={isActive(item.href)}
-                  onClick={() => setIsMobileMenuOpen(false)}
-                />
-              ))}
-            </div>
-          </nav>
-
-          <div className="border-t p-4">
-            <UserDropdown onCloseMenu={() => setIsMobileMenuOpen(false)} />
-          </div>
-        </SheetContent>
-      </Sheet>
+          </SheetContent>
+        </Sheet>
+      </div>
     </>
   );
 };

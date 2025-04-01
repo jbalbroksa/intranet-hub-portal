@@ -9,7 +9,306 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
-      [_ in never]: never
+      categorias_companias: {
+        Row: {
+          created_at: string | null
+          id: string
+          nombre: string
+          slug: string
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          nombre: string
+          slug: string
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          nombre?: string
+          slug?: string
+        }
+        Relationships: []
+      }
+      categorias_productos: {
+        Row: {
+          created_at: string | null
+          id: string
+          nombre: string
+          slug: string
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          nombre: string
+          slug: string
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          nombre?: string
+          slug?: string
+        }
+        Relationships: []
+      }
+      companias: {
+        Row: {
+          categoria: string | null
+          created_at: string | null
+          descripcion: string | null
+          direccion: string | null
+          email: string | null
+          id: string
+          logo_url: string | null
+          nombre: string
+          sitio_web: string | null
+          telefono: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          categoria?: string | null
+          created_at?: string | null
+          descripcion?: string | null
+          direccion?: string | null
+          email?: string | null
+          id?: string
+          logo_url?: string | null
+          nombre: string
+          sitio_web?: string | null
+          telefono?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          categoria?: string | null
+          created_at?: string | null
+          descripcion?: string | null
+          direccion?: string | null
+          email?: string | null
+          id?: string
+          logo_url?: string | null
+          nombre?: string
+          sitio_web?: string | null
+          telefono?: string | null
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
+      delegaciones: {
+        Row: {
+          ciudad: string | null
+          codigo_postal: string | null
+          created_at: string | null
+          direccion: string | null
+          email: string | null
+          id: string
+          nombre: string
+          pais: string | null
+          responsable: string | null
+          telefono: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          ciudad?: string | null
+          codigo_postal?: string | null
+          created_at?: string | null
+          direccion?: string | null
+          email?: string | null
+          id?: string
+          nombre: string
+          pais?: string | null
+          responsable?: string | null
+          telefono?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          ciudad?: string | null
+          codigo_postal?: string | null
+          created_at?: string | null
+          direccion?: string | null
+          email?: string | null
+          id?: string
+          nombre?: string
+          pais?: string | null
+          responsable?: string | null
+          telefono?: string | null
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
+      documentos: {
+        Row: {
+          archivo_url: string | null
+          categoria: string | null
+          created_at: string | null
+          descripcion: string | null
+          fecha_subida: string | null
+          id: string
+          nombre: string
+          updated_at: string | null
+        }
+        Insert: {
+          archivo_url?: string | null
+          categoria?: string | null
+          created_at?: string | null
+          descripcion?: string | null
+          fecha_subida?: string | null
+          id?: string
+          nombre: string
+          updated_at?: string | null
+        }
+        Update: {
+          archivo_url?: string | null
+          categoria?: string | null
+          created_at?: string | null
+          descripcion?: string | null
+          fecha_subida?: string | null
+          id?: string
+          nombre?: string
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
+      eventos: {
+        Row: {
+          color: string | null
+          created_at: string | null
+          descripcion: string | null
+          fecha_fin: string
+          fecha_inicio: string
+          id: string
+          titulo: string
+          todo_el_dia: boolean | null
+          ubicacion: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          color?: string | null
+          created_at?: string | null
+          descripcion?: string | null
+          fecha_fin: string
+          fecha_inicio: string
+          id?: string
+          titulo: string
+          todo_el_dia?: boolean | null
+          ubicacion?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          color?: string | null
+          created_at?: string | null
+          descripcion?: string | null
+          fecha_fin?: string
+          fecha_inicio?: string
+          id?: string
+          titulo?: string
+          todo_el_dia?: boolean | null
+          ubicacion?: string | null
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
+      noticias: {
+        Row: {
+          autor: string | null
+          contenido: string | null
+          created_at: string | null
+          es_destacada: boolean | null
+          fecha_publicacion: string | null
+          id: string
+          imagen_url: string | null
+          titulo: string
+          updated_at: string | null
+        }
+        Insert: {
+          autor?: string | null
+          contenido?: string | null
+          created_at?: string | null
+          es_destacada?: boolean | null
+          fecha_publicacion?: string | null
+          id?: string
+          imagen_url?: string | null
+          titulo: string
+          updated_at?: string | null
+        }
+        Update: {
+          autor?: string | null
+          contenido?: string | null
+          created_at?: string | null
+          es_destacada?: boolean | null
+          fecha_publicacion?: string | null
+          id?: string
+          imagen_url?: string | null
+          titulo?: string
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
+      notificaciones: {
+        Row: {
+          created_at: string | null
+          es_leida: boolean | null
+          fecha_creacion: string | null
+          id: string
+          mensaje: string | null
+          tipo: string | null
+          titulo: string
+        }
+        Insert: {
+          created_at?: string | null
+          es_leida?: boolean | null
+          fecha_creacion?: string | null
+          id?: string
+          mensaje?: string | null
+          tipo?: string | null
+          titulo: string
+        }
+        Update: {
+          created_at?: string | null
+          es_leida?: boolean | null
+          fecha_creacion?: string | null
+          id?: string
+          mensaje?: string | null
+          tipo?: string | null
+          titulo?: string
+        }
+        Relationships: []
+      }
+      productos: {
+        Row: {
+          categoria: string | null
+          created_at: string | null
+          descripcion: string | null
+          id: string
+          imagen_url: string | null
+          nombre: string
+          precio: number | null
+          stock: number | null
+          updated_at: string | null
+        }
+        Insert: {
+          categoria?: string | null
+          created_at?: string | null
+          descripcion?: string | null
+          id?: string
+          imagen_url?: string | null
+          nombre: string
+          precio?: number | null
+          stock?: number | null
+          updated_at?: string | null
+        }
+        Update: {
+          categoria?: string | null
+          created_at?: string | null
+          descripcion?: string | null
+          id?: string
+          imagen_url?: string | null
+          nombre?: string
+          precio?: number | null
+          stock?: number | null
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
