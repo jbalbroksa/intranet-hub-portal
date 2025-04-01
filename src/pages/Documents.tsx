@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
@@ -286,7 +287,7 @@ const Documents = () => {
               </div>
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="">Todas las categorías</SelectItem>
+              <SelectItem value="all">Todas las categorías</SelectItem>
               {documentCategories.map(category => (
                 <SelectItem key={category.id} value={category.id.toString()}>
                   {category.name}
@@ -306,7 +307,7 @@ const Documents = () => {
               </div>
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="">Todos los productos</SelectItem>
+              <SelectItem value="all">Todos los productos</SelectItem>
               {productCategories.map(category => (
                 <SelectItem key={category.id} value={category.id.toString()}>
                   {category.name}
@@ -466,7 +467,7 @@ const Documents = () => {
                     ))
                   ) : (
                     <tr>
-                      <td colSpan={6} className="text-center py-8">
+                      <td colSpan={6} className="text-center py-6">
                         <File className="h-12 w-12 text-muted-foreground mx-auto" />
                         <h3 className="mt-4 text-lg font-medium">No se encontraron documentos</h3>
                         <p className="text-muted-foreground">Intenta con otros criterios de búsqueda o sube un nuevo documento</p>
