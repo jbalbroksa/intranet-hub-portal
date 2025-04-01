@@ -49,12 +49,14 @@ type Company = {
   category: 'specific' | 'preferred' | 'all';
 };
 
+type SpecificationCategory = 'requirements' | 'procedures' | 'commercial' | 'contacts' | 'other';
+
 type Specification = {
   id: number;
   companyId: number;
   title: string;
   content: string;
-  category: 'requirements' | 'procedures' | 'commercial' | 'contacts' | 'other';
+  category: SpecificationCategory;
 };
 
 type SpecCategory = {
@@ -142,7 +144,7 @@ const Companies = () => {
   const handleSpecCategoryChange = (value: string) => {
     setSpecFormData({
       ...specFormData,
-      category: value,
+      category: value as SpecificationCategory,
     });
   };
 
