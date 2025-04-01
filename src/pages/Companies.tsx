@@ -1,16 +1,15 @@
+
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { Label } from '@/components/ui/label';
-import { Search, Plus, Edit, Trash, Filter, LayoutGrid, List, Upload, FileText } from 'lucide-react';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { toast } from 'sonner';
-import { Textarea } from '@/components/ui/textarea';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Company, SpecCategory, Specification } from '@/types/company';
+import CompanyFilters from '@/components/companies/CompanyFilters';
+import CompanyList from '@/components/companies/CompanyList';
+import CompanyDetail from '@/components/companies/CompanyDetail';
+import CompanyForm from '@/components/companies/CompanyForm';
+import SpecificationForm from '@/components/companies/SpecificationForm';
+import CategoryForm from '@/components/companies/CategoryForm';
 
 // Mock data for companies
 const mockCompanies: Company[] = [
@@ -38,32 +37,6 @@ const mockSpecCategories: SpecCategory[] = [
   { id: 4, name: 'Contactos', slug: 'contacts' },
   { id: 5, name: 'Otros', slug: 'other' },
 ];
-
-type Company = {
-  id: number;
-  logo: string;
-  name: string;
-  website: string;
-  mediatorAccess: string;
-  responsibleEmail: string;
-  category: 'specific' | 'preferred' | 'all';
-};
-
-type SpecificationCategory = 'requirements' | 'procedures' | 'commercial' | 'contacts' | 'other';
-
-type Specification = {
-  id: number;
-  companyId: number;
-  title: string;
-  content: string;
-  category: SpecificationCategory;
-};
-
-type SpecCategory = {
-  id: number;
-  name: string;
-  slug: string;
-};
 
 type FormMode = 'create' | 'edit';
 type ViewMode = 'grid' | 'list';
@@ -144,7 +117,7 @@ const Companies = () => {
   const handleSpecCategoryChange = (value: string) => {
     setSpecFormData({
       ...specFormData,
-      category: value as SpecificationCategory,
+      category: value as 'requirements' | 'procedures' | 'commercial' | 'contacts' | 'other',
     });
   };
 
@@ -257,6 +230,7 @@ const Companies = () => {
     if (window.confirm('¿Estás seguro de que quieres eliminar esta compañía?')) {
       setCompanies(companies.filter(company => company.id !== id));
       
+      // Also delete related specifications
       setSpecifications(specifications.filter(spec => spec.companyId !== id));
     }
   };
@@ -268,31 +242,6 @@ const Companies = () => {
     }
   };
 
-  const handleDeleteCategory = (id: number) => {
-    const categoryInUse = specifications.some(spec => {
-      const category = specCategories.find(c => c.id === id);
-      return category && spec.category === category.slug;
-    });
-    
-    if (categoryInUse) {
-      toast.error("No se puede eliminar esta categoría porque está en uso");
-      return;
-    }
-    
-    if (window.confirm('¿Estás seguro de que quieres eliminar esta categoría?')) {
-      setSpecCategories(specCategories.filter(category => category.id !== id));
-      toast.success("Categoría eliminada correctamente");
-    }
-  };
-
-  const handleCategoryInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { name, value } = e.target;
-    setCategoryFormData({
-      ...categoryFormData,
-      [name]: value,
-    });
-  };
-
   const handleCategoryNameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const name = e.target.value;
     const slug = name
@@ -302,9 +251,16 @@ const Companies = () => {
       .replace(/^-+|-+$/g, '');
     
     setCategoryFormData({
-      ...categoryFormData,
       name,
       slug,
+    });
+  };
+
+  const handleCategorySlugChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { value } = e.target;
+    setCategoryFormData({
+      ...categoryFormData,
+      slug: value,
     });
   };
 
@@ -334,6 +290,23 @@ const Companies = () => {
     toast.success("Categoría añadida correctamente");
   };
 
+  const handleDeleteCategory = (id: number) => {
+    const categoryInUse = specifications.some(spec => {
+      const category = specCategories.find(c => c.id === id);
+      return category && spec.category === category.slug;
+    });
+    
+    if (categoryInUse) {
+      toast.error("No se puede eliminar esta categoría porque está en uso");
+      return;
+    }
+    
+    if (window.confirm('¿Estás seguro de que quieres eliminar esta categoría?')) {
+      setSpecCategories(specCategories.filter(category => category.id !== id));
+      toast.success("Categoría eliminada correctamente");
+    }
+  };
+
   const getCategoryLabel = (category: string) => {
     switch(category) {
       case 'specific': return 'Específica';
@@ -347,490 +320,49 @@ const Companies = () => {
     return category ? category.name : 'Desconocido';
   };
 
-  const getSpecCategoryColor = (category: string) => {
-    switch(category) {
-      case 'requirements': return 'bg-blue-100 text-blue-800';
-      case 'procedures': return 'bg-green-100 text-green-800';
-      case 'commercial': return 'bg-purple-100 text-purple-800';
-      case 'contacts': return 'bg-orange-100 text-orange-800';
-      case 'other': return 'bg-gray-100 text-gray-800';
-      default: return 'bg-gray-100 text-gray-800';
-    }
-  };
-
   if (selectedCompany) {
     return (
-      <div className="space-y-6 animate-slideInUp">
-        <div className="flex items-center justify-between">
-          <Button variant="outline" onClick={backToList} className="mb-4">
-            &larr; Volver a la lista
-          </Button>
-          
-          <div className="flex items-center gap-4">
-            <Button variant="outline" onClick={() => openEditDialog(selectedCompany)}>
-              <Edit className="h-4 w-4 mr-2" />
-              Editar
-            </Button>
-            <Button variant="destructive" onClick={() => handleDelete(selectedCompany.id)}>
-              <Trash className="h-4 w-4 mr-2" />
-              Eliminar
-            </Button>
-          </div>
-        </div>
-        
-        <Card>
-          <CardHeader className="pb-4">
-            <div className="flex items-start gap-4">
-              <div className="bg-muted/30 p-2 rounded-md h-16 w-16 flex items-center justify-center">
-                <img 
-                  src={selectedCompany.logo} 
-                  alt={`${selectedCompany.name} logo`} 
-                  className="max-h-full max-w-full object-contain"
-                />
-              </div>
-              <div>
-                <CardTitle className="text-2xl">{selectedCompany.name}</CardTitle>
-                <CardDescription>
-                  <a 
-                    href={`https://${selectedCompany.website}`} 
-                    target="_blank" 
-                    rel="noopener noreferrer"
-                    className="hover:underline"
-                  >
-                    {selectedCompany.website}
-                  </a>
-                </CardDescription>
-                <div className="mt-2">
-                  <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-secondary text-secondary-foreground">
-                    {getCategoryLabel(selectedCompany.category)}
-                  </span>
-                </div>
-              </div>
-            </div>
-          </CardHeader>
-          
-          <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-            <TabsList className="grid w-full grid-cols-3">
-              <TabsTrigger value="info">Información General</TabsTrigger>
-              <TabsTrigger value="specs">Especificaciones</TabsTrigger>
-              <TabsTrigger value="categories">Categorías</TabsTrigger>
-            </TabsList>
-            
-            <TabsContent value="info" className="p-6">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div>
-                  <h3 className="text-lg font-medium mb-2">Información de Contacto</h3>
-                  <div className="space-y-2">
-                    <div>
-                      <Label>Email Responsable</Label>
-                      <p className="text-sm">{selectedCompany.responsibleEmail}</p>
-                    </div>
-                    <div>
-                      <Label>Acceso Mediador</Label>
-                      <p className="text-sm">
-                        <a 
-                          href={`https://${selectedCompany.mediatorAccess}`} 
-                          target="_blank" 
-                          rel="noopener noreferrer"
-                          className="hover:underline"
-                        >
-                          {selectedCompany.mediatorAccess}
-                        </a>
-                      </p>
-                    </div>
-                  </div>
-                </div>
-                
-                <div>
-                  <h3 className="text-lg font-medium mb-2">Detalles Adicionales</h3>
-                  <div className="space-y-2">
-                    <div>
-                      <Label>Categoría</Label>
-                      <p className="text-sm">{getCategoryLabel(selectedCompany.category)}</p>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </TabsContent>
-            
-            <TabsContent value="specs" className="p-6">
-              <div className="flex justify-between items-center mb-4">
-                <h3 className="text-lg font-medium">Especificaciones</h3>
-                <Button onClick={openAddSpecDialog}>
-                  <Plus className="h-4 w-4 mr-2" />
-                  Añadir Especificación
-                </Button>
-              </div>
-              
-              {filteredSpecifications.length > 0 ? (
-                <div className="grid grid-cols-1 gap-4">
-                  {filteredSpecifications.map((spec) => (
-                    <Card key={spec.id} className="border">
-                      <CardHeader className="pb-2">
-                        <div className="flex justify-between items-start">
-                          <div>
-                            <CardTitle className="text-lg">{spec.title}</CardTitle>
-                            <div className="mt-1">
-                              <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getSpecCategoryColor(spec.category)}`}>
-                                {getSpecCategoryLabel(spec.category)}
-                              </span>
-                            </div>
-                          </div>
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => handleDeleteSpec(spec.id)}
-                            className="h-8 w-8 p-0"
-                          >
-                            <span className="sr-only">Eliminar</span>
-                            <Trash className="h-4 w-4" />
-                          </Button>
-                        </div>
-                      </CardHeader>
-                      <CardContent>
-                        <p className="text-sm whitespace-pre-line">{spec.content}</p>
-                      </CardContent>
-                    </Card>
-                  ))}
-                </div>
-              ) : (
-                <div className="text-center py-10 text-muted-foreground">
-                  No hay especificaciones para esta compañía. Haga clic en "Añadir Especificación" para crear una.
-                </div>
-              )}
-            </TabsContent>
-            
-            <TabsContent value="categories" className="p-6">
-              <div className="flex justify-between items-center mb-4">
-                <h3 className="text-lg font-medium">Categorías de Especificaciones</h3>
-                <Button onClick={openAddCategoryDialog}>
-                  <Plus className="h-4 w-4 mr-2" />
-                  Añadir Categoría
-                </Button>
-              </div>
-              
-              {specCategories.length > 0 ? (
-                <div className="overflow-hidden rounded-md border">
-                  <Table>
-                    <TableHeader>
-                      <TableRow>
-                        <TableHead>Nombre</TableHead>
-                        <TableHead>Slug</TableHead>
-                        <TableHead className="text-right">Acciones</TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {specCategories.map((category) => (
-                        <TableRow key={category.id}>
-                          <TableCell className="font-medium">{category.name}</TableCell>
-                          <TableCell className="text-muted-foreground">{category.slug}</TableCell>
-                          <TableCell className="text-right">
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              onClick={() => handleDeleteCategory(category.id)}
-                              className="h-8 w-8 p-0"
-                            >
-                              <span className="sr-only">Eliminar</span>
-                              <Trash className="h-4 w-4" />
-                            </Button>
-                          </TableCell>
-                        </TableRow>
-                      ))}
-                    </TableBody>
-                  </Table>
-                </div>
-              ) : (
-                <div className="text-center py-10 text-muted-foreground">
-                  No hay categorías definidas. Haga clic en "Añadir Categoría" para crear una.
-                </div>
-              )}
-            </TabsContent>
-          </Tabs>
-        </Card>
-        
-        <Dialog open={specDialogOpen} onOpenChange={setSpecDialogOpen}>
-          <DialogContent className="sm:max-w-[600px]">
-            <DialogHeader>
-              <DialogTitle>Añadir Especificación</DialogTitle>
-              <DialogDescription>
-                Añada información específica para {selectedCompany.name}.
-              </DialogDescription>
-            </DialogHeader>
-            
-            <form onSubmit={handleSpecSubmit} className="space-y-4">
-              <div className="space-y-4">
-                <div className="space-y-2">
-                  <Label htmlFor="title">Título</Label>
-                  <Input
-                    id="title"
-                    name="title"
-                    value={specFormData.title}
-                    onChange={handleSpecInputChange}
-                    required
-                  />
-                </div>
-                
-                <div className="space-y-2">
-                  <Label htmlFor="category">Categoría</Label>
-                  <Select
-                    value={specFormData.category}
-                    onValueChange={handleSpecCategoryChange}
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Seleccionar categoría" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {specCategories.map(category => (
-                        <SelectItem key={category.id} value={category.slug}>
-                          {category.name}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-                
-                <div className="space-y-2">
-                  <Label htmlFor="content">Contenido</Label>
-                  <Textarea
-                    id="content"
-                    name="content"
-                    value={specFormData.content}
-                    onChange={handleSpecInputChange}
-                    rows={6}
-                    required
-                  />
-                </div>
-              </div>
-              
-              <DialogFooter>
-                <Button variant="outline" type="button" onClick={() => setSpecDialogOpen(false)}>
-                  Cancelar
-                </Button>
-                <Button type="submit">
-                  Guardar
-                </Button>
-              </DialogFooter>
-            </form>
-          </DialogContent>
-        </Dialog>
-        
-        <Dialog open={categoryDialogOpen} onOpenChange={setCategoryDialogOpen}>
-          <DialogContent className="sm:max-w-[500px]">
-            <DialogHeader>
-              <DialogTitle>Añadir Categoría de Especificación</DialogTitle>
-              <DialogDescription>
-                Cree una nueva categoría para organizar las especificaciones.
-              </DialogDescription>
-            </DialogHeader>
-            
-            <form onSubmit={handleCategorySubmit} className="space-y-4">
-              <div className="space-y-4">
-                <div className="space-y-2">
-                  <Label htmlFor="name">Nombre</Label>
-                  <Input
-                    id="name"
-                    name="name"
-                    value={categoryFormData.name}
-                    onChange={handleCategoryNameChange}
-                    required
-                  />
-                </div>
-                
-                <div className="space-y-2">
-                  <Label htmlFor="slug">Slug</Label>
-                  <Input
-                    id="slug"
-                    name="slug"
-                    value={categoryFormData.slug}
-                    onChange={handleCategoryInputChange}
-                    required
-                    placeholder="ejemplo-de-slug"
-                    className="font-mono text-sm"
-                  />
-                  <p className="text-xs text-muted-foreground">
-                    El slug se genera automáticamente a partir del nombre, pero puede editarlo si lo desea.
-                  </p>
-                </div>
-              </div>
-              
-              <DialogFooter>
-                <Button variant="outline" type="button" onClick={() => setCategoryDialogOpen(false)}>
-                  Cancelar
-                </Button>
-                <Button type="submit">
-                  Guardar
-                </Button>
-              </DialogFooter>
-            </form>
-          </DialogContent>
-        </Dialog>
-      </div>
+      <CompanyDetail
+        company={selectedCompany}
+        specifications={filteredSpecifications}
+        specCategories={specCategories}
+        activeTab={activeTab}
+        onBackClick={backToList}
+        onEditClick={() => openEditDialog(selectedCompany)}
+        onDeleteClick={() => {
+          handleDelete(selectedCompany.id);
+          backToList();
+        }}
+        onTabChange={setActiveTab}
+        onAddSpecClick={openAddSpecDialog}
+        onDeleteSpec={handleDeleteSpec}
+        onAddCategoryClick={openAddCategoryDialog}
+        onDeleteCategory={handleDeleteCategory}
+        getCategoryLabel={getCategoryLabel}
+      />
     );
   }
 
   return (
     <div className="space-y-6 animate-slideInUp">
-      <div className="flex flex-col md:flex-row gap-4 items-start md:items-center justify-between">
-        <div className="relative w-full md:w-96">
-          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-          <Input
-            placeholder="Buscar compañías..."
-            className="pl-9"
-            value={searchTerm}
-            onChange={handleSearchChange}
-          />
-        </div>
-        
-        <div className="flex flex-wrap gap-2">
-          <Tabs value={categoryFilter} onValueChange={(v) => setCategoryFilter(v as CategoryFilter)} className="w-auto">
-            <TabsList>
-              <TabsTrigger value="all">Todas</TabsTrigger>
-              <TabsTrigger value="preferred">Preferentes</TabsTrigger>
-              <TabsTrigger value="specific">Específicas</TabsTrigger>
-            </TabsList>
-          </Tabs>
-          
-          <div className="flex gap-2 ml-auto">
-            <div className="border rounded-md flex overflow-hidden">
-              <Button 
-                variant={viewMode === 'grid' ? 'secondary' : 'ghost'} 
-                size="sm" 
-                onClick={() => setViewMode('grid')}
-                className="rounded-none"
-              >
-                <LayoutGrid className="h-4 w-4" />
-              </Button>
-              <Button 
-                variant={viewMode === 'list' ? 'secondary' : 'ghost'} 
-                size="sm" 
-                onClick={() => setViewMode('list')}
-                className="rounded-none"
-              >
-                <List className="h-4 w-4" />
-              </Button>
-            </div>
-            
-            <Button onClick={openCreateDialog}>
-              <Plus className="h-4 w-4 mr-2" />
-              Nueva Compañía
-            </Button>
-          </div>
-        </div>
-      </div>
+      <CompanyFilters
+        searchTerm={searchTerm}
+        categoryFilter={categoryFilter}
+        viewMode={viewMode}
+        onSearchChange={handleSearchChange}
+        onCategoryFilterChange={setCategoryFilter}
+        onViewModeChange={setViewMode}
+        onCreateClick={openCreateDialog}
+      />
 
-      {viewMode === 'grid' ? (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-          {filteredCompanies.length > 0 ? (
-            filteredCompanies.map((company) => (
-              <Card key={company.id} className="overflow-hidden hover:shadow-md transition-shadow">
-                <div className="p-4 bg-muted/30 flex items-center justify-center h-40">
-                  <img 
-                    src={company.logo} 
-                    alt={`${company.name} logo`} 
-                    className="max-h-full max-w-full object-contain"
-                  />
-                </div>
-                <CardContent className="p-4">
-                  <div className="flex items-start justify-between">
-                    <div>
-                      <h3 className="font-poppins font-medium text-lg">{company.name}</h3>
-                      <div className="text-sm text-muted-foreground mt-1">
-                        <a href={`https://${company.website}`} target="_blank" rel="noopener noreferrer" className="hover:underline">
-                          {company.website}
-                        </a>
-                      </div>
-                      <div className="mt-2">
-                        <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-secondary text-secondary-foreground">
-                          {getCategoryLabel(company.category)}
-                        </span>
-                      </div>
-                    </div>
-                    <div className="flex flex-col gap-1">
-                      <Button variant="ghost" size="sm" onClick={() => viewCompanyDetails(company)} className="h-8 px-2">
-                        <FileText className="h-4 w-4 mr-1" /> Ver
-                      </Button>
-                      <Button variant="ghost" size="sm" onClick={() => openEditDialog(company)} className="h-8 px-2">
-                        <Edit className="h-4 w-4 mr-1" /> Editar
-                      </Button>
-                      <Button variant="ghost" size="sm" onClick={() => handleDelete(company.id)} className="h-8 px-2">
-                        <Trash className="h-4 w-4 mr-1" /> Eliminar
-                      </Button>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-            ))
-          ) : (
-            <div className="col-span-full text-center py-10">
-              <p>No se encontraron compañías</p>
-            </div>
-          )}
-        </div>
-      ) : (
-        <Card>
-          <CardContent className="p-0">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Logo</TableHead>
-                  <TableHead>Nombre</TableHead>
-                  <TableHead className="hidden md:table-cell">Web</TableHead>
-                  <TableHead className="hidden md:table-cell">Email Responsable</TableHead>
-                  <TableHead className="hidden md:table-cell">Categoría</TableHead>
-                  <TableHead className="text-right">Acciones</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {filteredCompanies.length > 0 ? (
-                  filteredCompanies.map((company) => (
-                    <TableRow key={company.id}>
-                      <TableCell>
-                        <img 
-                          src={company.logo} 
-                          alt={`${company.name} logo`} 
-                          className="h-10 w-10 object-contain"
-                        />
-                      </TableCell>
-                      <TableCell className="font-medium">{company.name}</TableCell>
-                      <TableCell className="hidden md:table-cell">
-                        <a href={`https://${company.website}`} target="_blank" rel="noopener noreferrer" className="hover:underline">
-                          {company.website}
-                        </a>
-                      </TableCell>
-                      <TableCell className="hidden md:table-cell">{company.responsibleEmail}</TableCell>
-                      <TableCell className="hidden md:table-cell">
-                        <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-secondary text-secondary-foreground">
-                          {getCategoryLabel(company.category)}
-                        </span>
-                      </TableCell>
-                      <TableCell className="text-right">
-                        <div className="flex justify-end gap-2">
-                          <Button variant="ghost" size="sm" onClick={() => viewCompanyDetails(company)}>
-                            <FileText className="h-4 w-4" />
-                          </Button>
-                          <Button variant="ghost" size="sm" onClick={() => openEditDialog(company)}>
-                            <Edit className="h-4 w-4" />
-                          </Button>
-                          <Button variant="ghost" size="sm" onClick={() => handleDelete(company.id)}>
-                            <Trash className="h-4 w-4" />
-                          </Button>
-                        </div>
-                      </TableCell>
-                    </TableRow>
-                  ))
-                ) : (
-                  <TableRow>
-                    <TableCell colSpan={6} className="text-center py-6">
-                      No se encontraron compañías
-                    </TableCell>
-                  </TableRow>
-                )}
-              </TableBody>
-            </Table>
-          </CardContent>
-        </Card>
-      )}
+      <CompanyList
+        companies={filteredCompanies}
+        viewMode={viewMode}
+        getCategoryLabel={getCategoryLabel}
+        onViewCompany={viewCompanyDetails}
+        onEditCompany={openEditDialog}
+        onDeleteCompany={handleDelete}
+      />
 
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
         <DialogContent className="sm:max-w-[600px]">
@@ -843,113 +375,58 @@ const Companies = () => {
             </DialogDescription>
           </DialogHeader>
           
-          <form onSubmit={handleSubmit} className="space-y-4">
-            <div className="space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="logo">Logo</Label>
-                <div className="flex flex-col items-center gap-4">
-                  <div className="w-32 h-32 border rounded-md flex items-center justify-center overflow-hidden bg-muted/30">
-                    <img 
-                      src={logoUrl}
-                      alt="Company logo" 
-                      className="max-h-full max-w-full object-contain"
-                    />
-                  </div>
-                  <label className="cursor-pointer">
-                    <div className="flex items-center gap-2 text-sm px-3 py-2 border rounded-md hover:bg-muted transition-colors">
-                      <Upload className="h-4 w-4" />
-                      <span>Subir logo</span>
-                    </div>
-                    <input 
-                      type="file" 
-                      id="logo" 
-                      accept="image/*" 
-                      className="hidden" 
-                      onChange={handleLogoUpload} 
-                    />
-                  </label>
-                </div>
-              </div>
-              
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="name">Nombre</Label>
-                  <Input 
-                    id="name" 
-                    name="name" 
-                    value={formData.name} 
-                    onChange={handleInputChange} 
-                    required 
-                  />
-                </div>
-                
-                <div className="space-y-2">
-                  <Label htmlFor="website">Web</Label>
-                  <Input 
-                    id="website" 
-                    name="website" 
-                    value={formData.website} 
-                    onChange={handleInputChange} 
-                    required 
-                  />
-                </div>
-                
-                <div className="space-y-2">
-                  <Label htmlFor="mediatorAccess">Acceso Mediador</Label>
-                  <Input 
-                    id="mediatorAccess" 
-                    name="mediatorAccess" 
-                    value={formData.mediatorAccess} 
-                    onChange={handleInputChange} 
-                    required 
-                  />
-                </div>
-                
-                <div className="space-y-2">
-                  <Label htmlFor="responsibleEmail">Email Responsable</Label>
-                  <Input 
-                    id="responsibleEmail" 
-                    name="responsibleEmail" 
-                    type="email" 
-                    value={formData.responsibleEmail} 
-                    onChange={handleInputChange} 
-                    required 
-                  />
-                </div>
-              </div>
-              
-              <div className="space-y-2">
-                <Label>Categoría</Label>
-                <RadioGroup 
-                  value={formData.category} 
-                  onValueChange={handleCategoryChange}
-                  className="flex space-x-4"
-                >
-                  <div className="flex items-center space-x-2">
-                    <RadioGroupItem value="specific" id="specific" />
-                    <Label htmlFor="specific" className="cursor-pointer">Específica</Label>
-                  </div>
-                  <div className="flex items-center space-x-2">
-                    <RadioGroupItem value="preferred" id="preferred" />
-                    <Label htmlFor="preferred" className="cursor-pointer">Preferente</Label>
-                  </div>
-                  <div className="flex items-center space-x-2">
-                    <RadioGroupItem value="all" id="all" />
-                    <Label htmlFor="all" className="cursor-pointer">Todas</Label>
-                  </div>
-                </RadioGroup>
-              </div>
-            </div>
-            
-            <DialogFooter>
-              <Button variant="outline" type="button" onClick={() => setDialogOpen(false)}>
-                Cancelar
-              </Button>
-              <Button type="submit">
-                {formMode === 'create' ? 'Crear' : 'Guardar cambios'}
-              </Button>
-            </DialogFooter>
-          </form>
+          <CompanyForm 
+            formData={formData}
+            formMode={formMode}
+            logoUrl={logoUrl}
+            onSubmit={handleSubmit}
+            onCancel={() => setDialogOpen(false)}
+            onInputChange={handleInputChange}
+            onCategoryChange={handleCategoryChange}
+            onLogoUpload={handleLogoUpload}
+          />
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={specDialogOpen} onOpenChange={setSpecDialogOpen}>
+        <DialogContent className="sm:max-w-[600px]">
+          <DialogHeader>
+            <DialogTitle>Añadir Especificación</DialogTitle>
+            <DialogDescription>
+              Añada información específica para {selectedCompany?.name}.
+            </DialogDescription>
+          </DialogHeader>
+          
+          <SpecificationForm 
+            title={specFormData.title}
+            content={specFormData.content}
+            category={specFormData.category}
+            specCategories={specCategories}
+            onInputChange={handleSpecInputChange}
+            onCategoryChange={handleSpecCategoryChange}
+            onCancel={() => setSpecDialogOpen(false)}
+            onSubmit={handleSpecSubmit}
+          />
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={categoryDialogOpen} onOpenChange={setCategoryDialogOpen}>
+        <DialogContent className="sm:max-w-[500px]">
+          <DialogHeader>
+            <DialogTitle>Añadir Categoría de Especificación</DialogTitle>
+            <DialogDescription>
+              Cree una nueva categoría para organizar las especificaciones.
+            </DialogDescription>
+          </DialogHeader>
+          
+          <CategoryForm 
+            name={categoryFormData.name}
+            slug={categoryFormData.slug}
+            onNameChange={handleCategoryNameChange}
+            onSlugChange={handleCategorySlugChange}
+            onCancel={() => setCategoryDialogOpen(false)}
+            onSubmit={handleCategorySubmit}
+          />
         </DialogContent>
       </Dialog>
     </div>

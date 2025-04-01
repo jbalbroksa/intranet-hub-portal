@@ -1,17 +1,13 @@
-import React, { useState } from 'react';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Card, CardContent } from '@/components/ui/card';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { Label } from '@/components/ui/label';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Search, Plus, Edit, Trash, Filter, ChevronRight, Package, Settings } from 'lucide-react';
-import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { toast } from 'sonner';
-import { Textarea } from "@/components/ui/textarea";
 
+import React, { useState } from 'react';
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { toast } from 'sonner';
+import ProductFilters from '@/components/products/ProductFilters';
+import ProductsList from '@/components/products/ProductsList';
+import ProductForm from '@/components/products/ProductForm';
+import CategoryManager from '@/components/products/CategoryManager';
+
+// Mock data for categories
 const mockCategories = [
   { 
     id: 1, 
@@ -100,6 +96,7 @@ const mockCategories = [
   },
 ];
 
+// Mock data for companies
 const mockCompanies = [
   { id: 1, name: 'Mapfre' },
   { id: 2, name: 'Allianz' },
@@ -108,6 +105,7 @@ const mockCompanies = [
   { id: 5, name: 'Zurich' },
 ];
 
+// Mock data for products
 const mockProducts = [
   { id: 1, name: 'Seguro Todo Riesgo Plus', description: 'Seguro a todo riesgo con las mejores coberturas', categoryId: 1, subcategoryId: 1, companies: [1, 3], features: ['Asistencia 24h', 'Vehículo de sustitución', 'Daños propios'], strengths: 'Cobertura completa, precio competitivo', weaknesses: 'Franquicia alta para conductores noveles', observations: 'Recomendado para familias' },
   { id: 2, name: 'Seguro Hogar Completo', description: 'Protección integral para tu hogar', categoryId: 2, subcategoryId: 5, companies: [2, 5], features: ['Daños por agua', 'Robo', 'Responsabilidad civil'], strengths: 'Amplia cobertura en daños estéticos', weaknesses: 'No cubre daños a terceros fuera del hogar', observations: 'Ideal para viviendas de más de 90m²' },
@@ -156,32 +154,26 @@ type Product = {
   observations?: string;
 };
 
+type CategoryFormData = {
+  level: 'category' | 'subcategory' | 'level3';
+  name: string;
+  parentCategoryId?: number;
+  parentSubcategoryId?: number;
+};
+
 const Products = () => {
   const [products, setProducts] = useState<Product[]>(mockProducts);
   const [categories, setCategories] = useState<Category[]>(mockCategories);
   const [companies] = useState<Company[]>(mockCompanies);
   const [searchTerm, setSearchTerm] = useState('');
   const [dialogOpen, setDialogOpen] = useState(false);
-  const [categoryDialogOpen, setCategoryDialogOpen] = useState(false);
   const [formMode, setFormMode] = useState<FormMode>('create');
   const [currentProduct, setCurrentProduct] = useState<Product | null>(null);
   const [expandedCategories, setExpandedCategories] = useState<number[]>([]);
   const [expandedSubcategories, setExpandedSubcategories] = useState<number[]>([]);
   const [selectedCategoryFilter, setSelectedCategoryFilter] = useState<number | null>(null);
-  const [selectedSubcategoryFilter, setSelectedSubcategoryFilter] = useState<number | null>(null);
-  const [selectedLevel3Filter, setSelectedLevel3Filter] = useState<number | null>(null);
   const [selectedCompanyFilter, setSelectedCompanyFilter] = useState<number | null>(null);
   const [activeCategoryTab, setActiveCategoryTab] = useState('list');
-  
-  const [categoryFormData, setCategoryFormData] = useState<{
-    level: 'category' | 'subcategory' | 'level3',
-    name: string,
-    parentCategoryId?: number,
-    parentSubcategoryId?: number
-  }>({
-    level: 'category',
-    name: '',
-  });
   
   const [formData, setFormData] = useState<Omit<Product, 'id'>>({
     name: '',
@@ -190,7 +182,7 @@ const Products = () => {
     subcategoryId: 0,
     level3CategoryId: undefined,
     companies: [],
-    features: [],
+    features: [''],
     strengths: '',
     weaknesses: '',
     observations: '',
@@ -202,17 +194,13 @@ const Products = () => {
 
   const filteredProducts = products.filter(product => {
     const matchesSearch = product.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         product.description.toLowerCase().includes(searchTerm.toLowerCase());
+                        product.description.toLowerCase().includes(searchTerm.toLowerCase());
     
     const matchesCategory = selectedCategoryFilter === null || product.categoryId === selectedCategoryFilter;
     
-    const matchesSubcategory = selectedSubcategoryFilter === null || product.subcategoryId === selectedSubcategoryFilter;
-    
-    const matchesLevel3 = selectedLevel3Filter === null || product.level3CategoryId === selectedLevel3Filter;
-    
     const matchesCompany = selectedCompanyFilter === null || product.companies.includes(selectedCompanyFilter);
     
-    return matchesSearch && matchesCategory && matchesSubcategory && matchesLevel3 && matchesCompany;
+    return matchesSearch && matchesCategory && matchesCompany;
   });
 
   const toggleCategoryExpansion = (categoryId: number) => {
@@ -231,33 +219,21 @@ const Products = () => {
     );
   };
 
-  const handleCategoryFilter = (categoryId: number) => {
-    setSelectedCategoryFilter(prevCategory => prevCategory === categoryId ? null : categoryId);
-    setSelectedSubcategoryFilter(null);
-    setSelectedLevel3Filter(null);
-  };
-
-  const handleSubcategoryFilter = (subcategoryId: number) => {
-    setSelectedSubcategoryFilter(prevSubcategory => prevSubcategory === subcategoryId ? null : subcategoryId);
-    setSelectedLevel3Filter(null);
-  };
-
-  const handleCompanyFilter = (companyId: number) => {
-    setSelectedCompanyFilter(prevCompany => prevCompany === companyId ? null : companyId);
-  };
-
-  const handleLevel3Filter = (level3Id: number) => {
-    setSelectedLevel3Filter(prevLevel3 => prevLevel3 === level3Id ? null : level3Id);
-  };
-
   const clearFilters = () => {
     setSelectedCategoryFilter(null);
-    setSelectedSubcategoryFilter(null);
-    setSelectedLevel3Filter(null);
     setSelectedCompanyFilter(null);
+    setSearchTerm('');
   };
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target;
+    setFormData({
+      ...formData,
+      [name]: value,
+    });
+  };
+
+  const handleTextAreaChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     const { name, value } = e.target;
     setFormData({
       ...formData,
@@ -288,7 +264,7 @@ const Products = () => {
     const level3Id = parseInt(value);
     setFormData({
       ...formData,
-      level3CategoryId: level3Id,
+      level3CategoryId: level3Id === 0 ? undefined : level3Id,
     });
   };
 
@@ -339,13 +315,6 @@ const Products = () => {
       strengths: '',
       weaknesses: '',
       observations: '',
-    });
-  };
-
-  const resetCategoryForm = () => {
-    setCategoryFormData({
-      level: 'category',
-      name: '',
     });
   };
 
@@ -400,124 +369,6 @@ const Products = () => {
     
     setDialogOpen(false);
     resetForm();
-  };
-
-  const openCategoryDialog = () => {
-    resetCategoryForm();
-    setCategoryDialogOpen(true);
-  };
-
-  const handleCategoryLevelChange = (level: 'category' | 'subcategory' | 'level3') => {
-    setCategoryFormData({
-      ...categoryFormData,
-      level,
-      ...(level === 'category' ? { parentCategoryId: undefined, parentSubcategoryId: undefined } : {}),
-    });
-  };
-
-  const handleParentCategoryChange = (value: string) => {
-    const categoryId = parseInt(value);
-    setCategoryFormData({
-      ...categoryFormData,
-      parentCategoryId: categoryId,
-      parentSubcategoryId: undefined,
-    });
-  };
-
-  const handleParentSubcategoryChange = (value: string) => {
-    const subcategoryId = parseInt(value);
-    setCategoryFormData({
-      ...categoryFormData,
-      parentSubcategoryId: subcategoryId,
-    });
-  };
-
-  const handleCategoryFormInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { name, value } = e.target;
-    setCategoryFormData({
-      ...categoryFormData,
-      [name]: value,
-    });
-  };
-
-  const handleCategorySubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    
-    if (categoryFormData.level === 'category') {
-      const newCategory: Category = {
-        id: Math.max(0, ...categories.map(c => c.id)) + 1,
-        name: categoryFormData.name,
-        subcategories: [],
-      };
-      
-      setCategories([...categories, newCategory]);
-      toast.success("Categoría añadida correctamente");
-    } 
-    else if (categoryFormData.level === 'subcategory' && categoryFormData.parentCategoryId) {
-      const newSubcategoryId = Math.max(0, ...categories.flatMap(c => c.subcategories.map(s => s.id))) + 1;
-      
-      const updatedCategories = categories.map(category => {
-        if (category.id === categoryFormData.parentCategoryId) {
-          return {
-            ...category,
-            subcategories: [
-              ...category.subcategories,
-              {
-                id: newSubcategoryId,
-                name: categoryFormData.name,
-                parent_id: category.id,
-                level3: [],
-              }
-            ],
-          };
-        }
-        return category;
-      });
-      
-      setCategories(updatedCategories);
-      toast.success("Subcategoría añadida correctamente");
-    }
-    else if (categoryFormData.level === 'level3' && categoryFormData.parentCategoryId && categoryFormData.parentSubcategoryId) {
-      const newLevel3Id = Math.max(
-        0, 
-        ...categories.flatMap(c => 
-          c.subcategories.flatMap(s => 
-            s.level3.map(l => l.id)
-          )
-        )
-      ) + 1;
-      
-      const updatedCategories = categories.map(category => {
-        if (category.id === categoryFormData.parentCategoryId) {
-          return {
-            ...category,
-            subcategories: category.subcategories.map(subcategory => {
-              if (subcategory.id === categoryFormData.parentSubcategoryId) {
-                return {
-                  ...subcategory,
-                  level3: [
-                    ...subcategory.level3,
-                    {
-                      id: newLevel3Id,
-                      name: categoryFormData.name,
-                      parent_id: subcategory.id,
-                    }
-                  ],
-                };
-              }
-              return subcategory;
-            }),
-          };
-        }
-        return category;
-      });
-      
-      setCategories(updatedCategories);
-      toast.success("Subcategoría de nivel 3 añadida correctamente");
-    }
-    
-    setCategoryDialogOpen(false);
-    resetCategoryForm();
   };
 
   const handleDelete = (id: number) => {
@@ -602,6 +453,81 @@ const Products = () => {
     }
   };
 
+  const handleCategorySubmit = (categoryFormData: CategoryFormData) => {
+    if (categoryFormData.level === 'category') {
+      const newCategory: Category = {
+        id: Math.max(0, ...categories.map(c => c.id)) + 1,
+        name: categoryFormData.name,
+        subcategories: [],
+      };
+      
+      setCategories([...categories, newCategory]);
+      toast.success("Categoría añadida correctamente");
+    } 
+    else if (categoryFormData.level === 'subcategory' && categoryFormData.parentCategoryId) {
+      const newSubcategoryId = Math.max(0, ...categories.flatMap(c => c.subcategories.map(s => s.id))) + 1;
+      
+      const updatedCategories = categories.map(category => {
+        if (category.id === categoryFormData.parentCategoryId) {
+          return {
+            ...category,
+            subcategories: [
+              ...category.subcategories,
+              {
+                id: newSubcategoryId,
+                name: categoryFormData.name,
+                parent_id: category.id,
+                level3: [],
+              }
+            ],
+          };
+        }
+        return category;
+      });
+      
+      setCategories(updatedCategories);
+      toast.success("Subcategoría añadida correctamente");
+    }
+    else if (categoryFormData.level === 'level3' && categoryFormData.parentCategoryId && categoryFormData.parentSubcategoryId) {
+      const newLevel3Id = Math.max(
+        0, 
+        ...categories.flatMap(c => 
+          c.subcategories.flatMap(s => 
+            s.level3.map(l => l.id)
+          )
+        )
+      ) + 1;
+      
+      const updatedCategories = categories.map(category => {
+        if (category.id === categoryFormData.parentCategoryId) {
+          return {
+            ...category,
+            subcategories: category.subcategories.map(subcategory => {
+              if (subcategory.id === categoryFormData.parentSubcategoryId) {
+                return {
+                  ...subcategory,
+                  level3: [
+                    ...subcategory.level3,
+                    {
+                      id: newLevel3Id,
+                      name: categoryFormData.name,
+                      parent_id: subcategory.id,
+                    }
+                  ],
+                };
+              }
+              return subcategory;
+            }),
+          };
+        }
+        return category;
+      });
+      
+      setCategories(updatedCategories);
+      toast.success("Subcategoría de nivel 3 añadida correctamente");
+    }
+  };
+
   const getCategoryName = (categoryId: number) => {
     const category = categories.find(c => c.id === categoryId);
     return category ? category.name : 'Sin categoría';
@@ -622,604 +548,77 @@ const Products = () => {
     }).filter(Boolean).join(', ');
   };
 
-  const getLevel3Name = (categoryId: number, subcategoryId: number, level3Id?: number) => {
-    if (!level3Id) return '';
-    
-    const category = categories.find(c => c.id === categoryId);
-    if (!category) return '';
-    
-    const subcategory = category.subcategories.find(s => s.id === subcategoryId);
-    if (!subcategory) return '';
-    
-    const level3 = subcategory.level3.find(l => l.id === level3Id);
-    return level3 ? level3.name : '';
-  };
-
-  const getAvailableSubcategories = () => {
-    const category = categories.find(c => c.id === formData.categoryId);
-    return category ? category.subcategories : [];
-  };
-
-  const getAvailableLevel3Categories = () => {
-    const category = categories.find(c => c.id === formData.categoryId);
-    if (!category) return [];
-    
-    const subcategory = category.subcategories.find(s => s.id === formData.subcategoryId);
-    return subcategory ? subcategory.level3 : [];
-  };
-
-  const getSubcategoriesForCategory = (categoryId: number) => {
-    const category = categories.find(c => c.id === categoryId);
-    return category ? category.subcategories : [];
-  };
-
   return (
     <div className="space-y-6 animate-slideInUp">
       <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
         <div className="md:col-span-1">
-          <Card>
-            <CardContent className="p-4">
-              <div className="space-y-4">
-                <div className="flex items-center justify-between">
-                  <h3 className="font-medium">Filtros</h3>
-                  <Button variant="ghost" size="sm" onClick={clearFilters}>
-                    Limpiar
-                  </Button>
-                </div>
-                
-                <div className="space-y-4">
-                  <div>
-                    <h4 className="text-sm font-medium mb-2">Categorías</h4>
-                    <ul className="space-y-1">
-                      {categories.map(category => (
-                        <li key={category.id}>
-                          <Collapsible 
-                            open={expandedCategories.includes(category.id)}
-                            onOpenChange={() => toggleCategoryExpansion(category.id)}
-                          >
-                            <div className="flex items-center">
-                              <button 
-                                type="button"
-                                className={`text-sm flex items-center justify-between w-full px-2 py-1.5 rounded-md ${selectedCategoryFilter === category.id ? 'bg-secondary text-secondary-foreground' : 'hover:bg-muted'}`}
-                                onClick={() => handleCategoryFilter(category.id)}
-                              >
-                                <span>{category.name}</span>
-                              </button>
-                              
-                              <CollapsibleTrigger asChild>
-                                <Button variant="ghost" size="sm" className="h-6 w-6 p-0 ml-1">
-                                  <ChevronRight className={`h-4 w-4 transition-transform ${expandedCategories.includes(category.id) ? 'rotate-90' : ''}`} />
-                                </Button>
-                              </CollapsibleTrigger>
-                            </div>
-                            
-                            <CollapsibleContent>
-                              <ul className="pl-4 mt-1 space-y-1">
-                                {category.subcategories.map(subcategory => (
-                                  <li key={subcategory.id}>
-                                    <Collapsible
-                                      open={expandedSubcategories.includes(subcategory.id)}
-                                      onOpenChange={() => toggleSubcategoryExpansion(subcategory.id)}
-                                    >
-                                      <div className="flex items-center">
-                                        <button 
-                                          type="button"
-                                          className={`text-sm w-full text-left px-2 py-1.5 rounded-md ${selectedSubcategoryFilter === subcategory.id ? 'bg-secondary text-secondary-foreground' : 'hover:bg-muted'}`}
-                                          onClick={() => handleSubcategoryFilter(subcategory.id)}
-                                        >
-                                          {subcategory.name}
-                                        </button>
-                                        
-                                        {subcategory.level3.length > 0 && (
-                                          <CollapsibleTrigger asChild>
-                                            <Button variant="ghost" size="sm" className="h-6 w-6 p-0 ml-1">
-                                              <ChevronRight className={`h-4 w-4 transition-transform ${expandedSubcategories.includes(subcategory.id) ? 'rotate-90' : ''}`} />
-                                            </Button>
-                                          </CollapsibleTrigger>
-                                        )}
-                                      </div>
-                                      
-                                      {subcategory.level3.length > 0 && (
-                                        <CollapsibleContent>
-                                          <ul className="pl-4 mt-1 space-y-1">
-                                            {subcategory.level3.map(level3 => (
-                                              <li key={level3.id}>
-                                                <button 
-                                                  type="button"
-                                                  className={`text-sm w-full text-left px-2 py-1.5 rounded-md ${selectedLevel3Filter === level3.id ? 'bg-secondary text-secondary-foreground' : 'hover:bg-muted'}`}
-                                                  onClick={() => handleLevel3Filter(level3.id)}
-                                                >
-                                                  {level3.name}
-                                                </button>
-                                              </li>
-                                            ))}
-                                          </ul>
-                                        </CollapsibleContent>
-                                      )}
-                                    </Collapsible>
-                                  </li>
-                                ))}
-                              </ul>
-                            </CollapsibleContent>
-                          </Collapsible>
-                        </li>
-                      ))}
-                    </ul>
-                  </div>
-                  
-                  <div>
-                    <h4 className="text-sm font-medium mb-2">Compañías</h4>
-                    <ul className="space-y-1">
-                      {companies.map(company => (
-                        <li key={company.id}>
-                          <button 
-                            type="button"
-                            className={`text-sm w-full text-left px-2 py-1.5 rounded-md ${selectedCompanyFilter === company.id ? 'bg-secondary text-secondary-foreground' : 'hover:bg-muted'}`}
-                            onClick={() => handleCompanyFilter(company.id)}
-                          >
-                            {company.name}
-                          </button>
-                        </li>
-                      ))}
-                    </ul>
-                  </div>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
+          <CategoryManager
+            categories={categories}
+            activeCategoryTab={activeCategoryTab}
+            expandedCategories={expandedCategories}
+            expandedSubcategories={expandedSubcategories}
+            onTabChange={setActiveCategoryTab}
+            onToggleCategoryExpansion={toggleCategoryExpansion}
+            onToggleSubcategoryExpansion={toggleSubcategoryExpansion}
+            onDeleteCategory={handleDeleteCategory}
+            onDeleteSubcategory={handleDeleteSubcategory}
+            onDeleteLevel3={handleDeleteLevel3}
+            onCategorySubmit={handleCategorySubmit}
+          />
         </div>
-        
+
         <div className="md:col-span-3 space-y-4">
-          <Tabs defaultValue="products" className="w-full">
-            <TabsList className="grid w-full grid-cols-2">
-              <TabsTrigger value="products">Productos</TabsTrigger>
-              <TabsTrigger value="categories">Gestionar Categorías</TabsTrigger>
-            </TabsList>
-            
-            <TabsContent value="products" className="space-y-4">
-              <div className="flex flex-col md:flex-row gap-4 items-start md:items-center justify-between">
-                <div className="relative w-full md:w-96">
-                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                  <Input
-                    placeholder="Buscar productos..."
-                    className="pl-9"
-                    value={searchTerm}
-                    onChange={handleSearchChange}
-                  />
-                </div>
-                
-                <Button onClick={openCreateDialog}>
-                  <Plus className="h-4 w-4 mr-2" />
-                  Nuevo Producto
-                </Button>
-              </div>
-              
-              <Card>
-                <CardContent className="p-0">
-                  <Table>
-                    <TableHeader>
-                      <TableRow>
-                        <TableHead>Producto</TableHead>
-                        <TableHead className="hidden md:table-cell">Categoría</TableHead>
-                        <TableHead className="hidden md:table-cell">Compañías</TableHead>
-                        <TableHead className="text-right">Acciones</TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {filteredProducts.length > 0 ? (
-                        filteredProducts.map((product) => (
-                          <TableRow key={product.id}>
-                            <TableCell>
-                              <div>
-                                <div className="font-medium">{product.name}</div>
-                                <div className="text-sm text-muted-foreground">{product.description}</div>
-                              </div>
-                            </TableCell>
-                            <TableCell className="hidden md:table-cell">
-                              <div>
-                                <div>{getCategoryName(product.categoryId)}</div>
-                                <div className="text-sm text-muted-foreground">{getSubcategoryName(product.categoryId, product.subcategoryId)}</div>
-                                {product.level3CategoryId && (
-                                  <div className="text-xs text-muted-foreground">
-                                    {getLevel3Name(product.categoryId, product.subcategoryId, product.level3CategoryId)}
-                                  </div>
-                                )}
-                              </div>
-                            </TableCell>
-                            <TableCell className="hidden md:table-cell">{getCompanyNames(product.companies)}</TableCell>
-                            <TableCell className="text-right">
-                              <div className="flex justify-end gap-2">
-                                <Button variant="ghost" size="sm" onClick={() => openEditDialog(product)}>
-                                  <Edit className="h-4 w-4" />
-                                </Button>
-                                <Button variant="ghost" size="sm" onClick={() => handleDelete(product.id)}>
-                                  <Trash className="h-4 w-4" />
-                                </Button>
-                              </div>
-                            </TableCell>
-                          </TableRow>
-                        ))
-                      ) : (
-                        <TableRow>
-                          <TableCell colSpan={4} className="text-center py-6">
-                            No se encontraron productos
-                          </TableCell>
-                        </TableRow>
-                      )}
-                    </TableBody>
-                  </Table>
-                </CardContent>
-              </Card>
-            </TabsContent>
-            
-            <TabsContent value="categories" className="space-y-4">
-              <div className="flex items-center justify-between">
-                <h3 className="text-lg font-medium">Gestión de Categorías</h3>
-                <div className="flex gap-2">
-                  <Tabs value={activeCategoryTab} onValueChange={setActiveCategoryTab} className="w-auto">
-                    <TabsList>
-                      <TabsTrigger value="list">Lista</TabsTrigger>
-                      <TabsTrigger value="tree">Árbol</TabsTrigger>
-                    </TabsList>
-                  </Tabs>
-                  <Button onClick={openCategoryDialog}>
-                    <Plus className="h-4 w-4 mr-2" />
-                    Nueva Categoría
-                  </Button>
-                </div>
-              </div>
+          <ProductFilters
+            searchTerm={searchTerm}
+            categories={categories}
+            companies={companies}
+            selectedCategoryFilter={selectedCategoryFilter}
+            selectedCompanyFilter={selectedCompanyFilter}
+            onSearchChange={handleSearchChange}
+            onCategoryFilterChange={setSelectedCategoryFilter}
+            onCompanyFilterChange={setSelectedCompanyFilter}
+            onClearFilters={clearFilters}
+            onCreateClick={openCreateDialog}
+          />
 
-              <Card>
-                <CardContent className="p-0">
-                  <Table>
-                    <TableHeader>
-                      <TableRow>
-                        <TableHead>Nombre</TableHead>
-                        <TableHead>Tipo</TableHead>
-                        <TableHead>Padre</TableHead>
-                        <TableHead className="text-right">Acciones</TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {categories.map((category) => (
-                        <React.Fragment key={category.id}>
-                          <TableRow>
-                            <TableCell>
-                              <div className="font-medium">{category.name}</div>
-                            </TableCell>
-                            <TableCell>Categoría</TableCell>
-                            <TableCell>-</TableCell>
-                            <TableCell className="text-right">
-                              <div className="flex justify-end gap-2">
-                                <Button variant="ghost" size="sm" onClick={() => handleDeleteCategory(category.id)}>
-                                  <Trash className="h-4 w-4" />
-                                </Button>
-                              </div>
-                            </TableCell>
-                          </TableRow>
-                          
-                          {category.subcategories.map((subcategory) => (
-                            <React.Fragment key={subcategory.id}>
-                              <TableRow>
-                                <TableCell>
-                                  <div className="font-medium pl-4">{subcategory.name}</div>
-                                </TableCell>
-                                <TableCell>Subcategoría</TableCell>
-                                <TableCell>{category.name}</TableCell>
-                                <TableCell className="text-right">
-                                  <div className="flex justify-end gap-2">
-                                    <Button variant="ghost" size="sm" onClick={() => handleDeleteSubcategory(category.id, subcategory.id)}>
-                                      <Trash className="h-4 w-4" />
-                                    </Button>
-                                  </div>
-                                </TableCell>
-                              </TableRow>
-                              
-                              {subcategory.level3.map((level3) => (
-                                <TableRow key={level3.id}>
-                                  <TableCell>
-                                    <div className="font-medium pl-8">{level3.name}</div>
-                                  </TableCell>
-                                  <TableCell>Nivel 3</TableCell>
-                                  <TableCell>{subcategory.name}</TableCell>
-                                  <TableCell className="text-right">
-                                    <div className="flex justify-end gap-2">
-                                      <Button variant="ghost" size="sm" onClick={() => handleDeleteLevel3(category.id, subcategory.id, level3.id)}>
-                                        <Trash className="h-4 w-4" />
-                                      </Button>
-                                    </div>
-                                  </TableCell>
-                                </TableRow>
-                              ))}
-                            </React.Fragment>
-                          ))}
-                        </React.Fragment>
-                      ))}
-                    </TableBody>
-                  </Table>
-                </CardContent>
-              </Card>
-
-              <Dialog open={categoryDialogOpen} onOpenChange={setCategoryDialogOpen}>
-                <DialogContent className="sm:max-w-md">
-                  <DialogHeader>
-                    <DialogTitle>Crear Nueva Categoría</DialogTitle>
-                    <DialogDescription>
-                      Rellena el formulario para crear una nueva categoría o subcategoría
-                    </DialogDescription>
-                  </DialogHeader>
-                  <form onSubmit={handleCategorySubmit}>
-                    <div className="space-y-4 py-4">
-                      <div className="grid grid-cols-1 gap-4">
-                        <div className="space-y-2">
-                          <Label htmlFor="categoryLevel">Tipo</Label>
-                          <Select
-                            value={categoryFormData.level}
-                            onValueChange={(value) => handleCategoryLevelChange(value as 'category' | 'subcategory' | 'level3')}
-                          >
-                            <SelectTrigger>
-                              <SelectValue placeholder="Selecciona el tipo" />
-                            </SelectTrigger>
-                            <SelectContent>
-                              <SelectItem value="category">Categoría</SelectItem>
-                              <SelectItem value="subcategory">Subcategoría</SelectItem>
-                              <SelectItem value="level3">Nivel 3</SelectItem>
-                            </SelectContent>
-                          </Select>
-                        </div>
-                        
-                        {categoryFormData.level !== 'category' && (
-                          <div className="space-y-2">
-                            <Label htmlFor="parentCategory">Categoría Padre</Label>
-                            <Select
-                              value={categoryFormData.parentCategoryId?.toString() || ""}
-                              onValueChange={handleParentCategoryChange}
-                            >
-                              <SelectTrigger>
-                                <SelectValue placeholder="Selecciona la categoría padre" />
-                              </SelectTrigger>
-                              <SelectContent>
-                                {categories.map((category) => (
-                                  <SelectItem key={category.id} value={category.id.toString()}>
-                                    {category.name}
-                                  </SelectItem>
-                                ))}
-                              </SelectContent>
-                            </Select>
-                          </div>
-                        )}
-                        
-                        {categoryFormData.level === 'level3' && categoryFormData.parentCategoryId && (
-                          <div className="space-y-2">
-                            <Label htmlFor="parentSubcategory">Subcategoría Padre</Label>
-                            <Select
-                              value={categoryFormData.parentSubcategoryId?.toString() || ""}
-                              onValueChange={handleParentSubcategoryChange}
-                            >
-                              <SelectTrigger>
-                                <SelectValue placeholder="Selecciona la subcategoría padre" />
-                              </SelectTrigger>
-                              <SelectContent>
-                                {getSubcategoriesForCategory(categoryFormData.parentCategoryId).map((subcategory) => (
-                                  <SelectItem key={subcategory.id} value={subcategory.id.toString()}>
-                                    {subcategory.name}
-                                  </SelectItem>
-                                ))}
-                              </SelectContent>
-                            </Select>
-                          </div>
-                        )}
-                        
-                        <div className="space-y-2">
-                          <Label htmlFor="categoryName">Nombre</Label>
-                          <Input
-                            id="categoryName"
-                            name="name"
-                            value={categoryFormData.name}
-                            onChange={handleCategoryFormInputChange}
-                            placeholder="Nombre de la categoría"
-                          />
-                        </div>
-                      </div>
-                    </div>
-                    <DialogFooter>
-                      <Button type="submit">Guardar</Button>
-                    </DialogFooter>
-                  </form>
-                </DialogContent>
-              </Dialog>
-            </TabsContent>
-          </Tabs>
+          <ProductsList
+            products={filteredProducts}
+            getCategoryName={getCategoryName}
+            getSubcategoryName={getSubcategoryName}
+            getCompanyNames={getCompanyNames}
+            onEditProduct={openEditDialog}
+            onDeleteProduct={handleDelete}
+          />
         </div>
       </div>
-      
+
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-        <DialogContent className="sm:max-w-md">
+        <DialogContent className="sm:max-w-[800px]">
           <DialogHeader>
             <DialogTitle>
-              {formMode === 'create' ? 'Crear Nuevo Producto' : 'Editar Producto'}
+              {formMode === 'create' ? 'Crear nuevo producto' : 'Editar producto'}
             </DialogTitle>
             <DialogDescription>
-              Rellena el formulario para {formMode === 'create' ? 'crear un nuevo producto' : 'editar el producto'}
+              Complete todos los campos para {formMode === 'create' ? 'crear un nuevo' : 'actualizar el'} producto.
             </DialogDescription>
           </DialogHeader>
-          <form onSubmit={handleSubmit}>
-            <div className="space-y-4 py-4">
-              <div className="grid grid-cols-1 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="name">Nombre</Label>
-                  <Input
-                    id="name"
-                    name="name"
-                    value={formData.name}
-                    onChange={handleInputChange}
-                    placeholder="Nombre del producto"
-                  />
-                </div>
-                
-                <div className="space-y-2">
-                  <Label htmlFor="description">Descripción</Label>
-                  <Textarea
-                    id="description"
-                    name="description"
-                    value={formData.description}
-                    onChange={(e) => setFormData({...formData, description: e.target.value})}
-                    placeholder="Descripción del producto"
-                    rows={3}
-                  />
-                </div>
-                
-                <div className="space-y-2">
-                  <Label htmlFor="strengths">Fortalezas</Label>
-                  <Textarea
-                    id="strengths"
-                    name="strengths"
-                    value={formData.strengths || ''}
-                    onChange={(e) => setFormData({...formData, strengths: e.target.value})}
-                    placeholder="Fortalezas del producto"
-                    rows={2}
-                  />
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="weaknesses">Debilidades</Label>
-                  <Textarea
-                    id="weaknesses"
-                    name="weaknesses"
-                    value={formData.weaknesses || ''}
-                    onChange={(e) => setFormData({...formData, weaknesses: e.target.value})}
-                    placeholder="Debilidades del producto"
-                    rows={2}
-                  />
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="observations">Observaciones</Label>
-                  <Textarea
-                    id="observations"
-                    name="observations"
-                    value={formData.observations || ''}
-                    onChange={(e) => setFormData({...formData, observations: e.target.value})}
-                    placeholder="Observaciones adicionales"
-                    rows={2}
-                  />
-                </div>
-                
-                <div className="space-y-2">
-                  <Label htmlFor="category">Categoría</Label>
-                  <Select
-                    value={formData.categoryId ? formData.categoryId.toString() : ""}
-                    onValueChange={handleCategoryChange}
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Selecciona una categoría" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {categories.map((category) => (
-                        <SelectItem key={category.id} value={category.id.toString()}>
-                          {category.name}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-                
-                {formData.categoryId > 0 && (
-                  <div className="space-y-2">
-                    <Label htmlFor="subcategory">Subcategoría</Label>
-                    <Select
-                      value={formData.subcategoryId ? formData.subcategoryId.toString() : ""}
-                      onValueChange={handleSubcategoryChange}
-                    >
-                      <SelectTrigger>
-                        <SelectValue placeholder="Selecciona una subcategoría" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {getAvailableSubcategories().map((subcategory) => (
-                          <SelectItem key={subcategory.id} value={subcategory.id.toString()}>
-                            {subcategory.name}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-                )}
-                
-                {formData.subcategoryId > 0 && getAvailableLevel3Categories().length > 0 && (
-                  <div className="space-y-2">
-                    <Label htmlFor="level3">Nivel 3</Label>
-                    <Select
-                      value={formData.level3CategoryId ? formData.level3CategoryId.toString() : ""}
-                      onValueChange={handleLevel3Change}
-                    >
-                      <SelectTrigger>
-                        <SelectValue placeholder="Selecciona un nivel 3" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {getAvailableLevel3Categories().map((level3) => (
-                          <SelectItem key={level3.id} value={level3.id.toString()}>
-                            {level3.name}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-                )}
-                
-                <div className="space-y-2">
-                  <Label>Compañías</Label>
-                  <div className="grid grid-cols-2 gap-2">
-                    {companies.map((company) => (
-                      <div key={company.id} className="flex items-center space-x-2">
-                        <input
-                          type="checkbox"
-                          id={`company-${company.id}`}
-                          checked={formData.companies.includes(company.id)}
-                          onChange={() => handleCompanyChange(company.id.toString())}
-                          className="h-4 w-4 rounded border-gray-300"
-                        />
-                        <label htmlFor={`company-${company.id}`}>{company.name}</label>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-                
-                <div className="space-y-2">
-                  <Label>Características</Label>
-                  {formData.features.map((feature, index) => (
-                    <div key={index} className="flex gap-2">
-                      <Input
-                        value={feature}
-                        onChange={(e) => handleFeatureChange(index, e.target.value)}
-                        placeholder="Característica del producto"
-                      />
-                      <Button
-                        type="button"
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => removeFeature(index)}
-                      >
-                        <Trash className="h-4 w-4" />
-                      </Button>
-                    </div>
-                  ))}
-                  <Button
-                    type="button"
-                    variant="outline"
-                    size="sm"
-                    onClick={addFeature}
-                    className="w-full mt-2"
-                  >
-                    <Plus className="h-4 w-4 mr-2" />
-                    Añadir Característica
-                  </Button>
-                </div>
-              </div>
-            </div>
-            <DialogFooter>
-              <Button type="submit">{formMode === 'create' ? 'Crear' : 'Actualizar'}</Button>
-            </DialogFooter>
-          </form>
+          
+          <ProductForm
+            formData={formData}
+            categories={categories}
+            companies={companies}
+            onSubmit={handleSubmit}
+            onCancel={() => setDialogOpen(false)}
+            onInputChange={handleInputChange}
+            onTextAreaChange={handleTextAreaChange}
+            onCategoryChange={handleCategoryChange}
+            onSubcategoryChange={handleSubcategoryChange}
+            onLevel3Change={handleLevel3Change}
+            onCompanyChange={handleCompanyChange}
+            onFeatureChange={handleFeatureChange}
+            addFeature={addFeature}
+            removeFeature={removeFeature}
+          />
         </DialogContent>
       </Dialog>
     </div>

@@ -1,7 +1,7 @@
 
 import React from 'react';
+import { Card, CardHeader, CardContent, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Trash } from 'lucide-react';
 import { Specification, SpecCategory } from '@/types/company';
 
@@ -20,7 +20,7 @@ const SpecificationItem: React.FC<SpecificationItemProps> = ({
     const category = specCategories.find(c => c.slug === categorySlug);
     return category ? category.name : 'Desconocido';
   };
-  
+
   const getSpecCategoryColor = (category: string) => {
     switch(category) {
       case 'requirements': return 'bg-blue-100 text-blue-800';
@@ -33,7 +33,7 @@ const SpecificationItem: React.FC<SpecificationItemProps> = ({
   };
 
   return (
-    <Card className="border">
+    <Card key={specification.id} className="border">
       <CardHeader className="pb-2">
         <div className="flex justify-between items-start">
           <div>

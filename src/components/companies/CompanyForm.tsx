@@ -1,41 +1,33 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
-import { Upload } from 'lucide-react';
 import { DialogFooter } from '@/components/ui/dialog';
-
-export type CompanyFormData = {
-  logo: string;
-  name: string;
-  website: string;
-  mediatorAccess: string;
-  responsibleEmail: string;
-  category: 'specific' | 'preferred' | 'all';
-};
+import { Upload } from 'lucide-react';
+import { Company } from '@/types/company';
 
 type CompanyFormProps = {
+  formData: Omit<Company, 'id'>;
   formMode: 'create' | 'edit';
-  formData: CompanyFormData;
   logoUrl: string;
+  onSubmit: (e: React.FormEvent) => void;
+  onCancel: () => void;
   onInputChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
   onCategoryChange: (value: string) => void;
   onLogoUpload: (e: React.ChangeEvent<HTMLInputElement>) => void;
-  onSubmit: (e: React.FormEvent) => void;
-  onCancel: () => void;
 };
 
 const CompanyForm: React.FC<CompanyFormProps> = ({
-  formMode,
   formData,
+  formMode,
   logoUrl,
+  onSubmit,
+  onCancel,
   onInputChange,
   onCategoryChange,
-  onLogoUpload,
-  onSubmit,
-  onCancel
+  onLogoUpload
 }) => {
   return (
     <form onSubmit={onSubmit} className="space-y-4">

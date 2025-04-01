@@ -2,18 +2,24 @@
 import React from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Edit, FileText, Trash } from 'lucide-react';
+import { FileText, Edit, Trash } from 'lucide-react';
 import { Company } from '@/types/company';
 
 type CompanyCardProps = {
   company: Company;
-  onView: (company: Company) => void;
-  onEdit: (company: Company) => void;
-  onDelete: (id: number) => void;
   getCategoryLabel: (category: string) => string;
+  onViewClick: () => void;
+  onEditClick: () => void;
+  onDeleteClick: () => void;
 };
 
-const CompanyCard = ({ company, onView, onEdit, onDelete, getCategoryLabel }: CompanyCardProps) => {
+const CompanyCard: React.FC<CompanyCardProps> = ({
+  company,
+  getCategoryLabel,
+  onViewClick,
+  onEditClick,
+  onDeleteClick
+}) => {
   return (
     <Card key={company.id} className="overflow-hidden hover:shadow-md transition-shadow">
       <div className="p-4 bg-muted/30 flex items-center justify-center h-40">
@@ -39,13 +45,13 @@ const CompanyCard = ({ company, onView, onEdit, onDelete, getCategoryLabel }: Co
             </div>
           </div>
           <div className="flex flex-col gap-1">
-            <Button variant="ghost" size="sm" onClick={() => onView(company)} className="h-8 px-2">
+            <Button variant="ghost" size="sm" onClick={onViewClick} className="h-8 px-2">
               <FileText className="h-4 w-4 mr-1" /> Ver
             </Button>
-            <Button variant="ghost" size="sm" onClick={() => onEdit(company)} className="h-8 px-2">
+            <Button variant="ghost" size="sm" onClick={onEditClick} className="h-8 px-2">
               <Edit className="h-4 w-4 mr-1" /> Editar
             </Button>
-            <Button variant="ghost" size="sm" onClick={() => onDelete(company.id)} className="h-8 px-2">
+            <Button variant="ghost" size="sm" onClick={onDeleteClick} className="h-8 px-2">
               <Trash className="h-4 w-4 mr-1" /> Eliminar
             </Button>
           </div>

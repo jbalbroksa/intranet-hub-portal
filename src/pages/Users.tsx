@@ -1,15 +1,13 @@
+
 import React, { useState } from 'react';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
 import { Card, CardContent } from '@/components/ui/card';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { Label } from '@/components/ui/label';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
-import { Search, Plus, Edit, Trash, Shield, User as UserIcon, LayoutGrid, List, Filter } from 'lucide-react';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { Textarea } from '@/components/ui/textarea';
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import UserFilters from '@/components/users/UserFilters';
+import UserCard from '@/components/users/UserCard';
+import UserTable from '@/components/users/UserTable';
+import UserForm from '@/components/users/UserForm';
+import UserDetail from '@/components/users/UserDetail';
+import EmptyNotifications from '@/components/notifications/EmptyNotifications';
 
 // Mock data for delegations
 const mockDelegations: Delegation[] = [
@@ -213,200 +211,49 @@ const Users = () => {
   return (
     <div className="space-y-6 animate-slideInUp">
       {/* Search and filter bar */}
-      <div className="flex flex-col md:flex-row gap-4 items-start md:items-center justify-between">
-        <div className="relative w-full md:w-96">
-          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-          <Input
-            placeholder="Buscar usuarios..."
-            className="pl-9"
-            value={searchTerm}
-            onChange={handleSearchChange}
-          />
-        </div>
-        
-        <div className="flex flex-wrap gap-2">
-          <Select
-            value={selectedDelegationFilter?.toString() || "all"}
-            onValueChange={handleDelegationFilter}
-          >
-            <SelectTrigger className="w-[180px]">
-              <div className="flex items-center">
-                <Filter className="h-4 w-4 mr-2" />
-                <span>{selectedDelegationFilter ? 'Delegación: ' + getDelegationName(selectedDelegationFilter) : 'Todas las delegaciones'}</span>
-              </div>
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">Todas las delegaciones</SelectItem>
-              {delegations.map(delegation => (
-                <SelectItem key={delegation.id} value={delegation.id.toString()}>
-                  {delegation.name}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-          
-          <div className="flex border rounded-md overflow-hidden">
-            <Button 
-              variant={viewMode === 'grid' ? 'secondary' : 'ghost'} 
-              size="sm" 
-              onClick={() => toggleViewMode('grid')}
-              className="rounded-none"
-            >
-              <LayoutGrid className="h-4 w-4" />
-            </Button>
-            <Button 
-              variant={viewMode === 'list' ? 'secondary' : 'ghost'} 
-              size="sm" 
-              onClick={() => toggleViewMode('list')}
-              className="rounded-none"
-            >
-              <List className="h-4 w-4" />
-            </Button>
-          </div>
-          
-          <Button onClick={openCreateDialog}>
-            <Plus className="h-4 w-4 mr-2" />
-            Nuevo Usuario
-          </Button>
-        </div>
-      </div>
+      <UserFilters
+        searchTerm={searchTerm}
+        selectedDelegationFilter={selectedDelegationFilter}
+        viewMode={viewMode}
+        delegations={delegations}
+        onSearchChange={handleSearchChange}
+        onDelegationFilterChange={handleDelegationFilter}
+        onViewModeToggle={toggleViewMode}
+        onCreateUserClick={openCreateDialog}
+      />
 
       {/* Users display */}
       {viewMode === 'grid' ? (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
           {filteredUsers.length > 0 ? (
             filteredUsers.map((user) => (
-              <Card key={user.id} className="overflow-hidden hover:shadow-md transition-shadow">
-                <div className="p-6 flex flex-col items-center text-center">
-                  <Avatar className="h-20 w-20 mb-4">
-                    <AvatarFallback className="text-lg">{getInitials(user.name)}</AvatarFallback>
-                  </Avatar>
-                  
-                  <h3 className="font-poppins font-medium text-lg">{user.name}</h3>
-                  
-                  <div className="text-sm text-muted-foreground mt-1">{user.position}</div>
-                  
-                  <div className="mt-2 mb-4">
-                    <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${user.role === 'admin' ? 'bg-primary/20 text-primary' : 'bg-secondary text-secondary-foreground'}`}>
-                      {user.role === 'admin' ? 'Administrador' : 'Usuario'}
-                    </span>
-                    <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-muted ml-2">
-                      {getDelegationName(user.delegationId)}
-                    </span>
-                  </div>
-                  
-                  <div className="space-y-2 w-full">
-                    <Button 
-                      variant="outline" 
-                      size="sm" 
-                      className="w-full justify-start"
-                      onClick={() => openDetailsDialog(user)}
-                    >
-                      <UserIcon className="h-4 w-4 mr-2" />
-                      Ver detalles
-                    </Button>
-                    
-                    <Button 
-                      variant="outline" 
-                      size="sm" 
-                      className="w-full justify-start"
-                      onClick={() => openEditDialog(user)}
-                    >
-                      <Edit className="h-4 w-4 mr-2" />
-                      Editar
-                    </Button>
-                    
-                    <Button 
-                      variant="outline" 
-                      size="sm" 
-                      className="w-full justify-start text-destructive hover:text-destructive"
-                      onClick={() => handleDelete(user.id)}
-                    >
-                      <Trash className="h-4 w-4 mr-2" />
-                      Eliminar
-                    </Button>
-                  </div>
-                </div>
-              </Card>
+              <UserCard
+                key={user.id}
+                user={user}
+                delegationName={getDelegationName(user.delegationId)}
+                getInitials={getInitials}
+                onDetailsClick={() => openDetailsDialog(user)}
+                onEditClick={() => openEditDialog(user)}
+                onDeleteClick={() => handleDelete(user.id)}
+              />
             ))
           ) : (
-            <div className="col-span-full text-center py-10">
-              <p>No se encontraron usuarios</p>
+            <div className="col-span-full">
+              <EmptyNotifications />
             </div>
           )}
         </div>
       ) : (
         <Card>
           <CardContent className="p-0">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Usuario</TableHead>
-                  <TableHead className="hidden md:table-cell">Delegación</TableHead>
-                  <TableHead className="hidden md:table-cell">Email</TableHead>
-                  <TableHead className="hidden md:table-cell">Rol</TableHead>
-                  <TableHead className="hidden md:table-cell">Último acceso</TableHead>
-                  <TableHead className="text-right">Acciones</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {filteredUsers.length > 0 ? (
-                  filteredUsers.map((user) => (
-                    <TableRow key={user.id}>
-                      <TableCell>
-                        <div className="flex items-center gap-3">
-                          <Avatar>
-                            <AvatarFallback>{getInitials(user.name)}</AvatarFallback>
-                          </Avatar>
-                          <div>
-                            <div className="font-medium">{user.name}</div>
-                            <div className="text-sm text-muted-foreground md:hidden">{user.email}</div>
-                            <div className="text-sm text-muted-foreground">{user.position}</div>
-                          </div>
-                        </div>
-                      </TableCell>
-                      <TableCell className="hidden md:table-cell">{getDelegationName(user.delegationId)}</TableCell>
-                      <TableCell className="hidden md:table-cell">{user.email}</TableCell>
-                      <TableCell className="hidden md:table-cell">
-                        <div className="flex items-center gap-2">
-                          {user.role === 'admin' ? (
-                            <>
-                              <Shield className="h-4 w-4 text-primary" />
-                              <span>Administrador</span>
-                            </>
-                          ) : (
-                            <>
-                              <UserIcon className="h-4 w-4" />
-                              <span>Usuario</span>
-                            </>
-                          )}
-                        </div>
-                      </TableCell>
-                      <TableCell className="hidden md:table-cell">{user.lastLogin}</TableCell>
-                      <TableCell className="text-right">
-                        <div className="flex justify-end gap-2">
-                          <Button variant="ghost" size="sm" onClick={() => openDetailsDialog(user)}>
-                            <UserIcon className="h-4 w-4" />
-                          </Button>
-                          <Button variant="ghost" size="sm" onClick={() => openEditDialog(user)}>
-                            <Edit className="h-4 w-4" />
-                          </Button>
-                          <Button variant="ghost" size="sm" onClick={() => handleDelete(user.id)}>
-                            <Trash className="h-4 w-4" />
-                          </Button>
-                        </div>
-                      </TableCell>
-                    </TableRow>
-                  ))
-                ) : (
-                  <TableRow>
-                    <TableCell colSpan={6} className="text-center py-6">
-                      No se encontraron usuarios
-                    </TableCell>
-                  </TableRow>
-                )}
-              </TableBody>
-            </Table>
+            <UserTable
+              users={filteredUsers}
+              getDelegationName={getDelegationName}
+              getInitials={getInitials}
+              onDetailsClick={openDetailsDialog}
+              onEditClick={openEditDialog}
+              onDeleteClick={handleDelete}
+            />
           </CardContent>
         </Card>
       )}
@@ -423,181 +270,33 @@ const Users = () => {
             </DialogDescription>
           </DialogHeader>
           
-          <form onSubmit={handleSubmit} className="space-y-4">
-            <div className="space-y-4">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="name">Nombre</Label>
-                  <Input 
-                    id="name" 
-                    name="name" 
-                    value={formData.name} 
-                    onChange={handleInputChange} 
-                    required 
-                  />
-                </div>
-                
-                <div className="space-y-2">
-                  <Label htmlFor="email">Email</Label>
-                  <Input 
-                    id="email" 
-                    name="email" 
-                    type="email" 
-                    value={formData.email} 
-                    onChange={handleInputChange} 
-                    required 
-                  />
-                </div>
-                
-                <div className="space-y-2">
-                  <Label htmlFor="position">Cargo</Label>
-                  <Input 
-                    id="position" 
-                    name="position" 
-                    value={formData.position} 
-                    onChange={handleInputChange} 
-                    required 
-                  />
-                </div>
-                
-                <div className="space-y-2">
-                  <Label htmlFor="delegation">Delegación</Label>
-                  <Select 
-                    value={formData.delegationId ? formData.delegationId.toString() : "0"} 
-                    onValueChange={handleDelegationChange}
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Seleccionar delegación" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {delegations.map(delegation => (
-                        <SelectItem key={delegation.id} value={delegation.id.toString()}>
-                          {delegation.name}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-              </div>
-              
-              <div className="space-y-2">
-                <Label htmlFor="bio">Biografía</Label>
-                <Textarea 
-                  id="bio" 
-                  name="bio" 
-                  value={formData.bio} 
-                  onChange={handleInputChange} 
-                  rows={3}
-                />
-              </div>
-              
-              <div className="space-y-2">
-                <Label>Rol</Label>
-                <RadioGroup 
-                  value={formData.role} 
-                  onValueChange={handleRoleChange}
-                  className="flex space-x-4"
-                >
-                  <div className="flex items-center space-x-2">
-                    <RadioGroupItem value="admin" id="admin" />
-                    <Label htmlFor="admin" className="cursor-pointer flex items-center gap-2">
-                      <Shield className="h-4 w-4 text-primary" />
-                      Administrador
-                    </Label>
-                  </div>
-                  <div className="flex items-center space-x-2">
-                    <RadioGroupItem value="user" id="user" />
-                    <Label htmlFor="user" className="cursor-pointer flex items-center gap-2">
-                      <UserIcon className="h-4 w-4" />
-                      Usuario
-                    </Label>
-                  </div>
-                </RadioGroup>
-              </div>
-              
-              {formMode === 'create' && (
-                <div className="text-sm text-muted-foreground">
-                  <p>El usuario recibirá un correo electrónico con instrucciones para establecer su contraseña.</p>
-                </div>
-              )}
-            </div>
-            
-            <DialogFooter>
-              <Button variant="outline" type="button" onClick={() => setDialogOpen(false)}>
-                Cancelar
-              </Button>
-              <Button type="submit">
-                {formMode === 'create' ? 'Crear' : 'Guardar cambios'}
-              </Button>
-            </DialogFooter>
-          </form>
+          <UserForm
+            formData={formData}
+            delegations={delegations}
+            formMode={formMode}
+            onSubmit={handleSubmit}
+            onCancel={() => setDialogOpen(false)}
+            onInputChange={handleInputChange}
+            onRoleChange={handleRoleChange}
+            onDelegationChange={handleDelegationChange}
+          />
         </DialogContent>
       </Dialog>
 
       {/* User details dialog */}
-      <Dialog open={detailsDialogOpen} onOpenChange={setDetailsDialogOpen}>
-        <DialogContent className="sm:max-w-[500px]">
-          <DialogHeader>
-            <DialogTitle>Detalles del Usuario</DialogTitle>
-          </DialogHeader>
-          
-          {currentUser && (
-            <div className="space-y-6">
-              <div className="flex flex-col items-center text-center">
-                <Avatar className="h-20 w-20 mb-3">
-                  <AvatarFallback className="text-lg">{getInitials(currentUser.name)}</AvatarFallback>
-                </Avatar>
-                
-                <h3 className="font-medium text-xl">{currentUser.name}</h3>
-                <div className="text-muted-foreground">{currentUser.position}</div>
-                
-                <div className="flex gap-2 mt-2">
-                  <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${currentUser.role === 'admin' ? 'bg-primary/20 text-primary' : 'bg-secondary text-secondary-foreground'}`}>
-                    {currentUser.role === 'admin' ? 'Administrador' : 'Usuario'}
-                  </span>
-                  <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-muted">
-                    {getDelegationName(currentUser.delegationId)}
-                  </span>
-                </div>
-              </div>
-              
-              <div className="space-y-4">
-                <div>
-                  <h4 className="text-sm font-medium text-muted-foreground mb-1">Email</h4>
-                  <p>{currentUser.email}</p>
-                </div>
-                
-                <div>
-                  <h4 className="text-sm font-medium text-muted-foreground mb-1">Delegación</h4>
-                  <p>{getDelegationName(currentUser.delegationId)}</p>
-                </div>
-                
-                <div>
-                  <h4 className="text-sm font-medium text-muted-foreground mb-1">Último acceso</h4>
-                  <p>{currentUser.lastLogin}</p>
-                </div>
-                
-                <div>
-                  <h4 className="text-sm font-medium text-muted-foreground mb-1">Biografía</h4>
-                  <p className="text-sm whitespace-pre-line">{currentUser.bio}</p>
-                </div>
-              </div>
-              
-              <div className="flex justify-end space-x-2">
-                <Button variant="outline" onClick={() => setDetailsDialogOpen(false)}>
-                  Cerrar
-                </Button>
-                <Button onClick={() => {
-                  setDetailsDialogOpen(false);
-                  openEditDialog(currentUser);
-                }}>
-                  Editar
-                </Button>
-              </div>
-            </div>
-          )}
-        </DialogContent>
-      </Dialog>
+      <UserDetail
+        user={currentUser}
+        isOpen={detailsDialogOpen}
+        getDelegationName={getDelegationName}
+        getInitials={getInitials}
+        onClose={() => setDetailsDialogOpen(false)}
+        onEdit={() => {
+          setDetailsDialogOpen(false);
+          if (currentUser) {
+            openEditDialog(currentUser);
+          }
+        }}
+      />
     </div>
   );
 };

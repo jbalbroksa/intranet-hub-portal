@@ -1,29 +1,26 @@
 
 import React from 'react';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
 import { DialogFooter } from '@/components/ui/dialog';
-
-type CategoryFormData = {
-  name: string;
-  slug: string;
-};
+import { Label } from '@/components/ui/label';
+import { Input } from '@/components/ui/input';
+import { Button } from '@/components/ui/button';
 
 type CategoryFormProps = {
-  formData: CategoryFormData;
+  name: string;
+  slug: string;
   onNameChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
   onSlugChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
-  onSubmit: (e: React.FormEvent) => void;
   onCancel: () => void;
+  onSubmit: (e: React.FormEvent) => void;
 };
 
 const CategoryForm: React.FC<CategoryFormProps> = ({
-  formData,
+  name,
+  slug,
   onNameChange,
   onSlugChange,
-  onSubmit,
-  onCancel
+  onCancel,
+  onSubmit
 }) => {
   return (
     <form onSubmit={onSubmit} className="space-y-4">
@@ -33,7 +30,7 @@ const CategoryForm: React.FC<CategoryFormProps> = ({
           <Input
             id="name"
             name="name"
-            value={formData.name}
+            value={name}
             onChange={onNameChange}
             required
           />
@@ -44,7 +41,7 @@ const CategoryForm: React.FC<CategoryFormProps> = ({
           <Input
             id="slug"
             name="slug"
-            value={formData.slug}
+            value={slug}
             onChange={onSlugChange}
             required
             placeholder="ejemplo-de-slug"
