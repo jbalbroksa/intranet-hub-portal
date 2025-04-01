@@ -1,20 +1,21 @@
 
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
-import { Bell, Check, Trash, Clock, AlertCircle, InfoIcon } from 'lucide-react';
+import { Bell, Check, Trash } from 'lucide-react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { toast } from 'sonner';
+import { Notification } from '@/components/notifications/NotificationCard';
+import NotificationsList from '@/components/notifications/NotificationsList';
 
 // Mock notifications data
-const mockNotifications = [
+const mockNotifications: Notification[] = [
   {
     id: 1,
     title: 'Nuevo documento disponible',
     message: 'Se ha añadido un nuevo documento a Pólizas de automóvil',
     createdAt: '2023-07-15T10:30:00',
     read: false,
-    type: 'info' as const,
+    type: 'info',
     category: 'documents'
   },
   {
@@ -23,7 +24,7 @@ const mockNotifications = [
     message: 'El producto "Seguro Todo Riesgo Plus" ha sido actualizado',
     createdAt: '2023-07-14T14:45:00',
     read: true,
-    type: 'update' as const,
+    type: 'update',
     category: 'products'
   },
   {
@@ -32,7 +33,7 @@ const mockNotifications = [
     message: 'La póliza #12345 caducará en 7 días',
     createdAt: '2023-07-13T09:15:00',
     read: false,
-    type: 'alert' as const,
+    type: 'alert',
     category: 'policies'
   },
   {
@@ -41,7 +42,7 @@ const mockNotifications = [
     message: 'El usuario Juan Pérez se ha registrado en el sistema',
     createdAt: '2023-07-12T16:20:00',
     read: true,
-    type: 'info' as const,
+    type: 'info',
     category: 'users'
   },
   {
@@ -50,24 +51,12 @@ const mockNotifications = [
     message: 'Tienes una reunión programada con el equipo comercial mañana a las 10:00',
     createdAt: '2023-07-11T11:05:00',
     read: false,
-    type: 'reminder' as const,
+    type: 'reminder',
     category: 'meetings'
   }
 ];
 
-type NotificationType = 'info' | 'update' | 'alert' | 'reminder';
-
-type Notification = {
-  id: number;
-  title: string;
-  message: string;
-  createdAt: string;
-  read: boolean;
-  type: NotificationType;
-  category: string;
-};
-
-const Notifications = () => {
+const Notifications: React.FC = () => {
   const [notifications, setNotifications] = useState<Notification[]>(mockNotifications);
   const [activeTab, setActiveTab] = useState<'all' | 'unread'>('all');
 
@@ -112,22 +101,6 @@ const Notifications = () => {
   const filteredNotifications = activeTab === 'all' 
     ? notifications 
     : notifications.filter(notification => !notification.read);
-
-  // Get notification icon based on type
-  const getNotificationIcon = (type: NotificationType) => {
-    switch(type) {
-      case 'info':
-        return <InfoIcon className="h-5 w-5 text-blue-500" />;
-      case 'update':
-        return <Clock className="h-5 w-5 text-green-500" />;
-      case 'alert':
-        return <AlertCircle className="h-5 w-5 text-red-500" />;
-      case 'reminder':
-        return <Bell className="h-5 w-5 text-amber-500" />;
-      default:
-        return <InfoIcon className="h-5 w-5 text-blue-500" />;
-    }
-  };
 
   const unreadCount = notifications.filter(notification => !notification.read).length;
 
@@ -183,7 +156,6 @@ const Notifications = () => {
             onMarkAsRead={markAsRead}
             onDelete={deleteNotification}
             formatDate={formatDate}
-            getIcon={getNotificationIcon}
           />
         </TabsContent>
         
@@ -193,78 +165,9 @@ const Notifications = () => {
             onMarkAsRead={markAsRead}
             onDelete={deleteNotification}
             formatDate={formatDate}
-            getIcon={getNotificationIcon}
           />
         </TabsContent>
       </Tabs>
-    </div>
-  );
-};
-
-// Notification list component
-type NotificationsListProps = {
-  notifications: Notification[];
-  onMarkAsRead: (id: number) => void;
-  onDelete: (id: number) => void;
-  formatDate: (date: string) => string;
-  getIcon: (type: NotificationType) => React.ReactNode;
-};
-
-const NotificationsList = ({ 
-  notifications, 
-  onMarkAsRead, 
-  onDelete, 
-  formatDate, 
-  getIcon 
-}: NotificationsListProps) => {
-  if (notifications.length === 0) {
-    return (
-      <div className="text-center py-12">
-        <Bell className="h-12 w-12 text-muted-foreground mx-auto" />
-        <h3 className="mt-4 text-lg font-medium">No hay notificaciones</h3>
-        <p className="text-muted-foreground">No tienes notificaciones en este momento</p>
-      </div>
-    );
-  }
-
-  return (
-    <div className="space-y-4">
-      {notifications.map((notification) => (
-        <Card key={notification.id} className={notification.read ? "opacity-75" : ""}>
-          <CardHeader className="pb-2">
-            <div className="flex justify-between items-start">
-              <div className="flex items-center gap-2">
-                {getIcon(notification.type)}
-                <CardTitle className="text-base">{notification.title}</CardTitle>
-              </div>
-              <CardDescription>{formatDate(notification.createdAt)}</CardDescription>
-            </div>
-          </CardHeader>
-          <CardContent>
-            <p>{notification.message}</p>
-          </CardContent>
-          <CardFooter className="pt-2 flex justify-end gap-2">
-            {!notification.read && (
-              <Button 
-                variant="ghost" 
-                size="sm" 
-                onClick={() => onMarkAsRead(notification.id)}
-              >
-                <Check className="h-4 w-4 mr-2" />
-                Marcar como leída
-              </Button>
-            )}
-            <Button 
-              variant="ghost" 
-              size="sm" 
-              onClick={() => onDelete(notification.id)}
-            >
-              <Trash className="h-4 w-4 mr-2" />
-              Eliminar
-            </Button>
-          </CardFooter>
-        </Card>
-      ))}
     </div>
   );
 };

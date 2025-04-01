@@ -1,33 +1,23 @@
+
 import React, { useState } from 'react';
-import {
-  Home,
-  MapPin,
-  Building,
-  Package,
-  Newspaper,
-  FileText,
-  Bell,
-  Settings,
-  Users,
-  User,
-  Moon,
-  Sun,
-  Calendar as CalendarIcon
+import { useLocation } from 'react-router-dom';
+import { 
+  Home, 
+  MapPin, 
+  Building, 
+  Package, 
+  Newspaper, 
+  FileText, 
+  Bell, 
+  Settings, 
+  Users, 
+  Calendar as CalendarIcon 
 } from 'lucide-react';
-import { Link, useLocation } from 'react-router-dom';
-import { useTheme } from "@/components/ui/theme-provider"
-import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet"
-import { Button } from "@/components/ui/button"
-import { Avatar, AvatarFallback } from "@/components/ui/avatar"
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu"
-import { Switch } from "@/components/ui/switch"
-import { cn } from '@/lib/utils';
+import { Link } from 'react-router-dom';
+import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
+import { Button } from "@/components/ui/button";
+import SidebarNavItem from './SidebarNavItem';
+import UserDropdown from './UserDropdown';
 
 // Main navigation items
 const mainNavItems = [
@@ -90,9 +80,7 @@ const secondaryNavItems = [
 const Sidebar = () => {
   const location = useLocation();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-  const { setTheme } = useTheme();
-  const { theme } = useTheme();
-
+  
   // Check if a nav item is active
   const isActive = (href: string) => {
     return location.pathname === href;
@@ -109,76 +97,31 @@ const Sidebar = () => {
         <nav className="flex-1 py-4">
           <div className="space-y-1">
             {mainNavItems.map((item) => (
-              <Link
+              <SidebarNavItem
                 key={item.title}
-                to={item.href}
-                className={cn(
-                  "flex items-center px-4 py-2 text-sm font-medium rounded-md hover:bg-secondary hover:text-foreground transition-colors",
-                  isActive(item.href) ? "bg-secondary text-foreground" : "text-muted-foreground"
-                )}
-              >
-                {item.icon}
-                <span className="ml-2">{item.title}</span>
-              </Link>
+                href={item.href}
+                title={item.title}
+                icon={item.icon}
+                isActive={isActive(item.href)}
+              />
             ))}
           </div>
 
           <div className="mt-6 pt-6 border-t space-y-1">
             {secondaryNavItems.map((item) => (
-              <Link
+              <SidebarNavItem
                 key={item.title}
-                to={item.href}
-                className={cn(
-                  "flex items-center px-4 py-2 text-sm font-medium rounded-md hover:bg-secondary hover:text-foreground transition-colors",
-                  isActive(item.href) ? "bg-secondary text-foreground" : "text-muted-foreground"
-                )}
-              >
-                {item.icon}
-                <span className="ml-2">{item.title}</span>
-              </Link>
+                href={item.href}
+                title={item.title}
+                icon={item.icon}
+                isActive={isActive(item.href)}
+              />
             ))}
           </div>
         </nav>
 
         <div className="border-t p-4">
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="ghost" className="flex h-8 w-full items-center justify-between rounded-md">
-                <div className="flex items-center gap-2">
-                  <Avatar className="h-6 w-6">
-                    <AvatarFallback className="text-xs">
-                      AU
-                    </AvatarFallback>
-                  </Avatar>
-                  <span className="text-sm font-medium">Admin Usuario</span>
-                </div>
-                <User className="h-4 w-4" />
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
-              <DropdownMenuItem asChild>
-                <Link to="/perfil">
-                  Perfil
-                </Link>
-              </DropdownMenuItem>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem>
-                <div className="flex items-center justify-between">
-                  <span>Modo oscuro</span>
-                  <Switch
-                    checked={theme === "dark"}
-                    onCheckedChange={(checked) => {
-                      setTheme(checked ? "dark" : "light")
-                    }}
-                  />
-                </div>
-              </DropdownMenuItem>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem>
-                Cerrar sesión
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
+          <UserDropdown />
         </div>
       </aside>
 
@@ -213,78 +156,33 @@ const Sidebar = () => {
           <nav className="flex-1 py-4">
             <div className="space-y-1">
               {mainNavItems.map((item) => (
-                <Link
+                <SidebarNavItem
                   key={item.title}
-                  to={item.href}
-                  className={cn(
-                    "flex items-center px-4 py-2 text-sm font-medium rounded-md hover:bg-secondary hover:text-foreground transition-colors",
-                    isActive(item.href) ? "bg-secondary text-foreground" : "text-muted-foreground"
-                  )}
+                  href={item.href}
+                  title={item.title}
+                  icon={item.icon}
+                  isActive={isActive(item.href)}
                   onClick={() => setIsMobileMenuOpen(false)}
-                >
-                  {item.icon}
-                  <span className="ml-2">{item.title}</span>
-                </Link>
+                />
               ))}
             </div>
 
             <div className="mt-6 pt-6 border-t space-y-1">
               {secondaryNavItems.map((item) => (
-                <Link
+                <SidebarNavItem
                   key={item.title}
-                  to={item.href}
-                  className={cn(
-                    "flex items-center px-4 py-2 text-sm font-medium rounded-md hover:bg-secondary hover:text-foreground transition-colors",
-                    isActive(item.href) ? "bg-secondary text-foreground" : "text-muted-foreground"
-                  )}
+                  href={item.href}
+                  title={item.title}
+                  icon={item.icon}
+                  isActive={isActive(item.href)}
                   onClick={() => setIsMobileMenuOpen(false)}
-                >
-                  {item.icon}
-                  <span className="ml-2">{item.title}</span>
-                </Link>
+                />
               ))}
             </div>
           </nav>
 
           <div className="border-t p-4">
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button variant="ghost" className="flex h-8 w-full items-center justify-between rounded-md">
-                  <div className="flex items-center gap-2">
-                    <Avatar className="h-6 w-6">
-                      <AvatarFallback className="text-xs">
-                        AU
-                      </AvatarFallback>
-                    </Avatar>
-                    <span className="text-sm font-medium">Admin Usuario</span>
-                  </div>
-                  <User className="h-4 w-4" />
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end">
-                <DropdownMenuItem asChild>
-                  <Link to="/perfil" onClick={() => setIsMobileMenuOpen(false)}>
-                    Perfil
-                  </Link>
-                </DropdownMenuItem>
-                <DropdownMenuSeparator />
-                <DropdownMenuItem>
-                  <div className="flex items-center justify-between">
-                    <span>Modo oscuro</span>
-                    <Switch
-                      checked={theme === "dark"}
-                      onCheckedChange={(checked) => {
-                        setTheme(checked ? "dark" : "light")
-                      }}
-                    />
-                  </div>
-                </DropdownMenuItem>
-                <DropdownMenuSeparator />
-                <DropdownMenuItem>
-                  Cerrar sesión
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
+            <UserDropdown onCloseMenu={() => setIsMobileMenuOpen(false)} />
           </div>
         </SheetContent>
       </Sheet>
