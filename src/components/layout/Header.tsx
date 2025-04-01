@@ -1,7 +1,10 @@
 
 import React, { useState } from 'react';
+import { Link } from 'react-router-dom';
 import { Bell, Search, User, X } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { Button } from '@/components/ui/button';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 
 type HeaderProps = {
   className?: string;
@@ -65,27 +68,48 @@ const Header = ({ className }: HeaderProps) => {
           {/* Notifications */}
           {!searchOpen && (
             <div className="relative">
-              <button className="p-2 rounded-md hover:bg-muted relative">
+              <Link to="/notificaciones" className="p-2 rounded-md hover:bg-muted relative">
                 <Bell className="h-5 w-5" />
                 {notifications > 0 && (
                   <span className="absolute top-1 right-1 bg-primary text-white text-xs rounded-full w-4 h-4 flex items-center justify-center">
                     {notifications}
                   </span>
                 )}
-              </button>
+              </Link>
             </div>
           )}
 
           {/* User profile */}
           {!searchOpen && (
-            <button className="flex items-center space-x-2 p-2 rounded-md hover:bg-muted">
-              <div className="relative w-8 h-8 rounded-full bg-muted flex items-center justify-center overflow-hidden">
-                <User className="h-5 w-5" />
-              </div>
-              <span className="hidden md:inline-block text-sm font-medium">
-                Administrador
-              </span>
-            </button>
+            <Popover>
+              <PopoverTrigger asChild>
+                <Button variant="ghost" className="flex items-center space-x-2 p-2 rounded-md hover:bg-muted">
+                  <div className="relative w-8 h-8 rounded-full bg-muted flex items-center justify-center overflow-hidden">
+                    <User className="h-5 w-5" />
+                  </div>
+                  <span className="hidden md:inline-block text-sm font-medium">
+                    Administrador
+                  </span>
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-56 p-0" align="end">
+                <div className="border-b border-border p-3">
+                  <p className="font-medium">Administrador</p>
+                  <p className="text-sm text-muted-foreground">admin@example.com</p>
+                </div>
+                <div className="p-2">
+                  <Link to="/perfil" className="w-full text-left block px-2 py-1.5 text-sm rounded-md hover:bg-muted">
+                    Mi Perfil
+                  </Link>
+                  <Link to="/configuracion" className="w-full text-left block px-2 py-1.5 text-sm rounded-md hover:bg-muted">
+                    Configuración
+                  </Link>
+                  <button className="w-full text-left px-2 py-1.5 text-sm rounded-md hover:bg-muted text-red-500">
+                    Cerrar Sesión
+                  </button>
+                </div>
+              </PopoverContent>
+            </Popover>
           )}
         </div>
       </div>

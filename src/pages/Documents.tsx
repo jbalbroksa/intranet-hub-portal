@@ -1,347 +1,269 @@
 
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
 import { Card, CardContent } from '@/components/ui/card';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Search, Plus, Download, Trash, Filter, Upload, FileText, File, Image } from 'lucide-react';
-import { format } from 'date-fns';
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Checkbox } from '@/components/ui/checkbox';
+import { Textarea } from '@/components/ui/textarea';
+import { 
+  Search, 
+  Plus, 
+  File, 
+  FileText, 
+  Download, 
+  Trash, 
+  Calendar, 
+  User,
+  Filter,
+  Package 
+} from 'lucide-react';
+import { toast } from 'sonner';
 
-// Mock data for categories
-const mockCategories = [
-  { id: 1, name: 'Manuales' },
-  { id: 2, name: 'Condicionados' },
-  { id: 3, name: 'Formularios' },
-  { id: 4, name: 'Marketing' },
-  { id: 5, name: 'Normativa' },
+// Mock data for document categories
+const documentCategories = [
+  { id: 1, name: 'Pólizas', icon: FileText },
+  { id: 2, name: 'Normativas', icon: File },
+  { id: 3, name: 'Manuales', icon: FileText },
+  { id: 4, name: 'Contratos', icon: FileText },
+  { id: 5, name: 'Otros', icon: File },
 ];
 
-// Mock data for products
-const mockProducts = [
-  { id: 1, name: 'Seguro Todo Riesgo Plus', categoryId: 1 },
-  { id: 2, name: 'Seguro Hogar Completo', categoryId: 2 },
-  { id: 3, name: 'Seguro de Vida Ahorro', categoryId: 3 },
-  { id: 4, name: 'Terceros Ampliado', categoryId: 1 },
-  { id: 5, name: 'Hogar Básico', categoryId: 2 },
-];
-
-// Mock data for companies
-const mockCompanies = [
-  { id: 1, name: 'Mapfre' },
-  { id: 2, name: 'Allianz' },
-  { id: 3, name: 'AXA' },
-  { id: 4, name: 'Generali' },
-  { id: 5, name: 'Zurich' },
+// Mock data for product categories
+const productCategories = [
+  { id: 1, name: 'Automóvil' },
+  { id: 2, name: 'Hogar' },
+  { id: 3, name: 'Vida' },
 ];
 
 // Mock data for documents
 const mockDocuments = [
   { 
     id: 1, 
-    name: 'Manual de procedimientos.pdf', 
-    type: 'pdf', 
-    size: '2.5 MB', 
-    uploadDate: '2023-05-01', 
-    categoryId: 1, 
-    productId: 1, 
-    companies: [1, 3], 
-    downloads: 45,
-    path: '#' 
+    title: 'Contrato Comercial', 
+    description: 'Modelo de contrato comercial para agentes', 
+    category: 4, 
+    uploadDate: '2023-05-15T14:30:00',
+    uploadedBy: 'admin',
+    productCategories: [1, 2],
+    fileSize: '2.4 MB',
+    fileType: 'application/pdf',
+    url: '#'
   },
   { 
     id: 2, 
-    name: 'Condiciones generales hogar.pdf', 
-    type: 'pdf', 
-    size: '1.8 MB', 
-    uploadDate: '2023-05-05', 
-    categoryId: 2, 
-    productId: 2, 
-    companies: [2, 5], 
-    downloads: 30,
-    path: '#' 
+    title: 'Manual de Usuario', 
+    description: 'Manual de usuario para la aplicación de gestión de pólizas', 
+    category: 3, 
+    uploadDate: '2023-04-20T10:15:00',
+    uploadedBy: 'admin',
+    productCategories: [1, 3],
+    fileSize: '5.7 MB',
+    fileType: 'application/pdf',
+    url: '#'
   },
   { 
     id: 3, 
-    name: 'Formulario reclamación.docx', 
-    type: 'docx', 
-    size: '0.5 MB', 
-    uploadDate: '2023-05-10', 
-    categoryId: 3, 
-    productId: null, 
-    companies: [1, 2, 3, 4, 5], 
-    downloads: 80,
-    path: '#' 
+    title: 'Política de Privacidad', 
+    description: 'Documento de política de privacidad y protección de datos', 
+    category: 2, 
+    uploadDate: '2023-03-10T09:45:00',
+    uploadedBy: 'admin',
+    productCategories: [],
+    fileSize: '1.1 MB',
+    fileType: 'application/pdf',
+    url: '#'
   },
   { 
     id: 4, 
-    name: 'Catálogo productos.pdf', 
-    type: 'pdf', 
-    size: '3.2 MB', 
-    uploadDate: '2023-05-15', 
-    categoryId: 4, 
-    productId: null, 
-    companies: [1, 4], 
-    downloads: 25,
-    path: '#' 
+    title: 'Póliza Tipo - Automóvil', 
+    description: 'Póliza tipo para seguros de automóvil', 
+    category: 1, 
+    uploadDate: '2023-02-25T16:50:00',
+    uploadedBy: 'admin',
+    productCategories: [1],
+    fileSize: '3.2 MB',
+    fileType: 'application/pdf',
+    url: '#'
   },
   { 
     id: 5, 
-    name: 'Infografía coberturas.png', 
-    type: 'png', 
-    size: '1.1 MB', 
-    uploadDate: '2023-05-20', 
-    categoryId: 4, 
-    productId: 3, 
-    companies: [2, 3], 
-    downloads: 60,
-    path: '#' 
-  },
+    title: 'Guía de Procedimientos', 
+    description: 'Guía interna de procedimientos administrativos', 
+    category: 5, 
+    uploadDate: '2023-01-05T11:20:00',
+    uploadedBy: 'admin',
+    productCategories: [],
+    fileSize: '4.5 MB',
+    fileType: 'application/pdf',
+    url: '#'
+  }
 ];
 
-type Category = {
-  id: number;
-  name: string;
-};
-
-type Product = {
-  id: number;
-  name: string;
-  categoryId: number;
-};
-
-type Company = {
-  id: number;
-  name: string;
-};
-
+// Document type definition
 type Document = {
   id: number;
-  name: string;
-  type: string;
-  size: string;
+  title: string;
+  description: string;
+  category: number;
   uploadDate: string;
-  categoryId: number | null;
-  productId: number | null;
-  companies: number[];
-  downloads: number;
-  path: string;
+  uploadedBy: string;
+  productCategories: number[];
+  fileSize: string;
+  fileType: string;
+  url: string;
 };
 
 const Documents = () => {
   const [documents, setDocuments] = useState<Document[]>(mockDocuments);
-  const [categories] = useState<Category[]>(mockCategories);
-  const [products] = useState<Product[]>(mockProducts);
-  const [companies] = useState<Company[]>(mockCompanies);
   const [searchTerm, setSearchTerm] = useState('');
+  const [selectedCategory, setSelectedCategory] = useState<number | null>(null);
+  const [selectedProductCategory, setSelectedProductCategory] = useState<number | null>(null);
   const [dialogOpen, setDialogOpen] = useState(false);
-  const [selectedCategoryFilter, setSelectedCategoryFilter] = useState<number | null>(null);
-  const [selectedProductFilter, setSelectedProductFilter] = useState<number | null>(null);
-  const [selectedCompanyFilter, setSelectedCompanyFilter] = useState<number | null>(null);
-  
-  const [formData, setFormData] = useState({
-    file: null as File | null,
-    categoryId: null as string | null,
-    productId: null as string | null,
-    companies: [] as number[],
+  const [newDocument, setNewDocument] = useState<Partial<Document>>({
+    title: '',
+    description: '',
+    category: 1,
+    productCategories: [],
   });
+  const [fileSelected, setFileSelected] = useState<File | null>(null);
+  const [currentView, setCurrentView] = useState<'grid' | 'list'>('grid');
 
   // Handle search input change
-  const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleSearch = (e: React.ChangeEvent<HTMLInputElement>) => {
     setSearchTerm(e.target.value);
   };
 
-  // Filter documents based on search term and filters
+  // Filter documents based on search term and category
   const filteredDocuments = documents.filter(document => {
-    const matchesSearch = document.name.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchesSearch = document.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                          document.description.toLowerCase().includes(searchTerm.toLowerCase());
+                          
+    const matchesCategory = selectedCategory === null || document.category === selectedCategory;
     
-    const matchesCategory = selectedCategoryFilter === null || document.categoryId === selectedCategoryFilter;
-    
-    const matchesProduct = selectedProductFilter === null || document.productId === selectedProductFilter;
-    
-    const matchesCompany = selectedCompanyFilter === null || document.companies.includes(selectedCompanyFilter);
-    
-    return matchesSearch && matchesCategory && matchesProduct && matchesCompany;
+    const matchesProductCategory = selectedProductCategory === null || 
+                                  document.productCategories.includes(selectedProductCategory);
+                                  
+    return matchesSearch && matchesCategory && matchesProductCategory;
   });
 
-  // Handle category filter selection
-  const handleCategoryFilter = (value: string) => {
-    setSelectedCategoryFilter(value === 'all' ? null : parseInt(value));
+  // Format date to a more readable format
+  const formatDate = (dateString: string): string => {
+    const date = new Date(dateString);
+    return date.toLocaleDateString('es-ES', {
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric'
+    });
   };
 
-  // Handle product filter selection
-  const handleProductFilter = (value: string) => {
-    setSelectedProductFilter(value === 'all' ? null : parseInt(value));
+  // Get category name by id
+  const getCategoryName = (categoryId: number): string => {
+    const category = documentCategories.find(cat => cat.id === categoryId);
+    return category ? category.name : 'Sin categoría';
   };
 
-  // Handle company filter selection
-  const handleCompanyFilter = (value: string) => {
-    setSelectedCompanyFilter(value === 'all' ? null : parseInt(value));
+  // Get category icon by id
+  const getCategoryIcon = (categoryId: number): React.ElementType => {
+    const category = documentCategories.find(cat => cat.id === categoryId);
+    return category ? category.icon : File;
   };
 
-  // Clear all filters
-  const clearFilters = () => {
-    setSelectedCategoryFilter(null);
-    setSelectedProductFilter(null);
-    setSelectedCompanyFilter(null);
+  // Get product category names
+  const getProductCategoryNames = (categoryIds: number[]): string => {
+    return categoryIds.map(id => {
+      const category = productCategories.find(cat => cat.id === id);
+      return category ? category.name : '';
+    }).filter(Boolean).join(', ');
   };
 
   // Handle file input change
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) {
-      setFormData({
-        ...formData,
-        file,
-      });
+    if (e.target.files && e.target.files[0]) {
+      setFileSelected(e.target.files[0]);
     }
   };
 
-  // Handle category selection in form
+  // Handle input changes for the new document form
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+    const { name, value } = e.target;
+    setNewDocument({
+      ...newDocument,
+      [name]: value
+    });
+  };
+
+  // Handle category selection
   const handleCategoryChange = (value: string) => {
-    setFormData({
-      ...formData,
-      categoryId: value,
+    setNewDocument({
+      ...newDocument,
+      category: parseInt(value)
     });
   };
 
-  // Handle product selection in form
-  const handleProductChange = (value: string) => {
-    setFormData({
-      ...formData,
-      productId: value,
+  // Handle product category checkbox change
+  const handleProductCategoryChange = (id: number, checked: boolean) => {
+    setNewDocument({
+      ...newDocument,
+      productCategories: checked 
+        ? [...(newDocument.productCategories || []), id]
+        : (newDocument.productCategories || []).filter(catId => catId !== id)
     });
-  };
-
-  // Handle company selection in form
-  const handleCompanyChange = (companyId: number) => {
-    setFormData({
-      ...formData,
-      companies: formData.companies.includes(companyId)
-        ? formData.companies.filter(id => id !== companyId)
-        : [...formData.companies, companyId],
-    });
-  };
-
-  // Reset form data
-  const resetForm = () => {
-    setFormData({
-      file: null,
-      categoryId: null,
-      productId: null,
-      companies: [],
-    });
-  };
-
-  // Open dialog for uploading a new document
-  const openUploadDialog = () => {
-    resetForm();
-    setDialogOpen(true);
   };
 
   // Handle form submission
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (formData.file) {
-      // Get file extension
-      const fileExt = formData.file.name.split('.').pop()?.toLowerCase() || '';
-      
-      // Create new document
-      const newDocument: Document = {
-        id: Math.max(0, ...documents.map(d => d.id)) + 1,
-        name: formData.file.name,
-        type: fileExt,
-        size: formatFileSize(formData.file.size),
-        uploadDate: format(new Date(), 'yyyy-MM-dd'),
-        categoryId: formData.categoryId ? parseInt(formData.categoryId) : null,
-        productId: formData.productId ? parseInt(formData.productId) : null,
-        companies: [...formData.companies],
-        downloads: 0,
-        path: '#', // In a real app, this would be the path to the uploaded file
-      };
-      
-      setDocuments([...documents, newDocument]);
+    if (!fileSelected || !newDocument.title) {
+      toast.error('Por favor, completa todos los campos obligatorios y selecciona un archivo');
+      return;
     }
     
+    // Create new document object
+    const newDoc: Document = {
+      id: Math.max(0, ...documents.map(d => d.id)) + 1,
+      title: newDocument.title || '',
+      description: newDocument.description || '',
+      category: newDocument.category || 1,
+      uploadDate: new Date().toISOString(),
+      uploadedBy: 'admin',
+      productCategories: newDocument.productCategories || [],
+      fileSize: `${(fileSelected.size / (1024 * 1024)).toFixed(1)} MB`,
+      fileType: fileSelected.type,
+      url: '#'
+    };
+    
+    // Add new document to the list
+    setDocuments([...documents, newDoc]);
+    
+    // Reset form and close dialog
+    setNewDocument({
+      title: '',
+      description: '',
+      category: 1,
+      productCategories: [],
+    });
+    setFileSelected(null);
     setDialogOpen(false);
-    resetForm();
+    
+    toast.success('Documento subido correctamente');
   };
 
   // Handle document deletion
   const handleDelete = (id: number) => {
     if (window.confirm('¿Estás seguro de que quieres eliminar este documento?')) {
       setDocuments(documents.filter(doc => doc.id !== id));
-    }
-  };
-
-  // Format file size
-  const formatFileSize = (bytes: number) => {
-    if (bytes === 0) return '0 Bytes';
-    
-    const k = 1024;
-    const sizes = ['Bytes', 'KB', 'MB', 'GB', 'TB'];
-    const i = Math.floor(Math.log(bytes) / Math.log(k));
-    
-    return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
-  };
-
-  // Get category name by id
-  const getCategoryName = (categoryId: number | null) => {
-    if (categoryId === null) return 'Sin categoría';
-    
-    const category = categories.find(c => c.id === categoryId);
-    return category ? category.name : 'Sin categoría';
-  };
-
-  // Get product name by id
-  const getProductName = (productId: number | null) => {
-    if (productId === null) return 'Sin producto';
-    
-    const product = products.find(p => p.id === productId);
-    return product ? product.name : 'Sin producto';
-  };
-
-  // Get company names by ids
-  const getCompanyNames = (companyIds: number[]) => {
-    return companyIds
-      .map(id => companies.find(c => c.id === id)?.name || '')
-      .filter(Boolean)
-      .join(', ');
-  };
-
-  // Format date
-  const formatDate = (dateString: string) => {
-    try {
-      return format(new Date(dateString), 'dd/MM/yyyy');
-    } catch (e) {
-      return dateString;
-    }
-  };
-
-  // Get icon for file type
-  const getFileIcon = (type: string) => {
-    switch (type.toLowerCase()) {
-      case 'pdf':
-        return <File className="h-5 w-5 text-red-500" />;
-      case 'docx':
-      case 'doc':
-        return <FileText className="h-5 w-5 text-blue-500" />;
-      case 'jpg':
-      case 'jpeg':
-      case 'png':
-      case 'gif':
-        return <Image className="h-5 w-5 text-green-500" />;
-      default:
-        return <FileText className="h-5 w-5" />;
+      toast.success('Documento eliminado correctamente');
     }
   };
 
   return (
     <div className="space-y-6 animate-slideInUp">
-      {/* Search and filter bar */}
+      {/* Header with search and buttons */}
       <div className="flex flex-col md:flex-row gap-4 items-start md:items-center justify-between">
         <div className="relative w-full md:w-96">
           <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
@@ -349,203 +271,259 @@ const Documents = () => {
             placeholder="Buscar documentos..."
             className="pl-9"
             value={searchTerm}
-            onChange={handleSearchChange}
+            onChange={handleSearch}
           />
         </div>
         
-        <div className="flex flex-wrap gap-2">
-          <Button variant="outline" size="sm" onClick={clearFilters}>
-            <Filter className="h-4 w-4 mr-2" />
-            Limpiar filtros
-          </Button>
-          
-          <Button onClick={openUploadDialog}>
-            <Plus className="h-4 w-4 mr-2" />
-            Subir Documento
-          </Button>
-        </div>
-      </div>
-
-      {/* Filters */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <div>
-          <Select value={selectedCategoryFilter?.toString() || "all"} onValueChange={handleCategoryFilter}>
-            <SelectTrigger>
-              <SelectValue placeholder="Filtrar por categoría" />
+        <div className="flex flex-col md:flex-row gap-2">
+          <Select 
+            value={selectedCategory?.toString() || ''} 
+            onValueChange={(value) => setSelectedCategory(value ? parseInt(value) : null)}
+          >
+            <SelectTrigger className="w-[180px]">
+              <div className="flex items-center">
+                <Filter className="mr-2 h-4 w-4 text-muted-foreground" />
+                <SelectValue placeholder="Filtrar por categoría" />
+              </div>
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="all">Todas las categorías</SelectItem>
-              {categories.map(category => (
+              <SelectItem value="">Todas las categorías</SelectItem>
+              {documentCategories.map(category => (
                 <SelectItem key={category.id} value={category.id.toString()}>
                   {category.name}
                 </SelectItem>
               ))}
             </SelectContent>
           </Select>
-        </div>
-        
-        <div>
-          <Select value={selectedProductFilter?.toString() || "all"} onValueChange={handleProductFilter}>
-            <SelectTrigger>
-              <SelectValue placeholder="Filtrar por producto" />
+          
+          <Select 
+            value={selectedProductCategory?.toString() || ''} 
+            onValueChange={(value) => setSelectedProductCategory(value ? parseInt(value) : null)}
+          >
+            <SelectTrigger className="w-[180px]">
+              <div className="flex items-center">
+                <Package className="mr-2 h-4 w-4 text-muted-foreground" />
+                <SelectValue placeholder="Filtrar por producto" />
+              </div>
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="all">Todos los productos</SelectItem>
-              {products.map(product => (
-                <SelectItem key={product.id} value={product.id.toString()}>
-                  {product.name}
+              <SelectItem value="">Todos los productos</SelectItem>
+              {productCategories.map(category => (
+                <SelectItem key={category.id} value={category.id.toString()}>
+                  {category.name}
                 </SelectItem>
               ))}
             </SelectContent>
           </Select>
-        </div>
-        
-        <div>
-          <Select value={selectedCompanyFilter?.toString() || "all"} onValueChange={handleCompanyFilter}>
-            <SelectTrigger>
-              <SelectValue placeholder="Filtrar por compañía" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">Todas las compañías</SelectItem>
-              {companies.map(company => (
-                <SelectItem key={company.id} value={company.id.toString()}>
-                  {company.name}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+          
+          <Button onClick={() => setDialogOpen(true)}>
+            <Plus className="h-4 w-4 mr-2" />
+            Subir documento
+          </Button>
         </div>
       </div>
 
-      {/* Documents table */}
-      <Card>
-        <CardContent className="p-0">
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Nombre</TableHead>
-                <TableHead className="hidden md:table-cell">Categoría</TableHead>
-                <TableHead className="hidden md:table-cell">Producto</TableHead>
-                <TableHead className="hidden lg:table-cell">Compañías</TableHead>
-                <TableHead className="hidden lg:table-cell">Fecha</TableHead>
-                <TableHead className="hidden lg:table-cell">Tamaño</TableHead>
-                <TableHead className="text-right">Acciones</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {filteredDocuments.length > 0 ? (
-                filteredDocuments.map((document) => (
-                  <TableRow key={document.id}>
-                    <TableCell>
-                      <div className="flex items-center gap-3">
-                        {getFileIcon(document.type)}
-                        <div>
-                          <div className="font-medium">{document.name}</div>
-                          <div className="text-xs text-muted-foreground md:hidden">
-                            {getCategoryName(document.categoryId)} • {document.size} • {formatDate(document.uploadDate)}
+      {/* View selector */}
+      <div className="flex justify-end">
+        <Tabs value={currentView} onValueChange={(value) => setCurrentView(value as 'grid' | 'list')}>
+          <TabsList>
+            <TabsTrigger value="grid">Grid</TabsTrigger>
+            <TabsTrigger value="list">Lista</TabsTrigger>
+          </TabsList>
+        </Tabs>
+      </div>
+
+      {/* Documents grid view */}
+      <TabsContent value="grid" className="mt-0">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {filteredDocuments.length > 0 ? (
+            filteredDocuments.map(document => (
+              <Card key={document.id}>
+                <CardContent className="p-6">
+                  <div className="flex flex-col h-full">
+                    <div className="flex items-start justify-between mb-4">
+                      <div className="bg-primary/10 p-3 rounded-lg">
+                        {React.createElement(getCategoryIcon(document.category), { 
+                          className: "h-6 w-6 text-primary" 
+                        })}
+                      </div>
+                      <div className="flex gap-2">
+                        <a 
+                          href={document.url}
+                          className="p-2 rounded-md hover:bg-muted transition-colors"
+                          download
+                        >
+                          <Download className="h-4 w-4" />
+                        </a>
+                        <button 
+                          onClick={() => handleDelete(document.id)}
+                          className="p-2 rounded-md hover:bg-muted transition-colors"
+                        >
+                          <Trash className="h-4 w-4" />
+                        </button>
+                      </div>
+                    </div>
+                    
+                    <h3 className="font-medium text-lg mb-2">{document.title}</h3>
+                    <p className="text-sm text-muted-foreground mb-4">{document.description}</p>
+                    
+                    <div className="mt-auto space-y-2 text-sm">
+                      <div className="flex justify-between">
+                        <div className="flex items-center gap-1 text-muted-foreground">
+                          <FileText className="h-4 w-4" />
+                          <span>{document.fileSize}</span>
+                        </div>
+                        <div className="text-primary">{getCategoryName(document.category)}</div>
+                      </div>
+                      
+                      <div className="flex justify-between">
+                        <div className="flex items-center gap-1 text-muted-foreground">
+                          <Calendar className="h-4 w-4" />
+                          <span>{formatDate(document.uploadDate)}</span>
+                        </div>
+                        <div className="flex items-center gap-1 text-muted-foreground">
+                          <User className="h-4 w-4" />
+                          <span>{document.uploadedBy}</span>
+                        </div>
+                      </div>
+                      
+                      {document.productCategories.length > 0 && (
+                        <div className="flex items-center gap-1 text-muted-foreground">
+                          <Package className="h-4 w-4" />
+                          <span className="truncate">{getProductCategoryNames(document.productCategories)}</span>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            ))
+          ) : (
+            <div className="col-span-full text-center py-12">
+              <File className="h-12 w-12 text-muted-foreground mx-auto" />
+              <h3 className="mt-4 text-lg font-medium">No se encontraron documentos</h3>
+              <p className="text-muted-foreground">Intenta con otros criterios de búsqueda o sube un nuevo documento</p>
+            </div>
+          )}
+        </div>
+      </TabsContent>
+
+      {/* Documents list view */}
+      <TabsContent value="list" className="mt-0">
+        <Card>
+          <CardContent className="p-0">
+            <table className="w-full">
+              <thead>
+                <tr className="border-b">
+                  <th className="text-left p-4">Documento</th>
+                  <th className="text-left p-4">Categoría</th>
+                  <th className="text-left p-4">Productos</th>
+                  <th className="text-left p-4">Fecha</th>
+                  <th className="text-left p-4">Tamaño</th>
+                  <th className="text-right p-4">Acciones</th>
+                </tr>
+              </thead>
+              <tbody>
+                {filteredDocuments.length > 0 ? (
+                  filteredDocuments.map(document => (
+                    <tr key={document.id} className="border-b">
+                      <td className="p-4">
+                        <div className="flex items-start gap-3">
+                          <div className="bg-primary/10 p-2 rounded-md">
+                            {React.createElement(getCategoryIcon(document.category), { 
+                              className: "h-5 w-5 text-primary" 
+                            })}
+                          </div>
+                          <div>
+                            <div className="font-medium">{document.title}</div>
+                            <div className="text-sm text-muted-foreground">{document.description}</div>
                           </div>
                         </div>
-                      </div>
-                    </TableCell>
-                    <TableCell className="hidden md:table-cell">{getCategoryName(document.categoryId)}</TableCell>
-                    <TableCell className="hidden md:table-cell">{getProductName(document.productId)}</TableCell>
-                    <TableCell className="hidden lg:table-cell truncate max-w-[150px]">{getCompanyNames(document.companies)}</TableCell>
-                    <TableCell className="hidden lg:table-cell">{formatDate(document.uploadDate)}</TableCell>
-                    <TableCell className="hidden lg:table-cell">{document.size}</TableCell>
-                    <TableCell className="text-right">
-                      <div className="flex justify-end gap-2">
-                        <Button variant="ghost" size="sm" asChild>
-                          <a href={document.path} download>
+                      </td>
+                      <td className="p-4">{getCategoryName(document.category)}</td>
+                      <td className="p-4">{getProductCategoryNames(document.productCategories) || '-'}</td>
+                      <td className="p-4">{formatDate(document.uploadDate)}</td>
+                      <td className="p-4">{document.fileSize}</td>
+                      <td className="p-4">
+                        <div className="flex justify-end gap-2">
+                          <a 
+                            href={document.url}
+                            className="p-2 rounded-md hover:bg-muted transition-colors"
+                            download
+                          >
                             <Download className="h-4 w-4" />
                           </a>
-                        </Button>
-                        <Button variant="ghost" size="sm" onClick={() => handleDelete(document.id)}>
-                          <Trash className="h-4 w-4" />
-                        </Button>
-                      </div>
-                    </TableCell>
-                  </TableRow>
-                ))
-              ) : (
-                <TableRow>
-                  <TableCell colSpan={7} className="text-center py-6">
-                    No se encontraron documentos
-                  </TableCell>
-                </TableRow>
-              )}
-            </TableBody>
-          </Table>
-        </CardContent>
-      </Card>
+                          <button 
+                            onClick={() => handleDelete(document.id)}
+                            className="p-2 rounded-md hover:bg-muted transition-colors"
+                          >
+                            <Trash className="h-4 w-4" />
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  ))
+                ) : (
+                  <tr>
+                    <td colSpan={6} className="text-center py-8">
+                      <File className="h-12 w-12 text-muted-foreground mx-auto" />
+                      <h3 className="mt-4 text-lg font-medium">No se encontraron documentos</h3>
+                      <p className="text-muted-foreground">Intenta con otros criterios de búsqueda o sube un nuevo documento</p>
+                    </td>
+                  </tr>
+                )}
+              </tbody>
+            </table>
+          </CardContent>
+        </Card>
+      </TabsContent>
 
-      {/* Upload dialog */}
+      {/* Upload document dialog */}
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-        <DialogContent className="sm:max-w-[500px]">
+        <DialogContent className="sm:max-w-md">
           <DialogHeader>
-            <DialogTitle>Subir nuevo documento</DialogTitle>
+            <DialogTitle>Subir documento</DialogTitle>
             <DialogDescription>
-              Seleccione un archivo y complete la información del documento.
+              Sube un nuevo documento al sistema
             </DialogDescription>
           </DialogHeader>
-          
-          <form onSubmit={handleSubmit} className="space-y-4">
-            <div className="space-y-4">
+          <form onSubmit={handleSubmit}>
+            <div className="space-y-4 py-4">
               <div className="space-y-2">
-                <Label htmlFor="file">Documento</Label>
-                <div className="border-2 border-dashed rounded-md p-6 flex flex-col items-center justify-center text-center">
-                  {formData.file ? (
-                    <div className="space-y-2">
-                      <div className="flex items-center justify-center">
-                        {getFileIcon(formData.file.name.split('.').pop() || '')}
-                      </div>
-                      <div className="text-sm font-medium">{formData.file.name}</div>
-                      <div className="text-xs text-muted-foreground">{formatFileSize(formData.file.size)}</div>
-                      <Button 
-                        type="button" 
-                        variant="outline" 
-                        size="sm" 
-                        onClick={() => setFormData({ ...formData, file: null })}
-                      >
-                        Cambiar archivo
-                      </Button>
-                    </div>
-                  ) : (
-                    <>
-                      <div className="flex flex-col items-center justify-center gap-1">
-                        <Upload className="h-8 w-8 text-muted-foreground mb-2" />
-                        <div className="text-sm font-medium">Arrastre un archivo o haga clic para seleccionar</div>
-                        <div className="text-xs text-muted-foreground">
-                          Formatos soportados: PDF, DOCX, PNG, JPG
-                        </div>
-                      </div>
-                      <label className="cursor-pointer w-full mt-4">
-                        <div className="flex items-center gap-2 text-sm px-3 py-2 border rounded-md hover:bg-muted transition-colors w-full justify-center">
-                          <Upload className="h-4 w-4" />
-                          <span>Seleccionar archivo</span>
-                        </div>
-                        <input 
-                          type="file" 
-                          id="file" 
-                          className="hidden" 
-                          accept=".pdf,.docx,.png,.jpg,.jpeg" 
-                          onChange={handleFileChange} 
-                          required
-                        />
-                      </label>
-                    </>
-                  )}
-                </div>
+                <Label htmlFor="title">Título *</Label>
+                <Input
+                  id="title"
+                  name="title"
+                  value={newDocument.title}
+                  onChange={handleInputChange}
+                  placeholder="Título del documento"
+                  required
+                />
+              </div>
+              
+              <div className="space-y-2">
+                <Label htmlFor="description">Descripción</Label>
+                <Textarea
+                  id="description"
+                  name="description"
+                  value={newDocument.description}
+                  onChange={handleInputChange}
+                  placeholder="Descripción del documento"
+                  rows={3}
+                />
               </div>
               
               <div className="space-y-2">
                 <Label htmlFor="category">Categoría</Label>
-                <Select value={formData.categoryId || "0"} onValueChange={handleCategoryChange}>
+                <Select
+                  value={newDocument.category?.toString()}
+                  onValueChange={handleCategoryChange}
+                >
                   <SelectTrigger>
-                    <SelectValue placeholder="Seleccionar categoría" />
+                    <SelectValue placeholder="Selecciona una categoría" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="0">Sin categoría</SelectItem>
-                    {categories.map(category => (
+                    {documentCategories.map(category => (
                       <SelectItem key={category.id} value={category.id.toString()}>
                         {category.name}
                       </SelectItem>
@@ -555,50 +533,40 @@ const Documents = () => {
               </div>
               
               <div className="space-y-2">
-                <Label htmlFor="product">Producto</Label>
-                <Select value={formData.productId || "0"} onValueChange={handleProductChange}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Seleccionar producto" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="0">Sin producto</SelectItem>
-                    {products.map(product => (
-                      <SelectItem key={product.id} value={product.id.toString()}>
-                        {product.name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-              
-              <div className="space-y-2">
-                <Label>Compañías</Label>
-                <div className="border rounded-md p-3 max-h-[150px] overflow-y-auto">
-                  {companies.map(company => (
-                    <div key={company.id} className="flex items-center space-x-2 py-1">
-                      <input
-                        type="checkbox"
-                        id={`company-${company.id}`}
-                        checked={formData.companies.includes(company.id)}
-                        onChange={() => handleCompanyChange(company.id)}
-                        className="rounded border-input"
+                <Label>Categorías de Productos</Label>
+                <div className="grid grid-cols-2 gap-2 mt-2">
+                  {productCategories.map(category => (
+                    <div key={category.id} className="flex items-center space-x-2">
+                      <Checkbox 
+                        id={`product-category-${category.id}`} 
+                        checked={(newDocument.productCategories || []).includes(category.id)}
+                        onCheckedChange={(checked) => 
+                          handleProductCategoryChange(category.id, checked === true)
+                        }
                       />
-                      <Label htmlFor={`company-${company.id}`} className="cursor-pointer text-sm">
-                        {company.name}
+                      <Label htmlFor={`product-category-${category.id}`} className="text-sm">
+                        {category.name}
                       </Label>
                     </div>
                   ))}
                 </div>
               </div>
+              
+              <div className="space-y-2">
+                <Label htmlFor="file">Archivo *</Label>
+                <Input
+                  id="file"
+                  type="file"
+                  onChange={handleFileChange}
+                  required
+                />
+                <p className="text-xs text-muted-foreground">
+                  Formatos soportados: PDF, DOCX, XLSX, PPTX. Tamaño máximo: 10MB
+                </p>
+              </div>
             </div>
-            
             <DialogFooter>
-              <Button variant="outline" type="button" onClick={() => setDialogOpen(false)}>
-                Cancelar
-              </Button>
-              <Button type="submit" disabled={!formData.file}>
-                Subir
-              </Button>
+              <Button type="submit">Subir documento</Button>
             </DialogFooter>
           </form>
         </DialogContent>
@@ -608,4 +576,3 @@ const Documents = () => {
 };
 
 export default Documents;
-

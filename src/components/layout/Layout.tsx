@@ -22,8 +22,10 @@ const Layout = ({ children }: LayoutProps) => {
     if (path === '/productos') return 'Productos';
     if (path === '/noticias') return 'Noticias';
     if (path === '/documentos') return 'Documentos';
+    if (path === '/notificaciones') return 'Notificaciones';
     if (path === '/configuracion') return 'Configuración';
     if (path === '/usuarios') return 'Usuarios';
+    if (path === '/perfil') return 'Mi Perfil';
     
     // Default
     return 'Intranet';

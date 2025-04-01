@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -11,8 +10,8 @@ import { Search, Plus, Edit, Trash, Filter, ChevronRight, Package, Settings } fr
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { toast } from 'sonner';
+import { Textarea } from "@/components/ui/textarea";
 
-// Mock data for categories with three levels
 const mockCategories = [
   { 
     id: 1, 
@@ -101,7 +100,6 @@ const mockCategories = [
   },
 ];
 
-// Mock data for companies
 const mockCompanies = [
   { id: 1, name: 'Mapfre' },
   { id: 2, name: 'Allianz' },
@@ -110,13 +108,12 @@ const mockCompanies = [
   { id: 5, name: 'Zurich' },
 ];
 
-// Mock data for products
 const mockProducts = [
-  { id: 1, name: 'Seguro Todo Riesgo Plus', description: 'Seguro a todo riesgo con las mejores coberturas', categoryId: 1, subcategoryId: 1, companies: [1, 3], features: ['Asistencia 24h', 'Vehículo de sustitución', 'Daños propios'] },
-  { id: 2, name: 'Seguro Hogar Completo', description: 'Protección integral para tu hogar', categoryId: 2, subcategoryId: 5, companies: [2, 5], features: ['Daños por agua', 'Robo', 'Responsabilidad civil'] },
-  { id: 3, name: 'Seguro de Vida Ahorro', description: 'Asegura tu futuro y el de tu familia', categoryId: 3, subcategoryId: 8, companies: [1, 4], features: ['Capital garantizado', 'Flexibilidad', 'Fiscalidad ventajosa'] },
-  { id: 4, name: 'Terceros Ampliado', description: 'Seguro a terceros con coberturas adicionales', categoryId: 1, subcategoryId: 3, companies: [3, 5], features: ['Lunas', 'Robo', 'Incendio'] },
-  { id: 5, name: 'Hogar Básico', description: 'Cobertura esencial para tu vivienda', categoryId: 2, subcategoryId: 4, companies: [2, 3], features: ['Incendio', 'Daños por agua', 'Responsabilidad civil'] },
+  { id: 1, name: 'Seguro Todo Riesgo Plus', description: 'Seguro a todo riesgo con las mejores coberturas', categoryId: 1, subcategoryId: 1, companies: [1, 3], features: ['Asistencia 24h', 'Vehículo de sustitución', 'Daños propios'], strengths: 'Cobertura completa, precio competitivo', weaknesses: 'Franquicia alta para conductores noveles', observations: 'Recomendado para familias' },
+  { id: 2, name: 'Seguro Hogar Completo', description: 'Protección integral para tu hogar', categoryId: 2, subcategoryId: 5, companies: [2, 5], features: ['Daños por agua', 'Robo', 'Responsabilidad civil'], strengths: 'Amplia cobertura en daños estéticos', weaknesses: 'No cubre daños a terceros fuera del hogar', observations: 'Ideal para viviendas de más de 90m²' },
+  { id: 3, name: 'Seguro de Vida Ahorro', description: 'Asegura tu futuro y el de tu familia', categoryId: 3, subcategoryId: 8, companies: [1, 4], features: ['Capital garantizado', 'Flexibilidad', 'Fiscalidad ventajosa'], strengths: 'Buena rentabilidad a largo plazo', weaknesses: 'Poca liquidez', observations: 'Recomendado para ahorro superior a 5 años' },
+  { id: 4, name: 'Terceros Ampliado', description: 'Seguro a terceros con coberturas adicionales', categoryId: 1, subcategoryId: 3, companies: [3, 5], features: ['Lunas', 'Robo', 'Incendio'], strengths: 'Precio muy competitivo', weaknesses: 'No cubre daños propios', observations: 'Para vehículos de más de 5 años' },
+  { id: 5, name: 'Hogar Básico', description: 'Cobertura esencial para tu vivienda', categoryId: 2, subcategoryId: 4, companies: [2, 3], features: ['Incendio', 'Daños por agua', 'Responsabilidad civil'], strengths: 'Precio económico', weaknesses: 'Coberturas limitadas', observations: 'Para viviendas de menos de 90m²' },
 ];
 
 type Level3Category = {
@@ -145,7 +142,6 @@ type Company = {
 
 type FormMode = 'create' | 'edit';
 
-// Updated Product type to include level3CategoryId
 type Product = {
   id: number;
   name: string;
@@ -155,6 +151,9 @@ type Product = {
   level3CategoryId?: number;
   companies: number[];
   features: string[];
+  strengths?: string;
+  weaknesses?: string;
+  observations?: string;
 };
 
 const Products = () => {
@@ -174,7 +173,6 @@ const Products = () => {
   const [selectedCompanyFilter, setSelectedCompanyFilter] = useState<number | null>(null);
   const [activeCategoryTab, setActiveCategoryTab] = useState('list');
   
-  // Category form state
   const [categoryFormData, setCategoryFormData] = useState<{
     level: 'category' | 'subcategory' | 'level3',
     name: string,
@@ -193,14 +191,15 @@ const Products = () => {
     level3CategoryId: undefined,
     companies: [],
     features: [],
+    strengths: '',
+    weaknesses: '',
+    observations: '',
   });
 
-  // Handle search input change
   const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setSearchTerm(e.target.value);
   };
 
-  // Filter products based on search term and filters - updated for 3 levels
   const filteredProducts = products.filter(product => {
     const matchesSearch = product.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          product.description.toLowerCase().includes(searchTerm.toLowerCase());
@@ -216,7 +215,6 @@ const Products = () => {
     return matchesSearch && matchesCategory && matchesSubcategory && matchesLevel3 && matchesCompany;
   });
 
-  // Toggle category expansion
   const toggleCategoryExpansion = (categoryId: number) => {
     setExpandedCategories(prevExpanded => 
       prevExpanded.includes(categoryId)
@@ -225,7 +223,6 @@ const Products = () => {
     );
   };
 
-  // Toggle subcategory expansion
   const toggleSubcategoryExpansion = (subcategoryId: number) => {
     setExpandedSubcategories(prevExpanded => 
       prevExpanded.includes(subcategoryId)
@@ -234,30 +231,25 @@ const Products = () => {
     );
   };
 
-  // Handle category filter selection
   const handleCategoryFilter = (categoryId: number) => {
     setSelectedCategoryFilter(prevCategory => prevCategory === categoryId ? null : categoryId);
     setSelectedSubcategoryFilter(null);
     setSelectedLevel3Filter(null);
   };
 
-  // Handle subcategory filter selection
   const handleSubcategoryFilter = (subcategoryId: number) => {
     setSelectedSubcategoryFilter(prevSubcategory => prevSubcategory === subcategoryId ? null : subcategoryId);
     setSelectedLevel3Filter(null);
   };
 
-  // Handle company filter selection
   const handleCompanyFilter = (companyId: number) => {
     setSelectedCompanyFilter(prevCompany => prevCompany === companyId ? null : companyId);
   };
 
-  // Handle level3 filter selection
   const handleLevel3Filter = (level3Id: number) => {
     setSelectedLevel3Filter(prevLevel3 => prevLevel3 === level3Id ? null : level3Id);
   };
 
-  // Clear all filters - updated to include level3
   const clearFilters = () => {
     setSelectedCategoryFilter(null);
     setSelectedSubcategoryFilter(null);
@@ -265,7 +257,6 @@ const Products = () => {
     setSelectedCompanyFilter(null);
   };
 
-  // Handle form input changes
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
     setFormData({
@@ -274,7 +265,6 @@ const Products = () => {
     });
   };
 
-  // Handle category selection in form - reset subcategory and level3 when category changes
   const handleCategoryChange = (value: string) => {
     const categoryId = parseInt(value);
     setFormData({
@@ -285,7 +275,6 @@ const Products = () => {
     });
   };
 
-  // Handle subcategory selection in form - reset level3 when subcategory changes
   const handleSubcategoryChange = (value: string) => {
     const subcategoryId = parseInt(value);
     setFormData({
@@ -295,7 +284,6 @@ const Products = () => {
     });
   };
 
-  // Handle level3 selection in form
   const handleLevel3Change = (value: string) => {
     const level3Id = parseInt(value);
     setFormData({
@@ -304,7 +292,6 @@ const Products = () => {
     });
   };
 
-  // Handle company selection in form
   const handleCompanyChange = (value: string) => {
     const companyId = parseInt(value);
     setFormData({
@@ -315,7 +302,6 @@ const Products = () => {
     });
   };
 
-  // Handle feature input
   const handleFeatureChange = (index: number, value: string) => {
     const updatedFeatures = [...formData.features];
     updatedFeatures[index] = value;
@@ -325,7 +311,6 @@ const Products = () => {
     });
   };
 
-  // Add a new feature field
   const addFeature = () => {
     setFormData({
       ...formData,
@@ -333,7 +318,6 @@ const Products = () => {
     });
   };
 
-  // Remove a feature field
   const removeFeature = (index: number) => {
     const updatedFeatures = [...formData.features];
     updatedFeatures.splice(index, 1);
@@ -343,7 +327,6 @@ const Products = () => {
     });
   };
 
-  // Reset form data - updated to include level3CategoryId
   const resetForm = () => {
     setFormData({
       name: '',
@@ -353,10 +336,12 @@ const Products = () => {
       level3CategoryId: undefined,
       companies: [],
       features: [''],
+      strengths: '',
+      weaknesses: '',
+      observations: '',
     });
   };
 
-  // Reset category form data
   const resetCategoryForm = () => {
     setCategoryFormData({
       level: 'category',
@@ -364,14 +349,12 @@ const Products = () => {
     });
   };
 
-  // Open dialog for creating a new product
   const openCreateDialog = () => {
     setFormMode('create');
     resetForm();
     setDialogOpen(true);
   };
 
-  // Open dialog for editing an existing product
   const openEditDialog = (product: Product) => {
     setFormMode('edit');
     setCurrentProduct(product);
@@ -383,47 +366,47 @@ const Products = () => {
       level3CategoryId: product.level3CategoryId,
       companies: [...product.companies],
       features: [...product.features],
+      strengths: product.strengths,
+      weaknesses: product.weaknesses,
+      observations: product.observations,
     });
     setDialogOpen(true);
   };
 
-  // Handle form submission
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     
     if (formMode === 'create') {
-      // Create new product
       const newProduct: Product = {
         id: Math.max(0, ...products.map(p => p.id)) + 1,
         ...formData,
-        features: formData.features.filter(f => f.trim() !== ''), // Remove empty features
+        features: formData.features.filter(f => f.trim() !== ''),
       };
       setProducts([...products, newProduct]);
+      toast.success("Producto creado exitosamente");
     } else if (formMode === 'edit' && currentProduct) {
-      // Update existing product
       const updatedProducts = products.map(product => 
         product.id === currentProduct.id 
           ? { 
               ...product, 
               ...formData,
-              features: formData.features.filter(f => f.trim() !== ''), // Remove empty features
+              features: formData.features.filter(f => f.trim() !== ''),
             } 
           : product
       );
       setProducts(updatedProducts);
+      toast.success("Producto actualizado exitosamente");
     }
     
     setDialogOpen(false);
     resetForm();
   };
 
-  // Open dialog for creating a new category
   const openCategoryDialog = () => {
     resetCategoryForm();
     setCategoryDialogOpen(true);
   };
 
-  // Handle category level change
   const handleCategoryLevelChange = (level: 'category' | 'subcategory' | 'level3') => {
     setCategoryFormData({
       ...categoryFormData,
@@ -432,7 +415,6 @@ const Products = () => {
     });
   };
 
-  // Handle parent category selection for subcategories
   const handleParentCategoryChange = (value: string) => {
     const categoryId = parseInt(value);
     setCategoryFormData({
@@ -442,7 +424,6 @@ const Products = () => {
     });
   };
 
-  // Handle parent subcategory selection for level3
   const handleParentSubcategoryChange = (value: string) => {
     const subcategoryId = parseInt(value);
     setCategoryFormData({
@@ -451,7 +432,6 @@ const Products = () => {
     });
   };
 
-  // Handle category form input changes
   const handleCategoryFormInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
     setCategoryFormData({
@@ -460,12 +440,10 @@ const Products = () => {
     });
   };
 
-  // Handle category form submission
   const handleCategorySubmit = (e: React.FormEvent) => {
     e.preventDefault();
     
     if (categoryFormData.level === 'category') {
-      // Add new main category
       const newCategory: Category = {
         id: Math.max(0, ...categories.map(c => c.id)) + 1,
         name: categoryFormData.name,
@@ -476,7 +454,6 @@ const Products = () => {
       toast.success("Categoría añadida correctamente");
     } 
     else if (categoryFormData.level === 'subcategory' && categoryFormData.parentCategoryId) {
-      // Add new subcategory to existing category
       const newSubcategoryId = Math.max(0, ...categories.flatMap(c => c.subcategories.map(s => s.id))) + 1;
       
       const updatedCategories = categories.map(category => {
@@ -501,7 +478,6 @@ const Products = () => {
       toast.success("Subcategoría añadida correctamente");
     }
     else if (categoryFormData.level === 'level3' && categoryFormData.parentCategoryId && categoryFormData.parentSubcategoryId) {
-      // Add new level3 to existing subcategory
       const newLevel3Id = Math.max(
         0, 
         ...categories.flatMap(c => 
@@ -544,16 +520,13 @@ const Products = () => {
     resetCategoryForm();
   };
 
-  // Handle product deletion
   const handleDelete = (id: number) => {
     if (window.confirm('¿Estás seguro de que quieres eliminar este producto?')) {
       setProducts(products.filter(product => product.id !== id));
     }
   };
 
-  // Handle category deletion
   const handleDeleteCategory = (categoryId: number) => {
-    // Check if category is in use
     const categoryInUse = products.some(product => product.categoryId === categoryId);
     
     if (categoryInUse) {
@@ -567,9 +540,7 @@ const Products = () => {
     }
   };
 
-  // Handle subcategory deletion
   const handleDeleteSubcategory = (categoryId: number, subcategoryId: number) => {
-    // Check if subcategory is in use
     const subcategoryInUse = products.some(product => 
       product.categoryId === categoryId && product.subcategoryId === subcategoryId
     );
@@ -595,9 +566,7 @@ const Products = () => {
     }
   };
 
-  // Handle level3 deletion
   const handleDeleteLevel3 = (categoryId: number, subcategoryId: number, level3Id: number) => {
-    // Check if level3 is in use
     const level3InUse = products.some(product => 
       product.categoryId === categoryId && 
       product.subcategoryId === subcategoryId &&
@@ -633,13 +602,11 @@ const Products = () => {
     }
   };
 
-  // Get category name by id
   const getCategoryName = (categoryId: number) => {
     const category = categories.find(c => c.id === categoryId);
     return category ? category.name : 'Sin categoría';
   };
 
-  // Get subcategory name by id
   const getSubcategoryName = (categoryId: number, subcategoryId: number) => {
     const category = categories.find(c => c.id === categoryId);
     if (!category) return 'Sin subcategoría';
@@ -648,7 +615,6 @@ const Products = () => {
     return subcategory ? subcategory.name : 'Sin subcategoría';
   };
 
-  // Get company names by ids
   const getCompanyNames = (companyIds: number[]) => {
     return companyIds.map(id => {
       const company = companies.find(c => c.id === id);
@@ -656,7 +622,6 @@ const Products = () => {
     }).filter(Boolean).join(', ');
   };
 
-  // Get level3 name by id
   const getLevel3Name = (categoryId: number, subcategoryId: number, level3Id?: number) => {
     if (!level3Id) return '';
     
@@ -670,13 +635,11 @@ const Products = () => {
     return level3 ? level3.name : '';
   };
 
-  // Get available subcategories for the selected category
   const getAvailableSubcategories = () => {
     const category = categories.find(c => c.id === formData.categoryId);
     return category ? category.subcategories : [];
   };
 
-  // Get available level3 categories for the selected subcategory
   const getAvailableLevel3Categories = () => {
     const category = categories.find(c => c.id === formData.categoryId);
     if (!category) return [];
@@ -685,7 +648,6 @@ const Products = () => {
     return subcategory ? subcategory.level3 : [];
   };
 
-  // Get subcategories for a specific category (used in category management)
   const getSubcategoriesForCategory = (categoryId: number) => {
     const category = categories.find(c => c.id === categoryId);
     return category ? category.subcategories : [];
@@ -694,7 +656,6 @@ const Products = () => {
   return (
     <div className="space-y-6 animate-slideInUp">
       <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-        {/* Filter sidebar */}
         <div className="md:col-span-1">
           <Card>
             <CardContent className="p-4">
@@ -707,7 +668,6 @@ const Products = () => {
                 </div>
                 
                 <div className="space-y-4">
-                  {/* Categories filter with three levels */}
                   <div>
                     <h4 className="text-sm font-medium mb-2">Categorías</h4>
                     <ul className="space-y-1">
@@ -787,7 +747,6 @@ const Products = () => {
                     </ul>
                   </div>
                   
-                  {/* Companies filter */}
                   <div>
                     <h4 className="text-sm font-medium mb-2">Compañías</h4>
                     <ul className="space-y-1">
@@ -810,7 +769,6 @@ const Products = () => {
           </Card>
         </div>
         
-        {/* Products list and categories management */}
         <div className="md:col-span-3 space-y-4">
           <Tabs defaultValue="products" className="w-full">
             <TabsList className="grid w-full grid-cols-2">
@@ -818,9 +776,7 @@ const Products = () => {
               <TabsTrigger value="categories">Gestionar Categorías</TabsTrigger>
             </TabsList>
             
-            {/* Products Tab */}
             <TabsContent value="products" className="space-y-4">
-              {/* Search and actions */}
               <div className="flex flex-col md:flex-row gap-4 items-start md:items-center justify-between">
                 <div className="relative w-full md:w-96">
                   <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
@@ -838,7 +794,6 @@ const Products = () => {
                 </Button>
               </div>
               
-              {/* Products table */}
               <Card>
                 <CardContent className="p-0">
                   <Table>
@@ -897,7 +852,6 @@ const Products = () => {
               </Card>
             </TabsContent>
             
-            {/* Categories Management Tab */}
             <TabsContent value="categories" className="space-y-4">
               <div className="flex items-center justify-between">
                 <h3 className="text-lg font-medium">Gestión de Categorías</h3>
@@ -915,7 +869,6 @@ const Products = () => {
                 </div>
               </div>
 
-              {/* Categories List View */}
               <Card>
                 <CardContent className="p-0">
                   <Table>
@@ -928,7 +881,6 @@ const Products = () => {
                       </TableRow>
                     </TableHeader>
                     <TableBody>
-                      {/* Level 1 Categories */}
                       {categories.map((category) => (
                         <React.Fragment key={category.id}>
                           <TableRow>
@@ -946,7 +898,6 @@ const Products = () => {
                             </TableCell>
                           </TableRow>
                           
-                          {/* Level 2 Categories - Subcategories */}
                           {category.subcategories.map((subcategory) => (
                             <React.Fragment key={subcategory.id}>
                               <TableRow>
@@ -964,7 +915,6 @@ const Products = () => {
                                 </TableCell>
                               </TableRow>
                               
-                              {/* Level 3 Categories */}
                               {subcategory.level3.map((level3) => (
                                 <TableRow key={level3.id}>
                                   <TableCell>
@@ -990,7 +940,6 @@ const Products = () => {
                 </CardContent>
               </Card>
 
-              {/* Dialog for creating categories */}
               <Dialog open={categoryDialogOpen} onOpenChange={setCategoryDialogOpen}>
                 <DialogContent className="sm:max-w-md">
                   <DialogHeader>
@@ -1084,7 +1033,6 @@ const Products = () => {
         </div>
       </div>
       
-      {/* Dialog for creating/editing products */}
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
@@ -1111,12 +1059,49 @@ const Products = () => {
                 
                 <div className="space-y-2">
                   <Label htmlFor="description">Descripción</Label>
-                  <Input
+                  <Textarea
                     id="description"
                     name="description"
                     value={formData.description}
-                    onChange={handleInputChange}
+                    onChange={(e) => setFormData({...formData, description: e.target.value})}
                     placeholder="Descripción del producto"
+                    rows={3}
+                  />
+                </div>
+                
+                <div className="space-y-2">
+                  <Label htmlFor="strengths">Fortalezas</Label>
+                  <Textarea
+                    id="strengths"
+                    name="strengths"
+                    value={formData.strengths || ''}
+                    onChange={(e) => setFormData({...formData, strengths: e.target.value})}
+                    placeholder="Fortalezas del producto"
+                    rows={2}
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="weaknesses">Debilidades</Label>
+                  <Textarea
+                    id="weaknesses"
+                    name="weaknesses"
+                    value={formData.weaknesses || ''}
+                    onChange={(e) => setFormData({...formData, weaknesses: e.target.value})}
+                    placeholder="Debilidades del producto"
+                    rows={2}
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="observations">Observaciones</Label>
+                  <Textarea
+                    id="observations"
+                    name="observations"
+                    value={formData.observations || ''}
+                    onChange={(e) => setFormData({...formData, observations: e.target.value})}
+                    placeholder="Observaciones adicionales"
+                    rows={2}
                   />
                 </div>
                 

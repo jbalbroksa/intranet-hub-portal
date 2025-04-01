@@ -13,6 +13,8 @@ import News from "./pages/News";
 import Documents from "./pages/Documents";
 import Settings from "./pages/Settings";
 import Users from "./pages/Users";
+import Notifications from "./pages/Notifications";
+import Profile from "./pages/Profile";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -30,8 +32,10 @@ const App = () => (
           <Route path="/productos" element={<Layout><Products /></Layout>} />
           <Route path="/noticias" element={<Layout><News /></Layout>} />
           <Route path="/documentos" element={<Layout><Documents /></Layout>} />
+          <Route path="/notificaciones" element={<Layout><Notifications /></Layout>} />
           <Route path="/configuracion" element={<Layout><Settings /></Layout>} />
           <Route path="/usuarios" element={<Layout><Users /></Layout>} />
+          <Route path="/perfil" element={<Layout><Profile /></Layout>} />
           <Route path="*" element={<NotFound />} />
         </Routes>
       </BrowserRouter>

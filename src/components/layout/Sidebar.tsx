@@ -12,7 +12,8 @@ import {
   ChevronLeft, 
   ChevronRight,
   Building,
-  ExternalLink
+  ExternalLink,
+  Bell
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
@@ -22,9 +23,10 @@ type SidebarItemProps = {
   to: string;
   isCollapsed: boolean;
   isActive: boolean;
+  badge?: number;
 };
 
-const SidebarItem = ({ icon: Icon, label, to, isCollapsed, isActive }: SidebarItemProps) => {
+const SidebarItem = ({ icon: Icon, label, to, isCollapsed, isActive, badge }: SidebarItemProps) => {
   return (
     <Link
       to={to}
@@ -36,15 +38,23 @@ const SidebarItem = ({ icon: Icon, label, to, isCollapsed, isActive }: SidebarIt
       )}
     >
       <Icon className="h-5 w-5 flex-shrink-0" />
-      <span className={cn("transition-all duration-300", isCollapsed ? "opacity-0 w-0 overflow-hidden" : "opacity-100")}>
+      <span className={cn("transition-all duration-300 flex-1", isCollapsed ? "opacity-0 w-0 overflow-hidden" : "opacity-100")}>
         {label}
       </span>
+      {badge !== undefined && badge > 0 && (
+        <span className={cn(
+          "bg-primary text-white text-xs font-medium rounded-full flex items-center justify-center",
+          isCollapsed ? "w-4 h-4 absolute right-2" : "min-w-5 h-5 px-1"
+        )}>
+          {badge}
+        </span>
+      )}
     </Link>
   );
 };
 
 // External link component
-const ExternalSidebarItem = ({ icon: Icon, label, to, isCollapsed }: Omit<SidebarItemProps, 'isActive'>) => {
+const ExternalSidebarItem = ({ icon: Icon, label, to, isCollapsed }: Omit<SidebarItemProps, 'isActive' | 'badge'>) => {
   return (
     <a
       href={to}
@@ -72,6 +82,9 @@ const Sidebar = ({ className }: SidebarProps) => {
   const [isCollapsed, setIsCollapsed] = useState(false);
   const location = useLocation();
 
+  // Mock unread notifications count
+  const unreadNotificationsCount = 3;
+
   // Responsive behavior - collapse sidebar on small screens
   useEffect(() => {
     const handleResize = () => {
@@ -97,6 +110,7 @@ const Sidebar = ({ className }: SidebarProps) => {
     { icon: Package, label: 'Productos', path: '/productos' },
     { icon: FileText, label: 'Noticias', path: '/noticias' },
     { icon: FolderOpen, label: 'Documentos', path: '/documentos' },
+    { icon: Bell, label: 'Notificaciones', path: '/notificaciones', badge: unreadNotificationsCount },
     { icon: Settings, label: 'Configuración', path: '/configuracion' },
   ];
 
@@ -137,6 +151,7 @@ const Sidebar = ({ className }: SidebarProps) => {
                 to={item.path}
                 isCollapsed={isCollapsed}
                 isActive={location.pathname === item.path}
+                badge={item.badge}
               />
             </li>
           ))}
