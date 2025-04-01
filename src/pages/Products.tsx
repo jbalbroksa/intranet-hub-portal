@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -904,4 +905,340 @@ const Products = () => {
                   <Tabs value={activeCategoryTab} onValueChange={setActiveCategoryTab} className="w-auto">
                     <TabsList>
                       <TabsTrigger value="list">Lista</TabsTrigger>
-                      <TabsTrigger value="tree">Árbol</
+                      <TabsTrigger value="tree">Árbol</TabsTrigger>
+                    </TabsList>
+                  </Tabs>
+                  <Button onClick={openCategoryDialog}>
+                    <Plus className="h-4 w-4 mr-2" />
+                    Nueva Categoría
+                  </Button>
+                </div>
+              </div>
+
+              {/* Categories List View */}
+              <Card>
+                <CardContent className="p-0">
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>Nombre</TableHead>
+                        <TableHead>Tipo</TableHead>
+                        <TableHead>Padre</TableHead>
+                        <TableHead className="text-right">Acciones</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {/* Level 1 Categories */}
+                      {categories.map((category) => (
+                        <React.Fragment key={category.id}>
+                          <TableRow>
+                            <TableCell>
+                              <div className="font-medium">{category.name}</div>
+                            </TableCell>
+                            <TableCell>Categoría</TableCell>
+                            <TableCell>-</TableCell>
+                            <TableCell className="text-right">
+                              <div className="flex justify-end gap-2">
+                                <Button variant="ghost" size="sm" onClick={() => handleDeleteCategory(category.id)}>
+                                  <Trash className="h-4 w-4" />
+                                </Button>
+                              </div>
+                            </TableCell>
+                          </TableRow>
+                          
+                          {/* Level 2 Categories - Subcategories */}
+                          {category.subcategories.map((subcategory) => (
+                            <React.Fragment key={subcategory.id}>
+                              <TableRow>
+                                <TableCell>
+                                  <div className="font-medium pl-4">{subcategory.name}</div>
+                                </TableCell>
+                                <TableCell>Subcategoría</TableCell>
+                                <TableCell>{category.name}</TableCell>
+                                <TableCell className="text-right">
+                                  <div className="flex justify-end gap-2">
+                                    <Button variant="ghost" size="sm" onClick={() => handleDeleteSubcategory(category.id, subcategory.id)}>
+                                      <Trash className="h-4 w-4" />
+                                    </Button>
+                                  </div>
+                                </TableCell>
+                              </TableRow>
+                              
+                              {/* Level 3 Categories */}
+                              {subcategory.level3.map((level3) => (
+                                <TableRow key={level3.id}>
+                                  <TableCell>
+                                    <div className="font-medium pl-8">{level3.name}</div>
+                                  </TableCell>
+                                  <TableCell>Nivel 3</TableCell>
+                                  <TableCell>{subcategory.name}</TableCell>
+                                  <TableCell className="text-right">
+                                    <div className="flex justify-end gap-2">
+                                      <Button variant="ghost" size="sm" onClick={() => handleDeleteLevel3(category.id, subcategory.id, level3.id)}>
+                                        <Trash className="h-4 w-4" />
+                                      </Button>
+                                    </div>
+                                  </TableCell>
+                                </TableRow>
+                              ))}
+                            </React.Fragment>
+                          ))}
+                        </React.Fragment>
+                      ))}
+                    </TableBody>
+                  </Table>
+                </CardContent>
+              </Card>
+
+              {/* Dialog for creating categories */}
+              <Dialog open={categoryDialogOpen} onOpenChange={setCategoryDialogOpen}>
+                <DialogContent className="sm:max-w-md">
+                  <DialogHeader>
+                    <DialogTitle>Crear Nueva Categoría</DialogTitle>
+                    <DialogDescription>
+                      Rellena el formulario para crear una nueva categoría o subcategoría
+                    </DialogDescription>
+                  </DialogHeader>
+                  <form onSubmit={handleCategorySubmit}>
+                    <div className="space-y-4 py-4">
+                      <div className="grid grid-cols-1 gap-4">
+                        <div className="space-y-2">
+                          <Label htmlFor="categoryLevel">Tipo</Label>
+                          <Select
+                            value={categoryFormData.level}
+                            onValueChange={(value) => handleCategoryLevelChange(value as 'category' | 'subcategory' | 'level3')}
+                          >
+                            <SelectTrigger>
+                              <SelectValue placeholder="Selecciona el tipo" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="category">Categoría</SelectItem>
+                              <SelectItem value="subcategory">Subcategoría</SelectItem>
+                              <SelectItem value="level3">Nivel 3</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </div>
+                        
+                        {categoryFormData.level !== 'category' && (
+                          <div className="space-y-2">
+                            <Label htmlFor="parentCategory">Categoría Padre</Label>
+                            <Select
+                              value={categoryFormData.parentCategoryId?.toString() || ""}
+                              onValueChange={handleParentCategoryChange}
+                            >
+                              <SelectTrigger>
+                                <SelectValue placeholder="Selecciona la categoría padre" />
+                              </SelectTrigger>
+                              <SelectContent>
+                                {categories.map((category) => (
+                                  <SelectItem key={category.id} value={category.id.toString()}>
+                                    {category.name}
+                                  </SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
+                          </div>
+                        )}
+                        
+                        {categoryFormData.level === 'level3' && categoryFormData.parentCategoryId && (
+                          <div className="space-y-2">
+                            <Label htmlFor="parentSubcategory">Subcategoría Padre</Label>
+                            <Select
+                              value={categoryFormData.parentSubcategoryId?.toString() || ""}
+                              onValueChange={handleParentSubcategoryChange}
+                            >
+                              <SelectTrigger>
+                                <SelectValue placeholder="Selecciona la subcategoría padre" />
+                              </SelectTrigger>
+                              <SelectContent>
+                                {getSubcategoriesForCategory(categoryFormData.parentCategoryId).map((subcategory) => (
+                                  <SelectItem key={subcategory.id} value={subcategory.id.toString()}>
+                                    {subcategory.name}
+                                  </SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
+                          </div>
+                        )}
+                        
+                        <div className="space-y-2">
+                          <Label htmlFor="categoryName">Nombre</Label>
+                          <Input
+                            id="categoryName"
+                            name="name"
+                            value={categoryFormData.name}
+                            onChange={handleCategoryFormInputChange}
+                            placeholder="Nombre de la categoría"
+                          />
+                        </div>
+                      </div>
+                    </div>
+                    <DialogFooter>
+                      <Button type="submit">Guardar</Button>
+                    </DialogFooter>
+                  </form>
+                </DialogContent>
+              </Dialog>
+            </TabsContent>
+          </Tabs>
+        </div>
+      </div>
+      
+      {/* Dialog for creating/editing products */}
+      <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>
+              {formMode === 'create' ? 'Crear Nuevo Producto' : 'Editar Producto'}
+            </DialogTitle>
+            <DialogDescription>
+              Rellena el formulario para {formMode === 'create' ? 'crear un nuevo producto' : 'editar el producto'}
+            </DialogDescription>
+          </DialogHeader>
+          <form onSubmit={handleSubmit}>
+            <div className="space-y-4 py-4">
+              <div className="grid grid-cols-1 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="name">Nombre</Label>
+                  <Input
+                    id="name"
+                    name="name"
+                    value={formData.name}
+                    onChange={handleInputChange}
+                    placeholder="Nombre del producto"
+                  />
+                </div>
+                
+                <div className="space-y-2">
+                  <Label htmlFor="description">Descripción</Label>
+                  <Input
+                    id="description"
+                    name="description"
+                    value={formData.description}
+                    onChange={handleInputChange}
+                    placeholder="Descripción del producto"
+                  />
+                </div>
+                
+                <div className="space-y-2">
+                  <Label htmlFor="category">Categoría</Label>
+                  <Select
+                    value={formData.categoryId ? formData.categoryId.toString() : ""}
+                    onValueChange={handleCategoryChange}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Selecciona una categoría" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {categories.map((category) => (
+                        <SelectItem key={category.id} value={category.id.toString()}>
+                          {category.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                
+                {formData.categoryId > 0 && (
+                  <div className="space-y-2">
+                    <Label htmlFor="subcategory">Subcategoría</Label>
+                    <Select
+                      value={formData.subcategoryId ? formData.subcategoryId.toString() : ""}
+                      onValueChange={handleSubcategoryChange}
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="Selecciona una subcategoría" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {getAvailableSubcategories().map((subcategory) => (
+                          <SelectItem key={subcategory.id} value={subcategory.id.toString()}>
+                            {subcategory.name}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                )}
+                
+                {formData.subcategoryId > 0 && getAvailableLevel3Categories().length > 0 && (
+                  <div className="space-y-2">
+                    <Label htmlFor="level3">Nivel 3</Label>
+                    <Select
+                      value={formData.level3CategoryId ? formData.level3CategoryId.toString() : ""}
+                      onValueChange={handleLevel3Change}
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="Selecciona un nivel 3" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {getAvailableLevel3Categories().map((level3) => (
+                          <SelectItem key={level3.id} value={level3.id.toString()}>
+                            {level3.name}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                )}
+                
+                <div className="space-y-2">
+                  <Label>Compañías</Label>
+                  <div className="grid grid-cols-2 gap-2">
+                    {companies.map((company) => (
+                      <div key={company.id} className="flex items-center space-x-2">
+                        <input
+                          type="checkbox"
+                          id={`company-${company.id}`}
+                          checked={formData.companies.includes(company.id)}
+                          onChange={() => handleCompanyChange(company.id.toString())}
+                          className="h-4 w-4 rounded border-gray-300"
+                        />
+                        <label htmlFor={`company-${company.id}`}>{company.name}</label>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+                
+                <div className="space-y-2">
+                  <Label>Características</Label>
+                  {formData.features.map((feature, index) => (
+                    <div key={index} className="flex gap-2">
+                      <Input
+                        value={feature}
+                        onChange={(e) => handleFeatureChange(index, e.target.value)}
+                        placeholder="Característica del producto"
+                      />
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => removeFeature(index)}
+                      >
+                        <Trash className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  ))}
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={addFeature}
+                    className="w-full mt-2"
+                  >
+                    <Plus className="h-4 w-4 mr-2" />
+                    Añadir Característica
+                  </Button>
+                </div>
+              </div>
+            </div>
+            <DialogFooter>
+              <Button type="submit">{formMode === 'create' ? 'Crear' : 'Actualizar'}</Button>
+            </DialogFooter>
+          </form>
+        </DialogContent>
+      </Dialog>
+    </div>
+  );
+};
+
+export default Products;
