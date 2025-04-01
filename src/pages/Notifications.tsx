@@ -14,7 +14,7 @@ const mockNotifications = [
     message: 'Se ha añadido un nuevo documento a Pólizas de automóvil',
     createdAt: '2023-07-15T10:30:00',
     read: false,
-    type: 'info',
+    type: 'info' as const,
     category: 'documents'
   },
   {
@@ -23,7 +23,7 @@ const mockNotifications = [
     message: 'El producto "Seguro Todo Riesgo Plus" ha sido actualizado',
     createdAt: '2023-07-14T14:45:00',
     read: true,
-    type: 'update',
+    type: 'update' as const,
     category: 'products'
   },
   {
@@ -32,7 +32,7 @@ const mockNotifications = [
     message: 'La póliza #12345 caducará en 7 días',
     createdAt: '2023-07-13T09:15:00',
     read: false,
-    type: 'alert',
+    type: 'alert' as const,
     category: 'policies'
   },
   {
@@ -41,7 +41,7 @@ const mockNotifications = [
     message: 'El usuario Juan Pérez se ha registrado en el sistema',
     createdAt: '2023-07-12T16:20:00',
     read: true,
-    type: 'info',
+    type: 'info' as const,
     category: 'users'
   },
   {
@@ -50,10 +50,12 @@ const mockNotifications = [
     message: 'Tienes una reunión programada con el equipo comercial mañana a las 10:00',
     createdAt: '2023-07-11T11:05:00',
     read: false,
-    type: 'reminder',
+    type: 'reminder' as const,
     category: 'meetings'
   }
 ];
+
+type NotificationType = 'info' | 'update' | 'alert' | 'reminder';
 
 type Notification = {
   id: number;
@@ -61,7 +63,7 @@ type Notification = {
   message: string;
   createdAt: string;
   read: boolean;
-  type: 'info' | 'update' | 'alert' | 'reminder';
+  type: NotificationType;
   category: string;
 };
 
@@ -112,7 +114,7 @@ const Notifications = () => {
     : notifications.filter(notification => !notification.read);
 
   // Get notification icon based on type
-  const getNotificationIcon = (type: Notification['type']) => {
+  const getNotificationIcon = (type: NotificationType) => {
     switch(type) {
       case 'info':
         return <InfoIcon className="h-5 w-5 text-blue-500" />;
@@ -205,7 +207,7 @@ type NotificationsListProps = {
   onMarkAsRead: (id: number) => void;
   onDelete: (id: number) => void;
   formatDate: (date: string) => string;
-  getIcon: (type: Notification['type']) => React.ReactNode;
+  getIcon: (type: NotificationType) => React.ReactNode;
 };
 
 const NotificationsList = ({ 
