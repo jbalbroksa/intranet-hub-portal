@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -186,8 +185,8 @@ const Users = () => {
   };
 
   // Set delegation filter
-  const handleDelegationFilter = (delegationId: number | null) => {
-    setSelectedDelegationFilter(delegationId);
+  const handleDelegationFilter = (delegationId: string) => {
+    setSelectedDelegationFilter(delegationId === "all" ? null : parseInt(delegationId));
   };
 
   // Toggle view mode between grid and list
@@ -227,8 +226,8 @@ const Users = () => {
         
         <div className="flex flex-wrap gap-2">
           <Select
-            value={selectedDelegationFilter?.toString() || ''}
-            onValueChange={(value) => handleDelegationFilter(value ? parseInt(value) : null)}
+            value={selectedDelegationFilter?.toString() || "all"}
+            onValueChange={handleDelegationFilter}
           >
             <SelectTrigger className="w-[180px]">
               <div className="flex items-center">
@@ -237,7 +236,7 @@ const Users = () => {
               </div>
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="">Todas las delegaciones</SelectItem>
+              <SelectItem value="all">Todas las delegaciones</SelectItem>
               {delegations.map(delegation => (
                 <SelectItem key={delegation.id} value={delegation.id.toString()}>
                   {delegation.name}
