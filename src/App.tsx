@@ -18,33 +18,36 @@ import Notifications from "./pages/Notifications";
 import CalendarPage from "./pages/Calendar";
 import Profile from "./pages/Profile";
 import NotFound from "./pages/NotFound";
+import { ThemeProvider } from "./components/ui/theme-provider";
 
 const queryClient = new QueryClient();
 
 const App = () => (
-  <QueryClientProvider client={queryClient}>
-    <TooltipProvider>
-      <Toaster />
-      <Sonner />
-      <BrowserRouter>
-        <Routes>
-          <Route path="/" element={<Layout><Index /></Layout>} />
-          <Route path="/delegaciones" element={<Layout><Delegations /></Layout>} />
-          <Route path="/companias" element={<Layout><Companies /></Layout>} />
-          <Route path="/productos" element={<Layout><Products /></Layout>} />
-          <Route path="/noticias" element={<Layout><News /></Layout>} />
-          <Route path="/noticias/:id" element={<Layout><NewsDetail /></Layout>} />
-          <Route path="/documentos" element={<Layout><Documents /></Layout>} />
-          <Route path="/notificaciones" element={<Layout><Notifications /></Layout>} />
-          <Route path="/calendario" element={<Layout><CalendarPage /></Layout>} />
-          <Route path="/configuracion" element={<Layout><Settings /></Layout>} />
-          <Route path="/usuarios" element={<Layout><Users /></Layout>} />
-          <Route path="/perfil" element={<Layout><Profile /></Layout>} />
-          <Route path="*" element={<NotFound />} />
-        </Routes>
-      </BrowserRouter>
-    </TooltipProvider>
-  </QueryClientProvider>
+  <ThemeProvider defaultTheme="light" storageKey="intranet-theme">
+    <QueryClientProvider client={queryClient}>
+      <TooltipProvider>
+        <Toaster />
+        <Sonner />
+        <BrowserRouter>
+          <Routes>
+            <Route path="/" element={<Layout><Index /></Layout>} />
+            <Route path="/delegaciones" element={<Layout><Delegations /></Layout>} />
+            <Route path="/companias" element={<Layout><Companies /></Layout>} />
+            <Route path="/productos" element={<Layout><Products /></Layout>} />
+            <Route path="/noticias" element={<Layout><News /></Layout>} />
+            <Route path="/noticias/:id" element={<Layout><NewsDetail /></Layout>} />
+            <Route path="/documentos" element={<Layout><Documents /></Layout>} />
+            <Route path="/notificaciones" element={<Layout><Notifications /></Layout>} />
+            <Route path="/calendario" element={<Layout><CalendarPage /></Layout>} />
+            <Route path="/configuracion" element={<Layout><Settings /></Layout>} />
+            <Route path="/usuarios" element={<Layout><Users /></Layout>} />
+            <Route path="/perfil" element={<Layout><Profile /></Layout>} />
+            <Route path="*" element={<NotFound />} />
+          </Routes>
+        </BrowserRouter>
+      </TooltipProvider>
+    </QueryClientProvider>
+  </ThemeProvider>
 );
 
 export default App;
