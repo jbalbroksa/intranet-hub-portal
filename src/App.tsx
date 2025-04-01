@@ -10,10 +10,12 @@ import Delegations from "./pages/Delegations";
 import Companies from "./pages/Companies";
 import Products from "./pages/Products";
 import News from "./pages/News";
+import NewsDetail from "./pages/NewsDetail";
 import Documents from "./pages/Documents";
 import Settings from "./pages/Settings";
 import Users from "./pages/Users";
 import Notifications from "./pages/Notifications";
+import CalendarPage from "./pages/Calendar";
 import Profile from "./pages/Profile";
 import NotFound from "./pages/NotFound";
 
@@ -31,8 +33,10 @@ const App = () => (
           <Route path="/companias" element={<Layout><Companies /></Layout>} />
           <Route path="/productos" element={<Layout><Products /></Layout>} />
           <Route path="/noticias" element={<Layout><News /></Layout>} />
+          <Route path="/noticias/:id" element={<Layout><NewsDetail /></Layout>} />
           <Route path="/documentos" element={<Layout><Documents /></Layout>} />
           <Route path="/notificaciones" element={<Layout><Notifications /></Layout>} />
+          <Route path="/calendario" element={<Layout><CalendarPage /></Layout>} />
           <Route path="/configuracion" element={<Layout><Settings /></Layout>} />
           <Route path="/usuarios" element={<Layout><Users /></Layout>} />
           <Route path="/perfil" element={<Layout><Profile /></Layout>} />

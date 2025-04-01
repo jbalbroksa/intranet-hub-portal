@@ -1,193 +1,294 @@
-
-import React, { useState, useEffect } from 'react';
-import { Link, useLocation } from 'react-router-dom';
-import { 
-  Home, 
-  Users, 
-  Briefcase, 
-  Package, 
-  FileText, 
-  FolderOpen, 
-  Settings, 
-  ChevronLeft, 
-  ChevronRight,
+import React, { useState } from 'react';
+import {
+  Home,
+  MapPin,
   Building,
-  ExternalLink,
-  Bell
+  Package,
+  Newspaper,
+  FileText,
+  Bell,
+  Settings,
+  Users,
+  User,
+  Moon,
+  Sun,
+  Calendar as CalendarIcon
 } from 'lucide-react';
+import { Link, useLocation } from 'react-router-dom';
+import { useTheme } from "@/components/ui/theme-provider"
+import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet"
+import { Button } from "@/components/ui/button"
+import { Avatar, AvatarFallback } from "@/components/ui/avatar"
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu"
+import { Switch } from "@/components/ui/switch"
 import { cn } from '@/lib/utils';
 
-type SidebarItemProps = {
-  icon: React.ElementType;
-  label: string;
-  to: string;
-  isCollapsed: boolean;
-  isActive: boolean;
-  badge?: number;
-};
+// Main navigation items
+const mainNavItems = [
+  {
+    title: "Inicio",
+    href: "/",
+    icon: <Home className="h-5 w-5" />,
+  },
+  {
+    title: "Delegaciones",
+    href: "/delegaciones",
+    icon: <MapPin className="h-5 w-5" />,
+  },
+  {
+    title: "Compañías",
+    href: "/companias",
+    icon: <Building className="h-5 w-5" />,
+  },
+  {
+    title: "Productos",
+    href: "/productos",
+    icon: <Package className="h-5 w-5" />,
+  },
+  {
+    title: "Noticias",
+    href: "/noticias",
+    icon: <Newspaper className="h-5 w-5" />,
+  },
+  {
+    title: "Documentos",
+    href: "/documentos",
+    icon: <FileText className="h-5 w-5" />,
+  },
+  {
+    title: "Notificaciones",
+    href: "/notificaciones",
+    icon: <Bell className="h-5 w-5" />,
+  },
+  {
+    title: "Calendario",
+    href: "/calendario",
+    icon: <CalendarIcon className="h-5 w-5" />,
+  },
+];
 
-const SidebarItem = ({ icon: Icon, label, to, isCollapsed, isActive, badge }: SidebarItemProps) => {
-  return (
-    <Link
-      to={to}
-      className={cn(
-        "flex items-center gap-3 px-3 py-3 rounded-md transition-all duration-300 ease-in-out",
-        isActive 
-          ? "bg-sidebar-primary text-sidebar-primary-foreground" 
-          : "text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
-      )}
-    >
-      <Icon className="h-5 w-5 flex-shrink-0" />
-      <span className={cn("transition-all duration-300 flex-1", isCollapsed ? "opacity-0 w-0 overflow-hidden" : "opacity-100")}>
-        {label}
-      </span>
-      {badge !== undefined && badge > 0 && (
-        <span className={cn(
-          "bg-primary text-white text-xs font-medium rounded-full flex items-center justify-center",
-          isCollapsed ? "w-4 h-4 absolute right-2" : "min-w-5 h-5 px-1"
-        )}>
-          {badge}
-        </span>
-      )}
-    </Link>
-  );
-};
+// Secondary navigation items
+const secondaryNavItems = [
+  {
+    title: "Configuración",
+    href: "/configuracion",
+    icon: <Settings className="h-5 w-5" />,
+  },
+  {
+    title: "Usuarios",
+    href: "/usuarios",
+    icon: <Users className="h-5 w-5" />,
+  },
+];
 
-// External link component
-const ExternalSidebarItem = ({ icon: Icon, label, to, isCollapsed }: Omit<SidebarItemProps, 'isActive' | 'badge'>) => {
-  return (
-    <a
-      href={to}
-      target="_blank"
-      rel="noopener noreferrer"
-      className={cn(
-        "flex items-center gap-3 px-3 py-3 rounded-md transition-all duration-300 ease-in-out",
-        "text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
-      )}
-    >
-      <Icon className="h-5 w-5 flex-shrink-0" />
-      <span className={cn("transition-all duration-300 flex-1", isCollapsed ? "opacity-0 w-0 overflow-hidden" : "opacity-100")}>
-        {label}
-      </span>
-      {!isCollapsed && <ExternalLink className="h-3 w-3 opacity-50" />}
-    </a>
-  );
-};
-
-type SidebarProps = {
-  className?: string;
-};
-
-const Sidebar = ({ className }: SidebarProps) => {
-  const [isCollapsed, setIsCollapsed] = useState(false);
+const Sidebar = () => {
   const location = useLocation();
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const { setTheme } = useTheme();
+  const { theme } = useTheme();
 
-  // Mock unread notifications count
-  const unreadNotificationsCount = 3;
-
-  // Responsive behavior - collapse sidebar on small screens
-  useEffect(() => {
-    const handleResize = () => {
-      if (window.innerWidth < 768) {
-        setIsCollapsed(true);
-      }
-    };
-
-    // Set initial state
-    handleResize();
-
-    // Add event listener
-    window.addEventListener('resize', handleResize);
-
-    // Cleanup
-    return () => window.removeEventListener('resize', handleResize);
-  }, []);
-
-  const menuItems = [
-    { icon: Home, label: 'Inicio', path: '/' },
-    { icon: Building, label: 'Delegaciones', path: '/delegaciones' },
-    { icon: Briefcase, label: 'Compañías', path: '/companias' },
-    { icon: Package, label: 'Productos', path: '/productos' },
-    { icon: FileText, label: 'Noticias', path: '/noticias' },
-    { icon: FolderOpen, label: 'Documentos', path: '/documentos' },
-    { icon: Bell, label: 'Notificaciones', path: '/notificaciones', badge: unreadNotificationsCount },
-    { icon: Settings, label: 'Configuración', path: '/configuracion' },
-  ];
-
-  // External links
-  const externalLinks = [
-    { icon: ExternalLink, label: 'Tesis Broker Manager', url: 'https://broker.tesis.com' },
-    { icon: ExternalLink, label: 'Avant2', url: 'https://www.avant2.es' },
-    { icon: ExternalLink, label: 'Centro de Soporte', url: 'https://soporte.albroksa.com' },
-    { icon: ExternalLink, label: 'Club Albroksa', url: 'https://club.albroksa.com' },
-  ];
+  // Check if a nav item is active
+  const isActive = (href: string) => {
+    return location.pathname === href;
+  };
 
   return (
-    <aside
-      className={cn(
-        "bg-sidebar h-screen flex flex-col transition-all duration-300 ease-in-out border-r border-sidebar-border relative",
-        isCollapsed ? "w-[70px]" : "w-[250px]",
-        className
-      )}
-    >
-      <div className="flex items-center justify-between p-4 border-b border-sidebar-border">
-        <div className={cn("flex items-center", isCollapsed ? "justify-center w-full" : "")}>
-          <div className="w-8 h-8 bg-primary rounded-md flex items-center justify-center text-white font-bold">
-            I
-          </div>
-          {!isCollapsed && (
-            <h1 className="text-sidebar-foreground font-poppins text-lg ml-2">Intranet</h1>
-          )}
+    <>
+      {/* Desktop Sidebar */}
+      <aside className="hidden lg:flex flex-col w-64 border-r bg-background h-screen">
+        <div className="flex items-center justify-center h-16 border-b">
+          <Link to="/" className="text-lg font-semibold">Intranet</Link>
         </div>
-      </div>
 
-      <nav className="flex-1 py-4 px-2 overflow-y-auto">
-        <ul className="space-y-1">
-          {menuItems.map((item) => (
-            <li key={item.path}>
-              <SidebarItem
-                icon={item.icon}
-                label={item.label}
-                to={item.path}
-                isCollapsed={isCollapsed}
-                isActive={location.pathname === item.path}
-                badge={item.badge}
-              />
-            </li>
-          ))}
-        </ul>
-        
-        {/* External links section */}
-        {externalLinks.length > 0 && (
-          <div className="mt-6 pt-6 border-t border-sidebar-border">
-            <div className={cn("px-3 py-2 text-xs font-medium text-sidebar-foreground/50", 
-              isCollapsed ? "text-center" : "")}>
-              {!isCollapsed && "Accesos Externos"}
-            </div>
-            <ul className="mt-2 space-y-1">
-              {externalLinks.map((link, index) => (
-                <li key={index}>
-                  <ExternalSidebarItem
-                    icon={link.icon}
-                    label={link.label}
-                    to={link.url}
-                    isCollapsed={isCollapsed}
-                  />
-                </li>
-              ))}
-            </ul>
+        <nav className="flex-1 py-4">
+          <div className="space-y-1">
+            {mainNavItems.map((item) => (
+              <Link
+                key={item.title}
+                to={item.href}
+                className={cn(
+                  "flex items-center px-4 py-2 text-sm font-medium rounded-md hover:bg-secondary hover:text-foreground transition-colors",
+                  isActive(item.href) ? "bg-secondary text-foreground" : "text-muted-foreground"
+                )}
+              >
+                {item.icon}
+                <span className="ml-2">{item.title}</span>
+              </Link>
+            ))}
           </div>
-        )}
-      </nav>
 
-      <button
-        onClick={() => setIsCollapsed(!isCollapsed)}
-        className="absolute -right-3 top-20 bg-primary text-white p-1 rounded-full shadow-md hover:bg-primary/90 transition-colors z-10"
-        aria-label={isCollapsed ? "Expand sidebar" : "Collapse sidebar"}
-      >
-        {isCollapsed ? <ChevronRight size={16} /> : <ChevronLeft size={16} />}
-      </button>
-    </aside>
+          <div className="mt-6 pt-6 border-t space-y-1">
+            {secondaryNavItems.map((item) => (
+              <Link
+                key={item.title}
+                to={item.href}
+                className={cn(
+                  "flex items-center px-4 py-2 text-sm font-medium rounded-md hover:bg-secondary hover:text-foreground transition-colors",
+                  isActive(item.href) ? "bg-secondary text-foreground" : "text-muted-foreground"
+                )}
+              >
+                {item.icon}
+                <span className="ml-2">{item.title}</span>
+              </Link>
+            ))}
+          </div>
+        </nav>
+
+        <div className="border-t p-4">
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="ghost" className="flex h-8 w-full items-center justify-between rounded-md">
+                <div className="flex items-center gap-2">
+                  <Avatar className="h-6 w-6">
+                    <AvatarFallback className="text-xs">
+                      AU
+                    </AvatarFallback>
+                  </Avatar>
+                  <span className="text-sm font-medium">Admin Usuario</span>
+                </div>
+                <User className="h-4 w-4" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              <DropdownMenuItem asChild>
+                <Link to="/perfil">
+                  Perfil
+                </Link>
+              </DropdownMenuItem>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem>
+                <div className="flex items-center justify-between">
+                  <span>Modo oscuro</span>
+                  <Switch
+                    checked={theme === "dark"}
+                    onCheckedChange={(checked) => {
+                      setTheme(checked ? "dark" : "light")
+                    }}
+                  />
+                </div>
+              </DropdownMenuItem>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem>
+                Cerrar sesión
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        </div>
+      </aside>
+
+      {/* Mobile Sidebar */}
+      <Sheet open={isMobileMenuOpen} onOpenChange={setIsMobileMenuOpen}>
+        <SheetTrigger asChild>
+          <Button variant="ghost" size="icon" className="lg:hidden">
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              width="24"
+              height="24"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              className="h-6 w-6"
+            >
+              <line x1="4" y1="12" x2="20" y2="12" />
+              <line x1="4" y1="6" x2="20" y2="6" />
+              <line x1="4" y1="18" x2="20" y2="18" />
+            </svg>
+            <span className="sr-only">Abrir menú</span>
+          </Button>
+        </SheetTrigger>
+        <SheetContent side="left" className="w-64">
+          <SheetHeader className="text-left">
+            <SheetTitle>Intranet</SheetTitle>
+          </SheetHeader>
+
+          <nav className="flex-1 py-4">
+            <div className="space-y-1">
+              {mainNavItems.map((item) => (
+                <Link
+                  key={item.title}
+                  to={item.href}
+                  className={cn(
+                    "flex items-center px-4 py-2 text-sm font-medium rounded-md hover:bg-secondary hover:text-foreground transition-colors",
+                    isActive(item.href) ? "bg-secondary text-foreground" : "text-muted-foreground"
+                  )}
+                  onClick={() => setIsMobileMenuOpen(false)}
+                >
+                  {item.icon}
+                  <span className="ml-2">{item.title}</span>
+                </Link>
+              ))}
+            </div>
+
+            <div className="mt-6 pt-6 border-t space-y-1">
+              {secondaryNavItems.map((item) => (
+                <Link
+                  key={item.title}
+                  to={item.href}
+                  className={cn(
+                    "flex items-center px-4 py-2 text-sm font-medium rounded-md hover:bg-secondary hover:text-foreground transition-colors",
+                    isActive(item.href) ? "bg-secondary text-foreground" : "text-muted-foreground"
+                  )}
+                  onClick={() => setIsMobileMenuOpen(false)}
+                >
+                  {item.icon}
+                  <span className="ml-2">{item.title}</span>
+                </Link>
+              ))}
+            </div>
+          </nav>
+
+          <div className="border-t p-4">
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="ghost" className="flex h-8 w-full items-center justify-between rounded-md">
+                  <div className="flex items-center gap-2">
+                    <Avatar className="h-6 w-6">
+                      <AvatarFallback className="text-xs">
+                        AU
+                      </AvatarFallback>
+                    </Avatar>
+                    <span className="text-sm font-medium">Admin Usuario</span>
+                  </div>
+                  <User className="h-4 w-4" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                <DropdownMenuItem asChild>
+                  <Link to="/perfil" onClick={() => setIsMobileMenuOpen(false)}>
+                    Perfil
+                  </Link>
+                </DropdownMenuItem>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem>
+                  <div className="flex items-center justify-between">
+                    <span>Modo oscuro</span>
+                    <Switch
+                      checked={theme === "dark"}
+                      onCheckedChange={(checked) => {
+                        setTheme(checked ? "dark" : "light")
+                      }}
+                    />
+                  </div>
+                </DropdownMenuItem>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem>
+                  Cerrar sesión
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </div>
+        </SheetContent>
+      </Sheet>
+    </>
   );
 };
 

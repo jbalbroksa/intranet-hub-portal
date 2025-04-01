@@ -6,10 +6,12 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Textarea } from '@/components/ui/textarea';
-import { Search, Plus, Edit, Trash, LayoutGrid, List, Upload, Calendar, Clock, EyeIcon } from 'lucide-react';
+import { Search, Plus, Edit, Trash, LayoutGrid, List, Upload, Calendar, Clock, EyeIcon, ExternalLink } from 'lucide-react';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { format } from 'date-fns';
+import { Link } from 'react-router-dom';
+import { toast } from 'sonner';
+import WysiwygEditor from '@/components/WysiwygEditor';
 
 // Mock data for companies
 const mockCompanies = [
@@ -357,6 +359,11 @@ const News = () => {
                     {getCompanyNames(item.companies)}
                   </div>
                   <div className="flex gap-2">
+                    <Button variant="ghost" size="sm" asChild>
+                      <Link to={`/noticias/${item.id}`}>
+                        <ExternalLink className="h-4 w-4" />
+                      </Link>
+                    </Button>
                     <Button variant="ghost" size="sm" onClick={() => openEditDialog(item)}>
                       <Edit className="h-4 w-4" />
                     </Button>
@@ -428,6 +435,11 @@ const News = () => {
                       </TableCell>
                       <TableCell className="text-right">
                         <div className="flex justify-end gap-2">
+                          <Button variant="ghost" size="sm" asChild>
+                            <Link to={`/noticias/${item.id}`}>
+                              <ExternalLink className="h-4 w-4" />
+                            </Link>
+                          </Button>
                           <Button variant="ghost" size="sm" onClick={() => openEditDialog(item)}>
                             <Edit className="h-4 w-4" />
                           </Button>
@@ -491,18 +503,10 @@ const News = () => {
                 
                 <div className="space-y-2">
                   <Label htmlFor="content">Contenido</Label>
-                  <Textarea 
-                    id="content" 
-                    name="content" 
-                    value={formData.content} 
-                    onChange={handleInputChange} 
-                    required 
-                    rows={10}
-                    className="min-h-[200px] md:min-h-[300px]"
+                  <WysiwygEditor 
+                    value={formData.content}
+                    onChange={(content) => setFormData({...formData, content})}
                   />
-                  <p className="text-xs text-muted-foreground">
-                    En una implementación real, aquí se utilizaría un editor WYSIWYG completo.
-                  </p>
                 </div>
               </div>
               
