@@ -1,36 +1,31 @@
-
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { toast } from 'sonner';
-import { Company, SpecCategory, Specification } from '@/types/company';
+import { CompaniaFormData } from '@/types/database';
 import CompanyFilters from '@/components/companies/CompanyFilters';
 import CompanyList from '@/components/companies/CompanyList';
 import CompanyDetail from '@/components/companies/CompanyDetail';
 import CompanyForm from '@/components/companies/CompanyForm';
 import SpecificationForm from '@/components/companies/SpecificationForm';
 import CategoryForm from '@/components/companies/CategoryForm';
+import { useCompanias } from '@/hooks/useCompanias';
 
-// Mock data for companies
-const mockCompanies: Company[] = [
-  { id: 1, logo: '/placeholder.svg', name: 'Mapfre', website: 'mapfre.es', mediatorAccess: 'mapfre.es/mediadores', responsibleEmail: 'mediadores@mapfre.es', category: 'preferred' },
-  { id: 2, logo: '/placeholder.svg', name: 'Allianz', website: 'allianz.es', mediatorAccess: 'allianz.es/mediadores', responsibleEmail: 'mediadores@allianz.es', category: 'specific' },
-  { id: 3, logo: '/placeholder.svg', name: 'AXA', website: 'axa.es', mediatorAccess: 'axa.es/mediadores', responsibleEmail: 'mediadores@axa.es', category: 'preferred' },
-  { id: 4, logo: '/placeholder.svg', name: 'Generali', website: 'generali.es', mediatorAccess: 'generali.es/mediadores', responsibleEmail: 'mediadores@generali.es', category: 'specific' },
-  { id: 5, logo: '/placeholder.svg', name: 'Zurich', website: 'zurich.es', mediatorAccess: 'zurich.es/mediadores', responsibleEmail: 'mediadores@zurich.es', category: 'preferred' },
-];
+type FormMode = 'create' | 'edit';
+type ViewMode = 'grid' | 'list';
+type CategoryFilter = 'all' | 'specific' | 'preferred';
 
 // Mock data for specifications
-const mockSpecifications: Specification[] = [
-  { id: 1, companyId: 1, title: 'Requisitos de Contratación', content: 'Documentación necesaria para la contratación de pólizas.', category: 'requirements' },
-  { id: 2, companyId: 1, title: 'Proceso de Siniestros', content: 'Pasos a seguir para la gestión de siniestros con esta compañía.', category: 'procedures' },
-  { id: 3, companyId: 2, title: 'Comisiones', content: 'Detalles sobre las comisiones por producto.', category: 'commercial' },
-  { id: 4, companyId: 3, title: 'Contactos Clave', content: 'Listado de contactos clave para diferentes departamentos.', category: 'contacts' },
-  { id: 5, companyId: 3, title: 'Procedimiento de Renovación', content: 'Información sobre el proceso de renovación de pólizas.', category: 'procedures' },
+const mockSpecifications = [
+  { id: 1, companyId: "1", title: 'Requisitos de Contratación', content: 'Documentación necesaria para la contratación de pólizas.', category: 'requirements' },
+  { id: 2, companyId: "1", title: 'Proceso de Siniestros', content: 'Pasos a seguir para la gestión de siniestros con esta compañía.', category: 'procedures' },
+  { id: 3, companyId: "2", title: 'Comisiones', content: 'Detalles sobre las comisiones por producto.', category: 'commercial' },
+  { id: 4, companyId: "3", title: 'Contactos Clave', content: 'Listado de contactos clave para diferentes departamentos.', category: 'contacts' },
+  { id: 5, companyId: "3", title: 'Procedimiento de Renovación', content: 'Información sobre el proceso de renovación de pólizas.', category: 'procedures' },
 ];
 
 // Mock data for specification categories
-const mockSpecCategories: SpecCategory[] = [
+const mockSpecCategories = [
   { id: 1, name: 'Requisitos', slug: 'requirements' },
   { id: 2, name: 'Procedimientos', slug: 'procedures' },
   { id: 3, name: 'Comercial', slug: 'commercial' },
@@ -38,54 +33,64 @@ const mockSpecCategories: SpecCategory[] = [
   { id: 5, name: 'Otros', slug: 'other' },
 ];
 
-type FormMode = 'create' | 'edit';
-type ViewMode = 'grid' | 'list';
-type CategoryFilter = 'all' | 'specific' | 'preferred';
-
 const Companies = () => {
-  const [companies, setCompanies] = useState<Company[]>(mockCompanies);
-  const [specifications, setSpecifications] = useState<Specification[]>(mockSpecifications);
-  const [searchTerm, setSearchTerm] = useState('');
+  const { 
+    companias, 
+    filteredCompanias, 
+    isLoading, 
+    error, 
+    searchTerm, 
+    setSearchTerm, 
+    createCompania, 
+    updateCompania, 
+    deleteCompania, 
+    refetch 
+  } = useCompanias();
+
+  const [specifications, setSpecifications] = useState(mockSpecifications);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [specDialogOpen, setSpecDialogOpen] = useState(false);
   const [formMode, setFormMode] = useState<FormMode>('create');
-  const [currentCompany, setCurrentCompany] = useState<Company | null>(null);
-  const [selectedCompany, setSelectedCompany] = useState<Company | null>(null);
+  const [currentCompany, setCurrentCompany] = useState<any | null>(null);
+  const [selectedCompany, setSelectedCompany] = useState<any | null>(null);
   const [viewMode, setViewMode] = useState<ViewMode>('grid');
   const [categoryFilter, setCategoryFilter] = useState<CategoryFilter>('all');
   const [logoUrl, setLogoUrl] = useState<string>('/placeholder.svg');
   const [activeTab, setActiveTab] = useState<string>('info');
-  const [specCategories, setSpecCategories] = useState<SpecCategory[]>(mockSpecCategories);
+  const [specCategories, setSpecCategories] = useState(mockSpecCategories);
   const [categoryDialogOpen, setCategoryDialogOpen] = useState(false);
-  const [categoryFormData, setCategoryFormData] = useState<Omit<SpecCategory, 'id'>>({
+  const [categoryFormData, setCategoryFormData] = useState({
     name: '',
     slug: '',
   });
 
-  const [formData, setFormData] = useState<Omit<Company, 'id'>>({
-    logo: '/placeholder.svg',
-    name: '',
-    website: '',
-    mediatorAccess: '',
-    responsibleEmail: '',
-    category: 'all',
+  const [formData, setFormData] = useState<CompaniaFormData>({
+    nombre: '',
+    descripcion: '',
+    logo_url: '/placeholder.svg',
+    sitio_web: '',
+    direccion: '',
+    telefono: '',
+    email: '',
+    categoria: '',
   });
 
-  const [specFormData, setSpecFormData] = useState<Omit<Specification, 'id' | 'companyId'>>({
+  const [specFormData, setSpecFormData] = useState<any>({
     title: '',
     content: '',
     category: 'procedures',
   });
 
-  const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setSearchTerm(e.target.value);
+  const applyFilters = () => {
+    const filtered = filteredCompanias.filter(company => {
+      const matchesCategory = categoryFilter === 'all' || 
+        (company.categoria && company.categoria.toLowerCase() === categoryFilter);
+      return matchesCategory;
+    });
+    return filtered;
   };
 
-  const filteredCompanies = companies.filter(company => {
-    const matchesSearch = company.name.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesCategory = categoryFilter === 'all' || company.category === categoryFilter;
-    return matchesSearch && matchesCategory;
-  });
+  const filteredCompaniesWithCategoryFilter = applyFilters();
 
   const filteredSpecifications = specifications.filter(spec => {
     return selectedCompany ? spec.companyId === selectedCompany.id : false;
@@ -102,7 +107,7 @@ const Companies = () => {
   const handleCategoryChange = (value: string) => {
     setFormData({
       ...formData,
-      category: value as 'specific' | 'preferred' | 'all',
+      categoria: value,
     });
   };
 
@@ -123,12 +128,14 @@ const Companies = () => {
 
   const resetForm = () => {
     setFormData({
-      logo: '/placeholder.svg',
-      name: '',
-      website: '',
-      mediatorAccess: '',
-      responsibleEmail: '',
-      category: 'all',
+      nombre: '',
+      descripcion: '',
+      logo_url: '/placeholder.svg',
+      sitio_web: '',
+      direccion: '',
+      telefono: '',
+      email: '',
+      categoria: '',
     });
     setLogoUrl('/placeholder.svg');
   };
@@ -147,18 +154,20 @@ const Companies = () => {
     setDialogOpen(true);
   };
 
-  const openEditDialog = (company: Company) => {
+  const openEditDialog = (company: any) => {
     setFormMode('edit');
     setCurrentCompany(company);
     setFormData({
-      logo: company.logo,
-      name: company.name,
-      website: company.website,
-      mediatorAccess: company.mediatorAccess,
-      responsibleEmail: company.responsibleEmail,
-      category: company.category,
+      nombre: company.nombre,
+      descripcion: company.descripcion || '',
+      logo_url: company.logo_url || '/placeholder.svg',
+      sitio_web: company.sitio_web || '',
+      direccion: company.direccion || '',
+      telefono: company.telefono || '',
+      email: company.email || '',
+      categoria: company.categoria || '',
     });
-    setLogoUrl(company.logo);
+    setLogoUrl(company.logo_url || '/placeholder.svg');
     setDialogOpen(true);
   };
 
@@ -168,7 +177,7 @@ const Companies = () => {
     setSpecDialogOpen(true);
   };
 
-  const viewCompanyDetails = (company: Company) => {
+  const viewCompanyDetails = (company: any) => {
     setSelectedCompany(company);
     setActiveTab('info');
   };
@@ -184,7 +193,7 @@ const Companies = () => {
       setLogoUrl(url);
       setFormData({
         ...formData,
-        logo: url,
+        logo_url: url,
       });
     }
   };
@@ -193,20 +202,31 @@ const Companies = () => {
     e.preventDefault();
     
     if (formMode === 'create') {
-      const newCompany: Company = {
-        id: Math.max(0, ...companies.map(c => c.id)) + 1,
-        ...formData,
-      };
-      setCompanies([...companies, newCompany]);
+      createCompania.mutate(formData, {
+        onSuccess: () => {
+          setDialogOpen(false);
+          resetForm();
+          toast.success('Compañía creada correctamente');
+          refetch();
+        }
+      });
     } else if (formMode === 'edit' && currentCompany) {
-      const updatedCompanies = companies.map(company => 
-        company.id === currentCompany.id ? { ...company, ...formData } : company
-      );
-      setCompanies(updatedCompanies);
+      updateCompania.mutate({
+        id: currentCompany.id,
+        data: formData
+      }, {
+        onSuccess: () => {
+          setDialogOpen(false);
+          resetForm();
+          toast.success('Compañía actualizada correctamente');
+          refetch();
+          
+          if (selectedCompany && selectedCompany.id === currentCompany.id) {
+            setSelectedCompany(null);
+          }
+        }
+      });
     }
-    
-    setDialogOpen(false);
-    resetForm();
   };
 
   const handleSpecSubmit = (e: React.FormEvent) => {
@@ -226,12 +246,17 @@ const Companies = () => {
     toast.success("Especificación añadida correctamente");
   };
 
-  const handleDelete = (id: number) => {
+  const handleDelete = (id: string) => {
     if (window.confirm('¿Estás seguro de que quieres eliminar esta compañía?')) {
-      setCompanies(companies.filter(company => company.id !== id));
-      
-      // Also delete related specifications
-      setSpecifications(specifications.filter(spec => spec.companyId !== id));
+      deleteCompania.mutate(id, {
+        onSuccess: () => {
+          toast.success('Compañía eliminada correctamente');
+          refetch();
+          if (selectedCompany && selectedCompany.id === id) {
+            setSelectedCompany(null);
+          }
+        }
+      });
     }
   };
 
@@ -307,11 +332,16 @@ const Companies = () => {
     }
   };
 
-  const getCategoryLabel = (category: string) => {
-    switch(category) {
-      case 'specific': return 'Específica';
-      case 'preferred': return 'Preferente';
-      default: return 'Todas';
+  const getCategoryLabel = (category: string | null | undefined) => {
+    if (!category) return 'Todas';
+    
+    switch(category.toLowerCase()) {
+      case 'specific': 
+        return 'Específica';
+      case 'preferred': 
+        return 'Preferente';
+      default: 
+        return 'Todas';
     }
   };
 
@@ -319,6 +349,14 @@ const Companies = () => {
     const category = specCategories.find(c => c.slug === categorySlug);
     return category ? category.name : 'Desconocido';
   };
+
+  if (isLoading) {
+    return <div className="flex justify-center p-8">Cargando compañías...</div>;
+  }
+
+  if (error) {
+    return <div className="text-red-500 p-8">Error al cargar compañías: {error.message}</div>;
+  }
 
   if (selectedCompany) {
     return (
@@ -349,18 +387,42 @@ const Companies = () => {
         searchTerm={searchTerm}
         categoryFilter={categoryFilter}
         viewMode={viewMode}
-        onSearchChange={handleSearchChange}
+        onSearchChange={(e) => setSearchTerm(e.target.value)}
         onCategoryFilterChange={setCategoryFilter}
         onViewModeChange={setViewMode}
         onCreateClick={openCreateDialog}
       />
 
       <CompanyList
-        companies={filteredCompanies}
+        companies={filteredCompaniesWithCategoryFilter.map(company => ({
+          id: company.id,
+          logo: company.logo_url || '/placeholder.svg',
+          name: company.nombre,
+          website: company.sitio_web || '',
+          mediatorAccess: '',  // No direct mapping in the database model
+          responsibleEmail: company.email || '',
+          category: company.categoria || 'all',
+        }))}
         viewMode={viewMode}
         getCategoryLabel={getCategoryLabel}
-        onViewCompany={viewCompanyDetails}
-        onEditCompany={openEditDialog}
+        onViewCompany={(company) => {
+          const originalCompany = companias.find(c => c.id === company.id);
+          if (originalCompany) {
+            viewCompanyDetails({
+              ...company,
+              descripcion: originalCompany.descripcion,
+              direccion: originalCompany.direccion,
+              telefono: originalCompany.telefono,
+              // Add any other fields needed
+            });
+          }
+        }}
+        onEditCompany={(company) => {
+          const originalCompany = companias.find(c => c.id === company.id);
+          if (originalCompany) {
+            openEditDialog(originalCompany);
+          }
+        }}
         onDeleteCompany={handleDelete}
       />
 

@@ -1,281 +1,203 @@
-
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
+import { Card, CardContent } from '@/components/ui/card';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Input } from '@/components/ui/input';
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Search, Plus, Edit, Trash, LayoutGrid, List, Upload, Calendar, Clock, EyeIcon, ExternalLink } from 'lucide-react';
-import { Avatar, AvatarFallback } from '@/components/ui/avatar';
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Checkbox } from '@/components/ui/checkbox';
 import { Textarea } from '@/components/ui/textarea';
-import { format } from 'date-fns';
-import { Link } from 'react-router-dom';
+import { 
+  Search, 
+  Plus, 
+  File, 
+  FileText, 
+  Download, 
+  Trash, 
+  Calendar, 
+  User,
+  Filter,
+  Package 
+} from 'lucide-react';
 import { toast } from 'sonner';
-import WysiwygEditor from '@/components/WysiwygEditor';
+import { useNoticias } from '@/hooks/useNoticias';
+import { useSupabaseUpload, getPublicUrl } from '@/hooks/useSupabaseQuery';
+import { NoticiaFormData } from '@/types/database';
+import { useNavigate } from 'react-router-dom';
 
-// Mock data for companies
-const mockCompanies = [
-  { id: 1, name: 'Mapfre' },
-  { id: 2, name: 'Allianz' },
-  { id: 3, name: 'AXA' },
-  { id: 4, name: 'Generali' },
-  { id: 5, name: 'Zurich' },
+// Mock data for document categories
+const documentCategories = [
+  { id: 1, name: 'Pólizas', icon: FileText },
+  { id: 2, name: 'Normativas', icon: File },
+  { id: 3, name: 'Manuales', icon: FileText },
+  { id: 4, name: 'Contratos', icon: FileText },
+  { id: 5, name: 'Otros', icon: File },
 ];
 
-// Mock data for news
-const mockNews = [
-  { 
-    id: 1, 
-    title: 'Nueva normativa para seguros de automóvil', 
-    excerpt: 'Cambios importantes en la regulación de seguros de automóvil que afectan a todos los mediadores.', 
-    content: '<p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nullam euismod, nisl eget aliquam ultricies, nisl nisl aliquet nisl, eget aliquam nisl nisl eget nisl. Nullam euismod, nisl eget aliquam ultricies, nisl nisl aliquet nisl, eget aliquam nisl nisl eget nisl.</p><p>Nullam euismod, nisl eget aliquam ultricies, nisl nisl aliquet nisl, eget aliquam nisl nisl eget nisl. Nullam euismod, nisl eget aliquam ultricies, nisl nisl aliquet nisl, eget aliquam nisl nisl eget nisl.</p>', 
-    image: '/placeholder.svg', 
-    date: '2023-05-01', 
-    author: 'Admin Usuario',
-    companies: [1, 3],
-    views: 120
-  },
-  { 
-    id: 2, 
-    title: 'Nuevos productos de hogar disponibles', 
-    excerpt: 'Lanzamiento de nuevos productos de hogar con coberturas mejoradas y precios competitivos.', 
-    content: '<p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nullam euismod, nisl eget aliquam ultricies, nisl nisl aliquet nisl, eget aliquam nisl nisl eget nisl. Nullam euismod, nisl eget aliquam ultricies, nisl nisl aliquet nisl, eget aliquam nisl nisl eget nisl.</p><p>Nullam euismod, nisl eget aliquam ultricies, nisl nisl aliquet nisl, eget aliquam nisl nisl eget nisl. Nullam euismod, nisl eget aliquam ultricies, nisl nisl aliquet nisl, eget aliquam nisl nisl eget nisl.</p>', 
-    image: '/placeholder.svg', 
-    date: '2023-05-05', 
-    author: 'Admin Usuario',
-    companies: [2, 5],
-    views: 85
-  },
-  { 
-    id: 3, 
-    title: 'Formación online para mediadores', 
-    excerpt: 'Nueva plataforma de formación online para mediadores con cursos certificados y gratuitos.', 
-    content: '<p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nullam euismod, nisl eget aliquam ultricies, nisl nisl aliquet nisl, eget aliquam nisl nisl eget nisl. Nullam euismod, nisl eget aliquam ultricies, nisl nisl aliquet nisl, eget aliquam nisl nisl eget nisl.</p><p>Nullam euismod, nisl eget aliquam ultricies, nisl nisl aliquet nisl, eget aliquam nisl nisl eget nisl. Nullam euismod, nisl eget aliquam ultricies, nisl nisl aliquet nisl, eget aliquam nisl nisl eget nisl.</p>', 
-    image: '/placeholder.svg', 
-    date: '2023-05-10', 
-    author: 'María García',
-    companies: [1, 2, 3, 4, 5],
-    views: 230
-  },
-  { 
-    id: 4, 
-    title: 'Actualización de comisiones 2023', 
-    excerpt: 'Información importante sobre la actualización de comisiones para todos los productos en 2023.', 
-    content: '<p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nullam euismod, nisl eget aliquam ultricies, nisl nisl aliquet nisl, eget aliquam nisl nisl eget nisl. Nullam euismod, nisl eget aliquam ultricies, nisl nisl aliquet nisl, eget aliquam nisl nisl eget nisl.</p><p>Nullam euismod, nisl eget aliquam ultricies, nisl nisl aliquet nisl, eget aliquam nisl nisl eget nisl. Nullam euismod, nisl eget aliquam ultricies, nisl nisl aliquet nisl, eget aliquam nisl nisl eget nisl.</p>', 
-    image: '/placeholder.svg', 
-    date: '2023-05-15', 
-    author: 'Carlos Rodríguez',
-    companies: [1, 4],
-    views: 170
-  },
-  { 
-    id: 5, 
-    title: 'Nueva delegación en Valencia', 
-    excerpt: 'Apertura de una nueva delegación en Valencia para dar mejor servicio a los mediadores de la zona.', 
-    content: '<p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nullam euismod, nisl eget aliquam ultricies, nisl nisl aliquet nisl, eget aliquam nisl nisl eget nisl. Nullam euismod, nisl eget aliquam ultricies, nisl nisl aliquet nisl, eget aliquam nisl nisl eget nisl.</p><p>Nullam euismod, nisl eget aliquam ultricies, nisl nisl aliquet nisl, eget aliquam nisl nisl eget nisl. Nullam euismod, nisl eget aliquam ultricies, nisl nisl aliquet nisl, eget aliquam nisl nisl eget nisl.</p>', 
-    image: '/placeholder.svg', 
-    date: '2023-05-20', 
-    author: 'Laura Pérez',
-    companies: [2, 3],
-    views: 95
-  },
+// Mock data for product categories
+const productCategories = [
+  { id: 1, name: 'Automóvil' },
+  { id: 2, name: 'Hogar' },
+  { id: 3, name: 'Vida' },
 ];
-
-type Company = {
-  id: number;
-  name: string;
-};
-
-type NewsItem = {
-  id: number;
-  title: string;
-  excerpt: string;
-  content: string;
-  image: string;
-  date: string;
-  author: string;
-  companies: number[];
-  views: number;
-};
-
-type FormMode = 'create' | 'edit';
-type ViewMode = 'grid' | 'list';
 
 const News = () => {
-  const [news, setNews] = useState<NewsItem[]>(mockNews);
-  const [companies] = useState<Company[]>(mockCompanies);
-  const [searchTerm, setSearchTerm] = useState('');
-  const [dialogOpen, setDialogOpen] = useState(false);
-  const [formMode, setFormMode] = useState<FormMode>('create');
-  const [currentNews, setCurrentNews] = useState<NewsItem | null>(null);
-  const [viewMode, setViewMode] = useState<ViewMode>('grid');
-  const [imageUrl, setImageUrl] = useState<string>('/placeholder.svg');
-  const [selectedCompanyFilter, setSelectedCompanyFilter] = useState<string>("all");
+  const navigate = useNavigate();
+  const { 
+    noticias, 
+    filteredNoticias, 
+    isLoading, 
+    error, 
+    searchTerm, 
+    setSearchTerm, 
+    createNoticia, 
+    updateNoticia, 
+    deleteNoticia, 
+    refetch 
+  } = useNoticias();
   
-  const [formData, setFormData] = useState<Omit<NewsItem, 'id' | 'date' | 'author' | 'views'>>({
-    title: '',
-    excerpt: '',
-    content: '',
-    image: '/placeholder.svg',
-    companies: [],
+  const uploadFile = useSupabaseUpload();
+  
+  const [selectedCategory, setSelectedCategory] = useState<number | null>(null);
+  const [selectedProductCategory, setSelectedProductCategory] = useState<number | null>(null);
+  const [dialogOpen, setDialogOpen] = useState(false);
+  const [newNoticia, setNewNoticia] = useState<NoticiaFormData>({
+    titulo: '',
+    contenido: '',
+    imagen_url: '',
+    autor: '',
+    fecha_publicacion: new Date().toISOString(),
+    es_destacada: false,
   });
+  const [fileSelected, setFileSelected] = useState<File | null>(null);
+  const [currentView, setCurrentView] = useState<'grid' | 'list'>('grid');
+  const [uploading, setUploading] = useState(false);
 
-  // Handle search input change
-  const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setSearchTerm(e.target.value);
+  // Format date to a more readable format
+  const formatDate = (dateString: string): string => {
+    if (!dateString) return '';
+    const date = new Date(dateString);
+    return date.toLocaleDateString('es-ES', {
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric'
+    });
   };
 
-  // Filter news based on search term and company filter
-  const filteredNews = news.filter(item => {
-    const matchesSearch = 
-      item.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      item.excerpt.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      item.content.toLowerCase().includes(searchTerm.toLowerCase());
-    
-    const matchesCompany = selectedCompanyFilter === "all" || item.companies.includes(parseInt(selectedCompanyFilter));
-    
-    return matchesSearch && matchesCompany;
-  });
-
-  // Handle company filter selection
-  const handleCompanyFilter = (value: string) => {
-    setSelectedCompanyFilter(value);
+  // Handle file input change
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files[0]) {
+      setFileSelected(e.target.files[0]);
+    }
   };
 
-  // Clear company filter
-  const clearCompanyFilter = () => {
-    setSelectedCompanyFilter(null);
-  };
-
-  // Handle form input changes
+  // Handle input changes for the new document form
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
-    setFormData({
-      ...formData,
-      [name]: value,
+    setNewNoticia({
+      ...newNoticia,
+      [name]: value
     });
   };
 
-  // Handle company selection in form
-  const handleCompanyChange = (value: string) => {
-    const companyId = parseInt(value);
-    setFormData({
-      ...formData,
-      companies: formData.companies.includes(companyId)
-        ? formData.companies.filter(id => id !== companyId)
-        : [...formData.companies, companyId],
+  // Handle checkbox change
+  const handleCheckboxChange = (checked: boolean) => {
+    setNewNoticia({
+      ...newNoticia,
+      es_destacada: checked
     });
   };
 
-  // Simulate file upload for featured image
-  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) {
-      // In a real application, you would upload the file to a server
-      // and get a URL back. Here we're just creating a temporary URL.
-      const url = URL.createObjectURL(file);
-      setImageUrl(url);
-      setFormData({
-        ...formData,
-        image: url,
+  // Handle form submission
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    if (!newNoticia.titulo) {
+      toast.error('Por favor, completa el título de la noticia');
+      return;
+    }
+    
+    setUploading(true);
+    
+    try {
+      let imageUrl = '';
+      
+      // Upload file to Supabase storage if selected
+      if (fileSelected) {
+        const fileName = `${Date.now()}_${fileSelected.name}`;
+        const filePath = await uploadFile.mutateAsync({
+          bucketName: 'noticias',
+          filePath: fileName,
+          file: fileSelected
+        });
+        
+        // Get public URL
+        imageUrl = getPublicUrl('noticias', filePath);
+      }
+      
+      // Create new document in database
+      const noticiaData: NoticiaFormData = {
+        ...newNoticia,
+        imagen_url: imageUrl || newNoticia.imagen_url,
+        fecha_publicacion: newNoticia.fecha_publicacion || new Date().toISOString()
+      };
+      
+      await createNoticia.mutateAsync(noticiaData);
+      
+      // Reset form and close dialog
+      setNewNoticia({
+        titulo: '',
+        contenido: '',
+        imagen_url: '',
+        autor: '',
+        fecha_publicacion: new Date().toISOString(),
+        es_destacada: false,
+      });
+      setFileSelected(null);
+      setDialogOpen(false);
+      
+      refetch();
+      toast.success('Noticia creada correctamente');
+    } catch (error) {
+      console.error('Error creating news:', error);
+      toast.error('Error al crear la noticia');
+    } finally {
+      setUploading(false);
+    }
+  };
+
+  // Handle document deletion
+  const handleDelete = (id: string) => {
+    if (window.confirm('¿Estás seguro de que quieres eliminar esta noticia?')) {
+      deleteNoticia.mutate(id, {
+        onSuccess: () => {
+          toast.success('Noticia eliminada correctamente');
+          refetch();
+        },
+        onError: (error) => {
+          toast.error(`Error al eliminar noticia: ${error.message}`);
+        }
       });
     }
   };
 
-  // Reset form data
-  const resetForm = () => {
-    setFormData({
-      title: '',
-      excerpt: '',
-      content: '',
-      image: '/placeholder.svg',
-      companies: [],
-    });
-    setImageUrl('/placeholder.svg');
+  // View news detail
+  const handleViewNews = (id: string) => {
+    navigate(`/noticias/${id}`);
   };
 
-  // Open dialog for creating a new news item
-  const openCreateDialog = () => {
-    setFormMode('create');
-    resetForm();
-    setDialogOpen(true);
-  };
+  if (isLoading) {
+    return <div className="flex justify-center p-8">Cargando noticias...</div>;
+  }
 
-  // Open dialog for editing an existing news item
-  const openEditDialog = (item: NewsItem) => {
-    setFormMode('edit');
-    setCurrentNews(item);
-    setFormData({
-      title: item.title,
-      excerpt: item.excerpt,
-      content: item.content,
-      image: item.image,
-      companies: [...item.companies],
-    });
-    setImageUrl(item.image);
-    setDialogOpen(true);
-  };
-
-  // Handle form submission
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    
-    if (formMode === 'create') {
-      // Create new news item
-      const newItem: NewsItem = {
-        id: Math.max(0, ...news.map(n => n.id)) + 1,
-        ...formData,
-        date: format(new Date(), 'yyyy-MM-dd'),
-        author: 'Admin Usuario', // In a real app, this would be the current user
-        views: 0,
-      };
-      setNews([newItem, ...news]); // Add new news at the beginning
-    } else if (formMode === 'edit' && currentNews) {
-      // Update existing news item
-      const updatedNews = news.map(item => 
-        item.id === currentNews.id 
-          ? { 
-              ...item, 
-              ...formData,
-            } 
-          : item
-      );
-      setNews(updatedNews);
-    }
-    
-    setDialogOpen(false);
-    resetForm();
-  };
-
-  // Handle news item deletion
-  const handleDelete = (id: number) => {
-    if (window.confirm('¿Estás seguro de que quieres eliminar esta noticia?')) {
-      setNews(news.filter(item => item.id !== id));
-    }
-  };
-
-  // Get company names by ids
-  const getCompanyNames = (companyIds: number[]) => {
-    return companyIds
-      .map(id => companies.find(c => c.id === id)?.name || '')
-      .filter(Boolean)
-      .join(', ');
-  };
-
-  // Format date as a readable string
-  const formatDate = (dateString: string) => {
-    try {
-      return format(new Date(dateString), 'dd/MM/yyyy');
-    } catch (e) {
-      return dateString;
-    }
-  };
+  if (error) {
+    return <div className="text-red-500 p-8">Error al cargar noticias: {error.message}</div>;
+  }
 
   return (
     <div className="space-y-6 animate-slideInUp">
-      {/* Search and filter bar */}
+      {/* Header with search and buttons */}
       <div className="flex flex-col md:flex-row gap-4 items-start md:items-center justify-between">
         <div className="relative w-full md:w-96">
           <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
@@ -283,290 +205,254 @@ const News = () => {
             placeholder="Buscar noticias..."
             className="pl-9"
             value={searchTerm}
-            onChange={handleSearchChange}
+            onChange={(e) => setSearchTerm(e.target.value)}
           />
         </div>
         
-        <div className="flex flex-wrap gap-2">
-          <Select value={selectedCompanyFilter?.toString() || "all"} onValueChange={handleCompanyFilter}>
-            <SelectTrigger className="w-[180px]">
-              <SelectValue placeholder="Filtrar por compañía" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">Todas las compañías</SelectItem>
-              {companies.map(company => (
-                <SelectItem key={company.id} value={company.id.toString()}>
-                  {company.name}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-          
-          <div className="flex gap-2 ml-auto">
-            <div className="border rounded-md flex overflow-hidden">
-              <Button 
-                variant={viewMode === 'grid' ? 'secondary' : 'ghost'} 
-                size="sm" 
-                onClick={() => setViewMode('grid')}
-                className="rounded-none"
-              >
-                <LayoutGrid className="h-4 w-4" />
-              </Button>
-              <Button 
-                variant={viewMode === 'list' ? 'secondary' : 'ghost'} 
-                size="sm" 
-                onClick={() => setViewMode('list')}
-                className="rounded-none"
-              >
-                <List className="h-4 w-4" />
-              </Button>
-            </div>
-            
-            <Button onClick={openCreateDialog}>
-              <Plus className="h-4 w-4 mr-2" />
-              Nueva Noticia
-            </Button>
-          </div>
+        <div className="flex flex-col md:flex-row gap-2">
+          <Button onClick={() => setDialogOpen(true)}>
+            <Plus className="h-4 w-4 mr-2" />
+            Crear noticia
+          </Button>
         </div>
       </div>
 
-      {/* News display */}
-      {viewMode === 'grid' ? (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-          {filteredNews.length > 0 ? (
-            filteredNews.map((item) => (
-              <Card key={item.id} className="overflow-hidden hover:shadow-md transition-shadow">
-                <div className="aspect-video relative overflow-hidden">
-                  <img 
-                    src={item.image} 
-                    alt={item.title} 
-                    className="w-full h-full object-cover"
-                  />
-                </div>
-                <CardHeader className="p-4 pb-2">
-                  <CardTitle className="text-lg line-clamp-2">{item.title}</CardTitle>
-                  <CardDescription className="flex items-center gap-1 text-xs">
-                    <Calendar className="h-3 w-3" />
-                    {formatDate(item.date)}
-                    <span className="mx-1">•</span>
-                    <EyeIcon className="h-3 w-3" />
-                    {item.views} visitas
-                  </CardDescription>
-                </CardHeader>
-                <CardContent className="p-4 pt-2">
-                  <p className="text-sm text-muted-foreground line-clamp-3">{item.excerpt}</p>
-                </CardContent>
-                <CardFooter className="p-4 pt-0 flex justify-between items-center">
-                  <div className="text-xs text-muted-foreground truncate max-w-[150px]">
-                    {getCompanyNames(item.companies)}
+      {/* View selector */}
+      <div className="flex justify-end">
+        <Tabs value={currentView} onValueChange={(value) => setCurrentView(value as 'grid' | 'list')}>
+          <TabsList>
+            <TabsTrigger value="grid">Grid</TabsTrigger>
+            <TabsTrigger value="list">Lista</TabsTrigger>
+          </TabsList>
+        </Tabs>
+      </div>
+
+      {/* MAIN TABS - Wrapping all TabsContent components */}
+      <Tabs value={currentView} className="mt-0">
+        {/* News grid view */}
+        <TabsContent value="grid" className="mt-0">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {filteredNoticias.length > 0 ? (
+              filteredNoticias.map(noticia => (
+                <Card key={noticia.id} className="overflow-hidden">
+                  <div className="relative h-48 bg-muted">
+                    {noticia.imagen_url ? (
+                      <img 
+                        src={noticia.imagen_url} 
+                        alt={noticia.titulo} 
+                        className="w-full h-full object-cover"
+                      />
+                    ) : (
+                      <div className="flex items-center justify-center h-full bg-muted">
+                        <FileText className="h-12 w-12 text-muted-foreground" />
+                      </div>
+                    )}
+                    {noticia.es_destacada && (
+                      <div className="absolute top-2 right-2 bg-primary text-primary-foreground px-2 py-1 text-xs rounded-md">
+                        Destacada
+                      </div>
+                    )}
                   </div>
-                  <div className="flex gap-2">
-                    <Button variant="ghost" size="sm" asChild>
-                      <Link to={`/noticias/${item.id}`}>
-                        <ExternalLink className="h-4 w-4" />
-                      </Link>
-                    </Button>
-                    <Button variant="ghost" size="sm" onClick={() => openEditDialog(item)}>
-                      <Edit className="h-4 w-4" />
-                    </Button>
-                    <Button variant="ghost" size="sm" onClick={() => handleDelete(item.id)}>
-                      <Trash className="h-4 w-4" />
-                    </Button>
-                  </div>
-                </CardFooter>
-              </Card>
-            ))
-          ) : (
-            <div className="col-span-full text-center py-10">
-              <p>No se encontraron noticias</p>
-            </div>
-          )}
-        </div>
-      ) : (
-        <Card>
-          <CardContent className="p-0">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Título</TableHead>
-                  <TableHead className="hidden md:table-cell">Fecha</TableHead>
-                  <TableHead className="hidden md:table-cell">Autor</TableHead>
-                  <TableHead className="hidden md:table-cell">Compañías</TableHead>
-                  <TableHead className="hidden md:table-cell">Visitas</TableHead>
-                  <TableHead className="text-right">Acciones</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {filteredNews.length > 0 ? (
-                  filteredNews.map((item) => (
-                    <TableRow key={item.id}>
-                      <TableCell>
-                        <div className="flex items-center gap-4">
-                          <div className="w-12 h-12 rounded overflow-hidden flex-shrink-0">
-                            <img 
-                              src={item.image} 
-                              alt={item.title} 
-                              className="w-full h-full object-cover"
-                            />
+                  <CardContent className="p-6">
+                    <div className="flex flex-col h-full">
+                      <h3 className="font-medium text-lg mb-2 line-clamp-2">{noticia.titulo}</h3>
+                      <p className="text-sm text-muted-foreground mb-4 line-clamp-3">{noticia.contenido}</p>
+                      
+                      <div className="mt-auto space-y-2 text-sm">
+                        <div className="flex justify-between">
+                          <div className="flex items-center gap-1 text-muted-foreground">
+                            <Calendar className="h-4 w-4" />
+                            <span>{formatDate(noticia.fecha_publicacion)}</span>
                           </div>
-                          <div>
-                            <div className="font-medium">{item.title}</div>
-                            <div className="text-sm text-muted-foreground line-clamp-1">{item.excerpt}</div>
-                          </div>
+                          {noticia.autor && (
+                            <div className="flex items-center gap-1 text-muted-foreground">
+                              <User className="h-4 w-4" />
+                              <span>{noticia.autor}</span>
+                            </div>
+                          )}
                         </div>
-                      </TableCell>
-                      <TableCell className="hidden md:table-cell">{formatDate(item.date)}</TableCell>
-                      <TableCell className="hidden md:table-cell">
-                        <div className="flex items-center gap-2">
-                          <Avatar className="h-6 w-6">
-                            <AvatarFallback className="text-xs">
-                              {item.author.split(' ').map(n => n[0]).join('').toUpperCase().substring(0, 2)}
-                            </AvatarFallback>
-                          </Avatar>
-                          <span>{item.author}</span>
-                        </div>
-                      </TableCell>
-                      <TableCell className="hidden md:table-cell truncate max-w-[150px]">
-                        {getCompanyNames(item.companies)}
-                      </TableCell>
-                      <TableCell className="hidden md:table-cell">
-                        <div className="flex items-center gap-1">
-                          <EyeIcon className="h-4 w-4 text-muted-foreground" />
-                          {item.views}
-                        </div>
-                      </TableCell>
-                      <TableCell className="text-right">
-                        <div className="flex justify-end gap-2">
-                          <Button variant="ghost" size="sm" asChild>
-                            <Link to={`/noticias/${item.id}`}>
-                              <ExternalLink className="h-4 w-4" />
-                            </Link>
+                        
+                        <div className="flex justify-between mt-4">
+                          <Button variant="outline" size="sm" onClick={() => handleViewNews(noticia.id)}>
+                            Leer más
                           </Button>
-                          <Button variant="ghost" size="sm" onClick={() => openEditDialog(item)}>
-                            <Edit className="h-4 w-4" />
-                          </Button>
-                          <Button variant="ghost" size="sm" onClick={() => handleDelete(item.id)}>
+                          <Button variant="ghost" size="sm" onClick={() => handleDelete(noticia.id)}>
                             <Trash className="h-4 w-4" />
                           </Button>
                         </div>
-                      </TableCell>
-                    </TableRow>
-                  ))
-                ) : (
-                  <TableRow>
-                    <TableCell colSpan={6} className="text-center py-6">
-                      No se encontraron noticias
-                    </TableCell>
-                  </TableRow>
-                )}
-              </TableBody>
-            </Table>
-          </CardContent>
-        </Card>
-      )}
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              ))
+            ) : (
+              <div className="col-span-full text-center py-12">
+                <FileText className="h-12 w-12 text-muted-foreground mx-auto" />
+                <h3 className="mt-4 text-lg font-medium">No se encontraron noticias</h3>
+                <p className="text-muted-foreground">Intenta con otros criterios de búsqueda o crea una nueva noticia</p>
+              </div>
+            )}
+          </div>
+        </TabsContent>
 
-      {/* Create/Edit dialog */}
+        {/* News list view */}
+        <TabsContent value="list" className="mt-0">
+          <Card>
+            <CardContent className="p-0">
+              <table className="w-full">
+                <thead>
+                  <tr className="border-b">
+                    <th className="text-left p-4">Noticia</th>
+                    <th className="text-left p-4 hidden md:table-cell">Autor</th>
+                    <th className="text-left p-4">Fecha</th>
+                    <th className="text-left p-4 hidden md:table-cell">Destacada</th>
+                    <th className="text-right p-4">Acciones</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {filteredNoticias.length > 0 ? (
+                    filteredNoticias.map(noticia => (
+                      <tr key={noticia.id} className="border-b">
+                        <td className="p-4">
+                          <div className="flex items-start gap-3">
+                            <div className="bg-muted rounded-md h-12 w-12 overflow-hidden flex-shrink-0">
+                              {noticia.imagen_url ? (
+                                <img 
+                                  src={noticia.imagen_url} 
+                                  alt={noticia.titulo} 
+                                  className="h-full w-full object-cover"
+                                />
+                              ) : (
+                                <div className="flex items-center justify-center h-full">
+                                  <FileText className="h-6 w-6 text-muted-foreground" />
+                                </div>
+                              )}
+                            </div>
+                            <div>
+                              <div className="font-medium">{noticia.titulo}</div>
+                              <div className="text-sm text-muted-foreground line-clamp-1">{noticia.contenido}</div>
+                            </div>
+                          </div>
+                        </td>
+                        <td className="p-4 hidden md:table-cell">{noticia.autor || '-'}</td>
+                        <td className="p-4">{formatDate(noticia.fecha_publicacion)}</td>
+                        <td className="p-4 hidden md:table-cell">
+                          {noticia.es_destacada ? (
+                            <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-primary text-primary-foreground">
+                              Sí
+                            </span>
+                          ) : 'No'}
+                        </td>
+                        <td className="p-4">
+                          <div className="flex justify-end gap-2">
+                            <Button variant="ghost" size="sm" onClick={() => handleViewNews(noticia.id)}>
+                              Leer más
+                            </Button>
+                            <Button variant="ghost" size="sm" onClick={() => handleDelete(noticia.id)}>
+                              <Trash className="h-4 w-4" />
+                            </Button>
+                          </div>
+                        </td>
+                      </tr>
+                    ))
+                  ) : (
+                    <tr>
+                      <td colSpan={5} className="text-center py-6">
+                        <FileText className="h-12 w-12 text-muted-foreground mx-auto" />
+                        <h3 className="mt-4 text-lg font-medium">No se encontraron noticias</h3>
+                        <p className="text-muted-foreground">Intenta con otros criterios de búsqueda o crea una nueva noticia</p>
+                      </td>
+                    </tr>
+                  )}
+                </tbody>
+              </table>
+            </CardContent>
+          </Card>
+        </TabsContent>
+      </Tabs>
+
+      {/* Create news dialog */}
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-        <DialogContent className="sm:max-w-[800px]">
+        <DialogContent className="sm:max-w-md">
           <DialogHeader>
-            <DialogTitle>
-              {formMode === 'create' ? 'Crear nueva noticia' : 'Editar noticia'}
-            </DialogTitle>
+            <DialogTitle>Crear noticia</DialogTitle>
             <DialogDescription>
-              Complete todos los campos para {formMode === 'create' ? 'crear una nueva' : 'actualizar la'} noticia.
+              Crea una nueva noticia para publicar en el sistema
             </DialogDescription>
           </DialogHeader>
-          
-          <form onSubmit={handleSubmit} className="space-y-4">
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              <div className="md:col-span-2 space-y-4">
-                <div className="space-y-2">
-                  <Label htmlFor="title">Título</Label>
-                  <Input 
-                    id="title" 
-                    name="title" 
-                    value={formData.title} 
-                    onChange={handleInputChange} 
-                    required 
-                  />
-                </div>
-                
-                <div className="space-y-2">
-                  <Label htmlFor="excerpt">Extracto</Label>
-                  <Textarea 
-                    id="excerpt" 
-                    name="excerpt" 
-                    value={formData.excerpt} 
-                    onChange={handleInputChange} 
-                    required 
-                    rows={3}
-                  />
-                </div>
-                
-                <div className="space-y-2">
-                  <Label htmlFor="content">Contenido</Label>
-                  <WysiwygEditor 
-                    value={formData.content}
-                    onChange={(content) => setFormData({...formData, content})}
-                  />
-                </div>
+          <form onSubmit={handleSubmit}>
+            <div className="space-y-4 py-4">
+              <div className="space-y-2">
+                <Label htmlFor="titulo">Título *</Label>
+                <Input
+                  id="titulo"
+                  name="titulo"
+                  value={newNoticia.titulo}
+                  onChange={handleInputChange}
+                  placeholder="Título de la noticia"
+                  required
+                />
               </div>
               
-              <div className="space-y-4">
-                <div className="space-y-2">
-                  <Label htmlFor="image">Imagen destacada</Label>
-                  <div className="flex flex-col items-center gap-4">
-                    <div className="w-full aspect-video rounded-md border overflow-hidden bg-muted/30">
-                      <img 
-                        src={imageUrl}
-                        alt="Featured image" 
-                        className="w-full h-full object-cover"
-                      />
-                    </div>
-                    <label className="cursor-pointer w-full">
-                      <div className="flex items-center gap-2 text-sm px-3 py-2 border rounded-md hover:bg-muted transition-colors w-full justify-center">
-                        <Upload className="h-4 w-4" />
-                        <span>Subir imagen</span>
-                      </div>
-                      <input 
-                        type="file" 
-                        id="image" 
-                        accept="image/*" 
-                        className="hidden" 
-                        onChange={handleImageUpload} 
-                      />
-                    </label>
-                  </div>
-                </div>
-                
-                <div className="space-y-2">
-                  <Label>Vincular a compañías</Label>
-                  <div className="space-y-2 border rounded-md p-3 max-h-[200px] overflow-y-auto">
-                    {companies.map(company => (
-                      <div key={company.id} className="flex items-center space-x-2">
-                        <input
-                          type="checkbox"
-                          id={`company-${company.id}`}
-                          checked={formData.companies.includes(company.id)}
-                          onChange={() => handleCompanyChange(company.id.toString())}
-                          className="rounded border-input"
-                        />
-                        <Label htmlFor={`company-${company.id}`} className="cursor-pointer text-sm">
-                          {company.name}
-                        </Label>
-                      </div>
-                    ))}
-                  </div>
-                </div>
+              <div className="space-y-2">
+                <Label htmlFor="contenido">Contenido</Label>
+                <Textarea
+                  id="contenido"
+                  name="contenido"
+                  value={newNoticia.contenido || ''}
+                  onChange={handleInputChange}
+                  placeholder="Contenido de la noticia"
+                  rows={5}
+                />
+              </div>
+              
+              <div className="space-y-2">
+                <Label htmlFor="autor">Autor</Label>
+                <Input
+                  id="autor"
+                  name="autor"
+                  value={newNoticia.autor || ''}
+                  onChange={handleInputChange}
+                  placeholder="Autor de la noticia"
+                />
+              </div>
+              
+              <div className="space-y-2">
+                <Label htmlFor="fecha_publicacion">Fecha de publicación</Label>
+                <Input
+                  id="fecha_publicacion"
+                  name="fecha_publicacion"
+                  type="date"
+                  value={newNoticia.fecha_publicacion ? new Date(newNoticia.fecha_publicacion).toISOString().split('T')[0] : ''}
+                  onChange={handleInputChange}
+                />
+              </div>
+              
+              <div className="flex items-center space-x-2">
+                <Checkbox 
+                  id="es_destacada" 
+                  checked={newNoticia.es_destacada}
+                  onCheckedChange={handleCheckboxChange}
+                />
+                <Label htmlFor="es_destacada">Noticia destacada</Label>
+              </div>
+              
+              <div className="space-y-2">
+                <Label htmlFor="file">Imagen</Label>
+                <Input
+                  id="file"
+                  type="file"
+                  accept="image/*"
+                  onChange={handleFileChange}
+                />
+                <p className="text-xs text-muted-foreground">
+                  Formatos soportados: JPG, PNG, GIF. Tamaño máximo: 5MB
+                </p>
               </div>
             </div>
-            
             <DialogFooter>
-              <Button variant="outline" type="button" onClick={() => setDialogOpen(false)}>
-                Cancelar
-              </Button>
-              <Button type="submit">
-                {formMode === 'create' ? 'Publicar' : 'Guardar cambios'}
+              <Button type="submit" disabled={uploading}>
+                {uploading ? 'Creando...' : 'Crear noticia'}
               </Button>
             </DialogFooter>
           </form>

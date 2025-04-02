@@ -1,624 +1,380 @@
-
-import React, { useState } from 'react';
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import React, { useState, useEffect } from 'react';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent } from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Textarea } from '@/components/ui/textarea';
+import { 
+  Search, 
+  Plus, 
+  FileImage, 
+  Download, 
+  Trash, 
+  Package,
+  Edit 
+} from 'lucide-react';
 import { toast } from 'sonner';
-import ProductFilters from '@/components/products/ProductFilters';
-import ProductsList from '@/components/products/ProductsList';
-import ProductForm from '@/components/products/ProductForm';
-import CategoryManager from '@/components/products/CategoryManager';
+import { useProductos } from '@/hooks/useProductos';
+import { ProductoFormData } from '@/types/database';
 
-// Mock data for categories
-const mockCategories = [
-  { 
-    id: 1, 
-    name: 'Automóvil', 
-    subcategories: [
-      { 
-        id: 1, 
-        name: 'Todo Riesgo',
-        parent_id: 1,
-        level3: [
-          { id: 1, name: 'Básico', parent_id: 1 },
-          { id: 2, name: 'Ampliado', parent_id: 1 },
-          { id: 3, name: 'Premium', parent_id: 1 },
-        ] 
-      },
-      { 
-        id: 2, 
-        name: 'Terceros',
-        parent_id: 1,
-        level3: [
-          { id: 4, name: 'Básico', parent_id: 2 },
-          { id: 5, name: 'Ampliado', parent_id: 2 },
-        ] 
-      },
-      { 
-        id: 3, 
-        name: 'Terceros Ampliado',
-        parent_id: 1,
-        level3: [] 
-      },
-    ]
-  },
-  { 
-    id: 2, 
-    name: 'Hogar', 
-    subcategories: [
-      { 
-        id: 4, 
-        name: 'Básico',
-        parent_id: 2,
-        level3: [] 
-      },
-      { 
-        id: 5, 
-        name: 'Completo',
-        parent_id: 2,
-        level3: [
-          { id: 6, name: 'Estándar', parent_id: 5 },
-          { id: 7, name: 'Plus', parent_id: 5 },
-        ] 
-      },
-      { 
-        id: 6, 
-        name: 'Premium',
-        parent_id: 2,
-        level3: [] 
-      },
-    ]
-  },
-  { 
-    id: 3, 
-    name: 'Vida', 
-    subcategories: [
-      { 
-        id: 7, 
-        name: 'Temporal',
-        parent_id: 3,
-        level3: [] 
-      },
-      { 
-        id: 8, 
-        name: 'Ahorro',
-        parent_id: 3,
-        level3: [
-          { id: 8, name: 'Estándar', parent_id: 8 },
-          { id: 9, name: 'Premium', parent_id: 8 },
-        ] 
-      },
-      { 
-        id: 9, 
-        name: 'Inversión',
-        parent_id: 3,
-        level3: [] 
-      },
-    ]
-  },
+// Mock data for product categories
+const productCategories = [
+  { id: 1, name: 'Automóvil' },
+  { id: 2, name: 'Hogar' },
+  { id: 3, name: 'Vida' },
 ];
-
-// Mock data for companies
-const mockCompanies = [
-  { id: 1, name: 'Mapfre' },
-  { id: 2, name: 'Allianz' },
-  { id: 3, name: 'AXA' },
-  { id: 4, name: 'Generali' },
-  { id: 5, name: 'Zurich' },
-];
-
-// Mock data for products
-const mockProducts = [
-  { id: 1, name: 'Seguro Todo Riesgo Plus', description: 'Seguro a todo riesgo con las mejores coberturas', categoryId: 1, subcategoryId: 1, companies: [1, 3], features: ['Asistencia 24h', 'Vehículo de sustitución', 'Daños propios'], strengths: 'Cobertura completa, precio competitivo', weaknesses: 'Franquicia alta para conductores noveles', observations: 'Recomendado para familias' },
-  { id: 2, name: 'Seguro Hogar Completo', description: 'Protección integral para tu hogar', categoryId: 2, subcategoryId: 5, companies: [2, 5], features: ['Daños por agua', 'Robo', 'Responsabilidad civil'], strengths: 'Amplia cobertura en daños estéticos', weaknesses: 'No cubre daños a terceros fuera del hogar', observations: 'Ideal para viviendas de más de 90m²' },
-  { id: 3, name: 'Seguro de Vida Ahorro', description: 'Asegura tu futuro y el de tu familia', categoryId: 3, subcategoryId: 8, companies: [1, 4], features: ['Capital garantizado', 'Flexibilidad', 'Fiscalidad ventajosa'], strengths: 'Buena rentabilidad a largo plazo', weaknesses: 'Poca liquidez', observations: 'Recomendado para ahorro superior a 5 años' },
-  { id: 4, name: 'Terceros Ampliado', description: 'Seguro a terceros con coberturas adicionales', categoryId: 1, subcategoryId: 3, companies: [3, 5], features: ['Lunas', 'Robo', 'Incendio'], strengths: 'Precio muy competitivo', weaknesses: 'No cubre daños propios', observations: 'Para vehículos de más de 5 años' },
-  { id: 5, name: 'Hogar Básico', description: 'Cobertura esencial para tu vivienda', categoryId: 2, subcategoryId: 4, companies: [2, 3], features: ['Incendio', 'Daños por agua', 'Responsabilidad civil'], strengths: 'Precio económico', weaknesses: 'Coberturas limitadas', observations: 'Para viviendas de menos de 90m²' },
-];
-
-type Level3Category = {
-  id: number;
-  name: string;
-  parent_id: number;
-};
-
-type Subcategory = {
-  id: number;
-  name: string;
-  parent_id: number;
-  level3: Level3Category[];
-};
-
-type Category = {
-  id: number;
-  name: string;
-  subcategories: Subcategory[];
-};
-
-type Company = {
-  id: number;
-  name: string;
-};
-
-type FormMode = 'create' | 'edit';
-
-type Product = {
-  id: number;
-  name: string;
-  description: string;
-  categoryId: number;
-  subcategoryId: number;
-  level3CategoryId?: number;
-  companies: number[];
-  features: string[];
-  strengths?: string;
-  weaknesses?: string;
-  observations?: string;
-};
-
-type CategoryFormData = {
-  level: 'category' | 'subcategory' | 'level3';
-  name: string;
-  parentCategoryId?: number;
-  parentSubcategoryId?: number;
-};
 
 const Products = () => {
-  const [products, setProducts] = useState<Product[]>(mockProducts);
-  const [categories, setCategories] = useState<Category[]>(mockCategories);
-  const [companies] = useState<Company[]>(mockCompanies);
-  const [searchTerm, setSearchTerm] = useState('');
+  const { 
+    productos, 
+    filteredProductos, 
+    isLoading, 
+    error, 
+    searchTerm, 
+    setSearchTerm, 
+    categoria,
+    setCategoria,
+    filtrosActivos,
+    setFiltrosActivos,
+    createProducto, 
+    updateProducto, 
+    deleteProducto, 
+    refetch 
+  } = useProductos();
+
   const [dialogOpen, setDialogOpen] = useState(false);
-  const [formMode, setFormMode] = useState<FormMode>('create');
-  const [currentProduct, setCurrentProduct] = useState<Product | null>(null);
-  const [expandedCategories, setExpandedCategories] = useState<number[]>([]);
-  const [expandedSubcategories, setExpandedSubcategories] = useState<number[]>([]);
-  const [selectedCategoryFilter, setSelectedCategoryFilter] = useState<number | null>(null);
-  const [selectedCompanyFilter, setSelectedCompanyFilter] = useState<number | null>(null);
-  const [activeCategoryTab, setActiveCategoryTab] = useState('list');
-  
-  const [formData, setFormData] = useState<Omit<Product, 'id'>>({
-    name: '',
-    description: '',
-    categoryId: 0,
-    subcategoryId: 0,
-    level3CategoryId: undefined,
-    companies: [],
-    features: [''],
-    strengths: '',
-    weaknesses: '',
-    observations: '',
+  const [formMode, setFormMode] = useState<'create' | 'edit'>('create');
+  const [currentProduct, setCurrentProduct] = useState<any | null>(null);
+  const [newProduct, setNewProduct] = useState<ProductoFormData>({
+    nombre: '',
+    descripcion: '',
+    imagen_url: '',
+    categoria: '',
+    precio: 0,
+    stock: 0,
   });
 
-  const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setSearchTerm(e.target.value);
-  };
-
-  const filteredProducts = products.filter(product => {
-    const matchesSearch = product.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                        product.description.toLowerCase().includes(searchTerm.toLowerCase());
-    
-    const matchesCategory = selectedCategoryFilter === null || product.categoryId === selectedCategoryFilter;
-    
-    const matchesCompany = selectedCompanyFilter === null || product.companies.includes(selectedCompanyFilter);
-    
-    return matchesSearch && matchesCategory && matchesCompany;
-  });
-
-  const toggleCategoryExpansion = (categoryId: number) => {
-    setExpandedCategories(prevExpanded => 
-      prevExpanded.includes(categoryId)
-        ? prevExpanded.filter(id => id !== categoryId)
-        : [...prevExpanded, categoryId]
-    );
-  };
-
-  const toggleSubcategoryExpansion = (subcategoryId: number) => {
-    setExpandedSubcategories(prevExpanded => 
-      prevExpanded.includes(subcategoryId)
-        ? prevExpanded.filter(id => id !== subcategoryId)
-        : [...prevExpanded, subcategoryId]
-    );
-  };
-
-  const clearFilters = () => {
-    setSelectedCategoryFilter(null);
-    setSelectedCompanyFilter(null);
-    setSearchTerm('');
-  };
-
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  // Handle input changes for the new product form
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
-    setFormData({
-      ...formData,
-      [name]: value,
+    setNewProduct({
+      ...newProduct,
+      [name]: value
     });
   };
 
-  const handleTextAreaChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
-    const { name, value } = e.target;
-    setFormData({
-      ...formData,
-      [name]: value,
-    });
-  };
-
+  // Handle category selection
   const handleCategoryChange = (value: string) => {
-    const categoryId = parseInt(value);
-    setFormData({
-      ...formData,
-      categoryId,
-      subcategoryId: 0,
-      level3CategoryId: undefined,
+    setNewProduct({
+      ...newProduct,
+      categoria: value
     });
+    setCategoria(value);
+    setFiltrosActivos(true);
   };
 
-  const handleSubcategoryChange = (value: string) => {
-    const subcategoryId = parseInt(value);
-    setFormData({
-      ...formData,
-      subcategoryId,
-      level3CategoryId: undefined,
-    });
-  };
-
-  const handleLevel3Change = (value: string) => {
-    const level3Id = parseInt(value);
-    setFormData({
-      ...formData,
-      level3CategoryId: level3Id === 0 ? undefined : level3Id,
-    });
-  };
-
-  const handleCompanyChange = (value: string) => {
-    const companyId = parseInt(value);
-    setFormData({
-      ...formData,
-      companies: formData.companies.includes(companyId)
-        ? formData.companies.filter(id => id !== companyId)
-        : [...formData.companies, companyId],
-    });
-  };
-
-  const handleFeatureChange = (index: number, value: string) => {
-    const updatedFeatures = [...formData.features];
-    updatedFeatures[index] = value;
-    setFormData({
-      ...formData,
-      features: updatedFeatures,
-    });
-  };
-
-  const addFeature = () => {
-    setFormData({
-      ...formData,
-      features: [...formData.features, ''],
-    });
-  };
-
-  const removeFeature = (index: number) => {
-    const updatedFeatures = [...formData.features];
-    updatedFeatures.splice(index, 1);
-    setFormData({
-      ...formData,
-      features: updatedFeatures,
-    });
-  };
-
-  const resetForm = () => {
-    setFormData({
-      name: '',
-      description: '',
-      categoryId: 0,
-      subcategoryId: 0,
-      level3CategoryId: undefined,
-      companies: [],
-      features: [''],
-      strengths: '',
-      weaknesses: '',
-      observations: '',
-    });
-  };
-
-  const openCreateDialog = () => {
-    setFormMode('create');
-    resetForm();
-    setDialogOpen(true);
-  };
-
-  const openEditDialog = (product: Product) => {
-    setFormMode('edit');
-    setCurrentProduct(product);
-    setFormData({
-      name: product.name,
-      description: product.description,
-      categoryId: product.categoryId,
-      subcategoryId: product.subcategoryId,
-      level3CategoryId: product.level3CategoryId,
-      companies: [...product.companies],
-      features: [...product.features],
-      strengths: product.strengths,
-      weaknesses: product.weaknesses,
-      observations: product.observations,
-    });
-    setDialogOpen(true);
-  };
-
+  // Handle form submission
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (formMode === 'create') {
-      const newProduct: Product = {
-        id: Math.max(0, ...products.map(p => p.id)) + 1,
-        ...formData,
-        features: formData.features.filter(f => f.trim() !== ''),
-      };
-      setProducts([...products, newProduct]);
-      toast.success("Producto creado exitosamente");
+      createProducto.mutate(newProduct, {
+        onSuccess: () => {
+          setDialogOpen(false);
+          setNewProduct({
+            nombre: '',
+            descripcion: '',
+            imagen_url: '',
+            categoria: '',
+            precio: 0,
+            stock: 0,
+          });
+          refetch();
+          toast.success('Producto creado correctamente');
+        },
+        onError: (error) => {
+          toast.error(`Error al crear producto: ${error.message}`);
+        }
+      });
     } else if (formMode === 'edit' && currentProduct) {
-      const updatedProducts = products.map(product => 
-        product.id === currentProduct.id 
-          ? { 
-              ...product, 
-              ...formData,
-              features: formData.features.filter(f => f.trim() !== ''),
-            } 
-          : product
-      );
-      setProducts(updatedProducts);
-      toast.success("Producto actualizado exitosamente");
+      updateProducto.mutate({
+        id: currentProduct.id,
+        data: newProduct
+      }, {
+        onSuccess: () => {
+          setDialogOpen(false);
+          setNewProduct({
+            nombre: '',
+            descripcion: '',
+            imagen_url: '',
+            categoria: '',
+            precio: 0,
+            stock: 0,
+          });
+          refetch();
+          toast.success('Producto actualizado correctamente');
+        },
+        onError: (error) => {
+          toast.error(`Error al actualizar producto: ${error.message}`);
+        }
+      });
     }
-    
-    setDialogOpen(false);
-    resetForm();
   };
 
-  const handleDelete = (id: number) => {
+  // Handle product deletion
+  const handleDelete = (id: string) => {
     if (window.confirm('¿Estás seguro de que quieres eliminar este producto?')) {
-      setProducts(products.filter(product => product.id !== id));
-    }
-  };
-
-  const handleDeleteCategory = (categoryId: number) => {
-    const categoryInUse = products.some(product => product.categoryId === categoryId);
-    
-    if (categoryInUse) {
-      toast.error("No se puede eliminar esta categoría porque está en uso por productos");
-      return;
-    }
-    
-    if (window.confirm('¿Estás seguro de que quieres eliminar esta categoría?')) {
-      setCategories(categories.filter(category => category.id !== categoryId));
-      toast.success("Categoría eliminada correctamente");
-    }
-  };
-
-  const handleDeleteSubcategory = (categoryId: number, subcategoryId: number) => {
-    const subcategoryInUse = products.some(product => 
-      product.categoryId === categoryId && product.subcategoryId === subcategoryId
-    );
-    
-    if (subcategoryInUse) {
-      toast.error("No se puede eliminar esta subcategoría porque está en uso por productos");
-      return;
-    }
-    
-    if (window.confirm('¿Estás seguro de que quieres eliminar esta subcategoría?')) {
-      const updatedCategories = categories.map(category => {
-        if (category.id === categoryId) {
-          return {
-            ...category,
-            subcategories: category.subcategories.filter(subcategory => subcategory.id !== subcategoryId),
-          };
+      deleteProducto.mutate(id, {
+        onSuccess: () => {
+          toast.success('Producto eliminado correctamente');
+          refetch();
+        },
+        onError: (error) => {
+          toast.error(`Error al eliminar producto: ${error.message}`);
         }
-        return category;
       });
-      
-      setCategories(updatedCategories);
-      toast.success("Subcategoría eliminada correctamente");
     }
   };
 
-  const handleDeleteLevel3 = (categoryId: number, subcategoryId: number, level3Id: number) => {
-    const level3InUse = products.some(product => 
-      product.categoryId === categoryId && 
-      product.subcategoryId === subcategoryId &&
-      product.level3CategoryId === level3Id
-    );
-    
-    if (level3InUse) {
-      toast.error("No se puede eliminar esta subcategoría porque está en uso por productos");
-      return;
-    }
-    
-    if (window.confirm('¿Estás seguro de que quieres eliminar esta subcategoría?')) {
-      const updatedCategories = categories.map(category => {
-        if (category.id === categoryId) {
-          return {
-            ...category,
-            subcategories: category.subcategories.map(subcategory => {
-              if (subcategory.id === subcategoryId) {
-                return {
-                  ...subcategory,
-                  level3: subcategory.level3.filter(level3 => level3.id !== level3Id),
-                };
-              }
-              return subcategory;
-            }),
-          };
-        }
-        return category;
-      });
-      
-      setCategories(updatedCategories);
-      toast.success("Subcategoría de nivel 3 eliminada correctamente");
-    }
+  const handleEdit = (product: any) => {
+    setFormMode('edit');
+    setCurrentProduct(product);
+    setNewProduct({
+      nombre: product.nombre,
+      descripcion: product.descripcion || '',
+      imagen_url: product.imagen_url || '',
+      categoria: product.categoria || '',
+      precio: product.precio || 0,
+      stock: product.stock || 0,
+    });
+    setDialogOpen(true);
   };
 
-  const handleCategorySubmit = (categoryFormData: CategoryFormData) => {
-    if (categoryFormData.level === 'category') {
-      const newCategory: Category = {
-        id: Math.max(0, ...categories.map(c => c.id)) + 1,
-        name: categoryFormData.name,
-        subcategories: [],
-      };
-      
-      setCategories([...categories, newCategory]);
-      toast.success("Categoría añadida correctamente");
-    } 
-    else if (categoryFormData.level === 'subcategory' && categoryFormData.parentCategoryId) {
-      const newSubcategoryId = Math.max(0, ...categories.flatMap(c => c.subcategories.map(s => s.id))) + 1;
-      
-      const updatedCategories = categories.map(category => {
-        if (category.id === categoryFormData.parentCategoryId) {
-          return {
-            ...category,
-            subcategories: [
-              ...category.subcategories,
-              {
-                id: newSubcategoryId,
-                name: categoryFormData.name,
-                parent_id: category.id,
-                level3: [],
-              }
-            ],
-          };
-        }
-        return category;
-      });
-      
-      setCategories(updatedCategories);
-      toast.success("Subcategoría añadida correctamente");
+  const handleCreate = () => {
+    setFormMode('create');
+    setCurrentProduct(null);
+    setNewProduct({
+      nombre: '',
+      descripcion: '',
+      imagen_url: '',
+      categoria: '',
+      precio: 0,
+      stock: 0,
+    });
+    setDialogOpen(true);
+  };
+
+  useEffect(() => {
+    if (!filtrosActivos) {
+      setCategoria(null);
     }
-    else if (categoryFormData.level === 'level3' && categoryFormData.parentCategoryId && categoryFormData.parentSubcategoryId) {
-      const newLevel3Id = Math.max(
-        0, 
-        ...categories.flatMap(c => 
-          c.subcategories.flatMap(s => 
-            s.level3.map(l => l.id)
-          )
-        )
-      ) + 1;
-      
-      const updatedCategories = categories.map(category => {
-        if (category.id === categoryFormData.parentCategoryId) {
-          return {
-            ...category,
-            subcategories: category.subcategories.map(subcategory => {
-              if (subcategory.id === categoryFormData.parentSubcategoryId) {
-                return {
-                  ...subcategory,
-                  level3: [
-                    ...subcategory.level3,
-                    {
-                      id: newLevel3Id,
-                      name: categoryFormData.name,
-                      parent_id: subcategory.id,
-                    }
-                  ],
-                };
-              }
-              return subcategory;
-            }),
-          };
-        }
-        return category;
-      });
-      
-      setCategories(updatedCategories);
-      toast.success("Subcategoría de nivel 3 añadida correctamente");
-    }
-  };
+  }, [filtrosActivos]);
 
-  const getCategoryName = (categoryId: number) => {
-    const category = categories.find(c => c.id === categoryId);
-    return category ? category.name : 'Sin categoría';
-  };
+  if (isLoading) {
+    return <div className="flex justify-center p-8">Cargando productos...</div>;
+  }
 
-  const getSubcategoryName = (categoryId: number, subcategoryId: number) => {
-    const category = categories.find(c => c.id === categoryId);
-    if (!category) return 'Sin subcategoría';
-    
-    const subcategory = category.subcategories.find(s => s.id === subcategoryId);
-    return subcategory ? subcategory.name : 'Sin subcategoría';
-  };
-
-  const getCompanyNames = (companyIds: number[]) => {
-    return companyIds.map(id => {
-      const company = companies.find(c => c.id === id);
-      return company ? company.name : '';
-    }).filter(Boolean).join(', ');
-  };
+  if (error) {
+    return <div className="text-red-500 p-8">Error al cargar productos: {error.message}</div>;
+  }
 
   return (
     <div className="space-y-6 animate-slideInUp">
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-        <div className="md:col-span-1">
-          <CategoryManager
-            categories={categories}
-            activeCategoryTab={activeCategoryTab}
-            expandedCategories={expandedCategories}
-            expandedSubcategories={expandedSubcategories}
-            onTabChange={setActiveCategoryTab}
-            onToggleCategoryExpansion={toggleCategoryExpansion}
-            onToggleSubcategoryExpansion={toggleSubcategoryExpansion}
-            onDeleteCategory={handleDeleteCategory}
-            onDeleteSubcategory={handleDeleteSubcategory}
-            onDeleteLevel3={handleDeleteLevel3}
-            onCategorySubmit={handleCategorySubmit}
+      {/* Header with search and buttons */}
+      <div className="flex flex-col md:flex-row gap-4 items-start md:items-center justify-between">
+        <div className="relative w-full md:w-96">
+          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+          <Input
+            placeholder="Buscar productos..."
+            className="pl-9"
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
           />
         </div>
-
-        <div className="md:col-span-3 space-y-4">
-          <ProductFilters
-            searchTerm={searchTerm}
-            categories={categories}
-            companies={companies}
-            selectedCategoryFilter={selectedCategoryFilter}
-            selectedCompanyFilter={selectedCompanyFilter}
-            onSearchChange={handleSearchChange}
-            onCategoryFilterChange={setSelectedCategoryFilter}
-            onCompanyFilterChange={setSelectedCompanyFilter}
-            onClearFilters={clearFilters}
-            onCreateClick={openCreateDialog}
-          />
-
-          <ProductsList
-            products={filteredProducts}
-            getCategoryName={getCategoryName}
-            getSubcategoryName={getSubcategoryName}
-            getCompanyNames={getCompanyNames}
-            onEditProduct={openEditDialog}
-            onDeleteProduct={handleDelete}
-          />
+        
+        <div className="flex flex-col md:flex-row gap-2">
+          <Select 
+            value={categoria || ''} 
+            onValueChange={handleCategoryChange}
+          >
+            <SelectTrigger className="w-[180px]">
+              <div className="flex items-center">
+                <Package className="mr-2 h-4 w-4 text-muted-foreground" />
+                <SelectValue placeholder="Filtrar por categoría" />
+              </div>
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="">Todas las categorías</SelectItem>
+              {productCategories.map(cat => (
+                <SelectItem key={cat.id} value={cat.name}>
+                  {cat.name}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          
+          <Button onClick={handleCreate}>
+            <Plus className="h-4 w-4 mr-2" />
+            Añadir producto
+          </Button>
         </div>
       </div>
 
+      {/* Products grid */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        {filteredProductos.length > 0 ? (
+          filteredProductos.map(product => (
+            <Card key={product.id}>
+              <CardContent className="p-6">
+                <div className="flex flex-col h-full">
+                  <div className="flex items-start justify-between mb-4">
+                    <div className="bg-primary/10 p-3 rounded-lg">
+                      <FileImage className="h-6 w-6 text-primary" />
+                    </div>
+                    <div className="flex gap-2">
+                      <button 
+                        onClick={() => handleEdit(product)}
+                        className="p-2 rounded-md hover:bg-muted transition-colors"
+                      >
+                        <Edit className="h-4 w-4" />
+                      </button>
+                      <button 
+                        onClick={() => handleDelete(product.id)}
+                        className="p-2 rounded-md hover:bg-muted transition-colors"
+                      >
+                        <Trash className="h-4 w-4" />
+                      </button>
+                    </div>
+                  </div>
+                  
+                  <h3 className="font-medium text-lg mb-2">{product.nombre}</h3>
+                  <p className="text-sm text-muted-foreground mb-4">{product.descripcion}</p>
+                  
+                  <div className="mt-auto space-y-2 text-sm">
+                    <div className="flex justify-between">
+                      <div className="flex items-center gap-1 text-muted-foreground">
+                        <Package className="h-4 w-4" />
+                        <span>{product.categoria || 'Sin categoría'}</span>
+                      </div>
+                      <div className="text-primary">Stock: {product.stock}</div>
+                    </div>
+                    
+                    <div className="flex justify-between">
+                      <div className="flex items-center gap-1 text-muted-foreground">
+                        <span>Precio: {product.precio}</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          ))
+        ) : (
+          <div className="col-span-full text-center py-12">
+            <FileImage className="h-12 w-12 text-muted-foreground mx-auto" />
+            <h3 className="mt-4 text-lg font-medium">No se encontraron productos</h3>
+            <p className="text-muted-foreground">Intenta con otros criterios de búsqueda o añade un nuevo producto</p>
+          </div>
+        )}
+      </div>
+
+      {/* Add/Edit product dialog */}
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-        <DialogContent className="sm:max-w-[800px]">
+        <DialogContent className="sm:max-w-md">
           <DialogHeader>
-            <DialogTitle>
-              {formMode === 'create' ? 'Crear nuevo producto' : 'Editar producto'}
-            </DialogTitle>
+            <DialogTitle>{formMode === 'create' ? 'Añadir producto' : 'Editar producto'}</DialogTitle>
             <DialogDescription>
-              Complete todos los campos para {formMode === 'create' ? 'crear un nuevo' : 'actualizar el'} producto.
+              {formMode === 'create' ? 'Añade un nuevo producto al sistema' : 'Edita la información del producto'}
             </DialogDescription>
           </DialogHeader>
-          
-          <ProductForm
-            formData={formData}
-            categories={categories}
-            companies={companies}
-            onSubmit={handleSubmit}
-            onCancel={() => setDialogOpen(false)}
-            onInputChange={handleInputChange}
-            onTextAreaChange={handleTextAreaChange}
-            onCategoryChange={handleCategoryChange}
-            onSubcategoryChange={handleSubcategoryChange}
-            onLevel3Change={handleLevel3Change}
-            onCompanyChange={handleCompanyChange}
-            onFeatureChange={handleFeatureChange}
-            addFeature={addFeature}
-            removeFeature={removeFeature}
-          />
+          <form onSubmit={handleSubmit}>
+            <div className="space-y-4 py-4">
+              <div className="space-y-2">
+                <Label htmlFor="nombre">Nombre *</Label>
+                <Input
+                  id="nombre"
+                  name="nombre"
+                  value={newProduct.nombre}
+                  onChange={handleInputChange}
+                  placeholder="Nombre del producto"
+                  required
+                />
+              </div>
+              
+              <div className="space-y-2">
+                <Label htmlFor="descripcion">Descripción</Label>
+                <Textarea
+                  id="descripcion"
+                  name="descripcion"
+                  value={newProduct.descripcion || ''}
+                  onChange={handleInputChange}
+                  placeholder="Descripción del producto"
+                  rows={3}
+                />
+              </div>
+              
+              <div className="space-y-2">
+                <Label htmlFor="imagen_url">URL de la imagen</Label>
+                <Input
+                  id="imagen_url"
+                  name="imagen_url"
+                  value={newProduct.imagen_url || ''}
+                  onChange={handleInputChange}
+                  placeholder="URL de la imagen del producto"
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="categoria">Categoría</Label>
+                <Select
+                  value={newProduct.categoria || ''}
+                  onValueChange={handleCategoryChange}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Selecciona una categoría" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {productCategories.map(cat => (
+                      <SelectItem key={cat.id} value={cat.name}>
+                        {cat.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              
+              <div className="space-y-2">
+                <Label htmlFor="precio">Precio</Label>
+                <Input
+                  id="precio"
+                  name="precio"
+                  type="number"
+                  value={newProduct.precio?.toString() || ''}
+                  onChange={handleInputChange}
+                  placeholder="Precio del producto"
+                />
+              </div>
+              
+              <div className="space-y-2">
+                <Label htmlFor="stock">Stock</Label>
+                <Input
+                  id="stock"
+                  name="stock"
+                  type="number"
+                  value={newProduct.stock?.toString() || ''}
+                  onChange={handleInputChange}
+                  placeholder="Stock del producto"
+                />
+              </div>
+            </div>
+            <DialogFooter>
+              <Button type="submit">
+                {formMode === 'create' ? 'Añadir producto' : 'Guardar cambios'}
+              </Button>
+            </DialogFooter>
+          </form>
         </DialogContent>
       </Dialog>
     </div>

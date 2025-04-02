@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useCallback, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -22,6 +22,9 @@ import {
   Package 
 } from 'lucide-react';
 import { toast } from 'sonner';
+import { useDocumentos } from '@/hooks/useDocumentos';
+import { useSupabaseUpload, getPublicUrl } from '@/hooks/useSupabaseQuery';
+import { DocumentoFormData } from '@/types/database';
 
 // Mock data for document categories
 const documentCategories = [
@@ -39,119 +42,54 @@ const productCategories = [
   { id: 3, name: 'Vida' },
 ];
 
-// Mock data for documents
-const mockDocuments = [
-  { 
-    id: 1, 
-    title: 'Contrato Comercial', 
-    description: 'Modelo de contrato comercial para agentes', 
-    category: 4, 
-    uploadDate: '2023-05-15T14:30:00',
-    uploadedBy: 'admin',
-    productCategories: [1, 2],
-    fileSize: '2.4 MB',
-    fileType: 'application/pdf',
-    url: '#'
-  },
-  { 
-    id: 2, 
-    title: 'Manual de Usuario', 
-    description: 'Manual de usuario para la aplicación de gestión de pólizas', 
-    category: 3, 
-    uploadDate: '2023-04-20T10:15:00',
-    uploadedBy: 'admin',
-    productCategories: [1, 3],
-    fileSize: '5.7 MB',
-    fileType: 'application/pdf',
-    url: '#'
-  },
-  { 
-    id: 3, 
-    title: 'Política de Privacidad', 
-    description: 'Documento de política de privacidad y protección de datos', 
-    category: 2, 
-    uploadDate: '2023-03-10T09:45:00',
-    uploadedBy: 'admin',
-    productCategories: [],
-    fileSize: '1.1 MB',
-    fileType: 'application/pdf',
-    url: '#'
-  },
-  { 
-    id: 4, 
-    title: 'Póliza Tipo - Automóvil', 
-    description: 'Póliza tipo para seguros de automóvil', 
-    category: 1, 
-    uploadDate: '2023-02-25T16:50:00',
-    uploadedBy: 'admin',
-    productCategories: [1],
-    fileSize: '3.2 MB',
-    fileType: 'application/pdf',
-    url: '#'
-  },
-  { 
-    id: 5, 
-    title: 'Guía de Procedimientos', 
-    description: 'Guía interna de procedimientos administrativos', 
-    category: 5, 
-    uploadDate: '2023-01-05T11:20:00',
-    uploadedBy: 'admin',
-    productCategories: [],
-    fileSize: '4.5 MB',
-    fileType: 'application/pdf',
-    url: '#'
-  }
-];
-
-// Document type definition
-type Document = {
-  id: number;
-  title: string;
-  description: string;
-  category: number;
-  uploadDate: string;
-  uploadedBy: string;
-  productCategories: number[];
-  fileSize: string;
-  fileType: string;
-  url: string;
-};
-
 const Documents = () => {
-  const [documents, setDocuments] = useState<Document[]>(mockDocuments);
-  const [searchTerm, setSearchTerm] = useState('');
+  const { 
+    documentos, 
+    filteredDocumentos, 
+    isLoading, 
+    error, 
+    searchTerm, 
+    setSearchTerm, 
+    createDocumento, 
+    updateDocumento, 
+    deleteDocumento, 
+    refetch 
+  } = useDocumentos();
+  
+  const uploadFile = useSupabaseUpload();
+  
   const [selectedCategory, setSelectedCategory] = useState<number | null>(null);
   const [selectedProductCategory, setSelectedProductCategory] = useState<number | null>(null);
   const [dialogOpen, setDialogOpen] = useState(false);
-  const [newDocument, setNewDocument] = useState<Partial<Document>>({
-    title: '',
-    description: '',
-    category: 1,
-    productCategories: [],
+  const [newDocument, setNewDocument] = useState<DocumentoFormData>({
+    nombre: '',
+    descripcion: '',
+    archivo_url: '',
+    categoria: '',
+    fecha_subida: new Date().toISOString(),
   });
   const [fileSelected, setFileSelected] = useState<File | null>(null);
   const [currentView, setCurrentView] = useState<'grid' | 'list'>('grid');
+  const [uploading, setUploading] = useState(false);
 
-  // Handle search input change
-  const handleSearch = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setSearchTerm(e.target.value);
-  };
+  // Filter documents based on selected category
+  const applyFilters = useCallback(() => {
+    const filtered = filteredDocumentos.filter(document => {
+      const matchesDocCategory = selectedCategory === null || 
+        (document.categoria === documentCategories.find(cat => cat.id === selectedCategory)?.name.toLowerCase());
+      
+      const matchesProductCategory = selectedProductCategory === null; // We would need to implement product categories in the database
+      
+      return matchesDocCategory && matchesProductCategory;
+    });
+    return filtered;
+  }, [filteredDocumentos, selectedCategory, selectedProductCategory]);
 
-  // Filter documents based on search term and category
-  const filteredDocuments = documents.filter(document => {
-    const matchesSearch = document.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                          document.description.toLowerCase().includes(searchTerm.toLowerCase());
-                          
-    const matchesCategory = selectedCategory === null || document.category === selectedCategory;
-    
-    const matchesProductCategory = selectedProductCategory === null || 
-                                  document.productCategories.includes(selectedProductCategory);
-                                  
-    return matchesSearch && matchesCategory && matchesProductCategory;
-  });
+  const filteredDocumentsWithCategoryFilter = applyFilters();
 
   // Format date to a more readable format
   const formatDate = (dateString: string): string => {
+    if (!dateString) return '';
     const date = new Date(dateString);
     return date.toLocaleDateString('es-ES', {
       year: 'numeric',
@@ -161,23 +99,17 @@ const Documents = () => {
   };
 
   // Get category name by id
-  const getCategoryName = (categoryId: number): string => {
-    const category = documentCategories.find(cat => cat.id === categoryId);
+  const getCategoryName = (categoryName: string | null | undefined): string => {
+    if (!categoryName) return 'Sin categoría';
+    const category = documentCategories.find(cat => cat.name.toLowerCase() === categoryName.toLowerCase());
     return category ? category.name : 'Sin categoría';
   };
 
-  // Get category icon by id
-  const getCategoryIcon = (categoryId: number): React.ElementType => {
-    const category = documentCategories.find(cat => cat.id === categoryId);
+  // Get category icon by name
+  const getCategoryIcon = (categoryName: string | null | undefined): React.ElementType => {
+    if (!categoryName) return File;
+    const category = documentCategories.find(cat => cat.name.toLowerCase() === categoryName.toLowerCase());
     return category ? category.icon : File;
-  };
-
-  // Get product category names
-  const getProductCategoryNames = (categoryIds: number[]): string => {
-    return categoryIds.map(id => {
-      const category = productCategories.find(cat => cat.id === id);
-      return category ? category.name : '';
-    }).filter(Boolean).join(', ');
   };
 
   // Handle file input change
@@ -198,68 +130,90 @@ const Documents = () => {
 
   // Handle category selection
   const handleCategoryChange = (value: string) => {
-    setNewDocument({
-      ...newDocument,
-      category: parseInt(value)
-    });
-  };
-
-  // Handle product category checkbox change
-  const handleProductCategoryChange = (id: number, checked: boolean) => {
-    setNewDocument({
-      ...newDocument,
-      productCategories: checked 
-        ? [...(newDocument.productCategories || []), id]
-        : (newDocument.productCategories || []).filter(catId => catId !== id)
-    });
+    const category = documentCategories.find(cat => cat.id === parseInt(value));
+    if (category) {
+      setNewDocument({
+        ...newDocument,
+        categoria: category.name.toLowerCase()
+      });
+    }
   };
 
   // Handle form submission
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!fileSelected || !newDocument.title) {
+    if (!fileSelected || !newDocument.nombre) {
       toast.error('Por favor, completa todos los campos obligatorios y selecciona un archivo');
       return;
     }
     
-    // Create new document object
-    const newDoc: Document = {
-      id: Math.max(0, ...documents.map(d => d.id)) + 1,
-      title: newDocument.title || '',
-      description: newDocument.description || '',
-      category: newDocument.category || 1,
-      uploadDate: new Date().toISOString(),
-      uploadedBy: 'admin',
-      productCategories: newDocument.productCategories || [],
-      fileSize: `${(fileSelected.size / (1024 * 1024)).toFixed(1)} MB`,
-      fileType: fileSelected.type,
-      url: '#'
-    };
+    setUploading(true);
     
-    // Add new document to the list
-    setDocuments([...documents, newDoc]);
-    
-    // Reset form and close dialog
-    setNewDocument({
-      title: '',
-      description: '',
-      category: 1,
-      productCategories: [],
-    });
-    setFileSelected(null);
-    setDialogOpen(false);
-    
-    toast.success('Documento subido correctamente');
+    try {
+      // Upload file to Supabase storage
+      const fileName = `${Date.now()}_${fileSelected.name}`;
+      const filePath = await uploadFile.mutateAsync({
+        bucketName: 'documentos',
+        filePath: fileName,
+        file: fileSelected
+      });
+      
+      // Get public URL
+      const publicUrl = getPublicUrl('documentos', filePath);
+      
+      // Create new document in database
+      const documentData: DocumentoFormData = {
+        ...newDocument,
+        archivo_url: publicUrl,
+        fecha_subida: new Date().toISOString()
+      };
+      
+      await createDocumento.mutateAsync(documentData);
+      
+      // Reset form and close dialog
+      setNewDocument({
+        nombre: '',
+        descripcion: '',
+        archivo_url: '',
+        categoria: '',
+        fecha_subida: new Date().toISOString(),
+      });
+      setFileSelected(null);
+      setDialogOpen(false);
+      
+      refetch();
+      toast.success('Documento subido correctamente');
+    } catch (error) {
+      console.error('Error uploading document:', error);
+      toast.error('Error al subir documento');
+    } finally {
+      setUploading(false);
+    }
   };
 
   // Handle document deletion
-  const handleDelete = (id: number) => {
+  const handleDelete = (id: string) => {
     if (window.confirm('¿Estás seguro de que quieres eliminar este documento?')) {
-      setDocuments(documents.filter(doc => doc.id !== id));
-      toast.success('Documento eliminado correctamente');
+      deleteDocumento.mutate(id, {
+        onSuccess: () => {
+          toast.success('Documento eliminado correctamente');
+          refetch();
+        },
+        onError: (error) => {
+          toast.error(`Error al eliminar documento: ${error.message}`);
+        }
+      });
     }
   };
+
+  if (isLoading) {
+    return <div className="flex justify-center p-8">Cargando documentos...</div>;
+  }
+
+  if (error) {
+    return <div className="text-red-500 p-8">Error al cargar documentos: {error.message}</div>;
+  }
 
   return (
     <div className="space-y-6 animate-slideInUp">
@@ -271,7 +225,7 @@ const Documents = () => {
             placeholder="Buscar documentos..."
             className="pl-9"
             value={searchTerm}
-            onChange={handleSearch}
+            onChange={(e) => setSearchTerm(e.target.value)}
           />
         </div>
         
@@ -287,7 +241,7 @@ const Documents = () => {
               </div>
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="all">Todas las categorías</SelectItem>
+              <SelectItem value="">Todas las categorías</SelectItem>
               {documentCategories.map(category => (
                 <SelectItem key={category.id} value={category.id.toString()}>
                   {category.name}
@@ -307,7 +261,7 @@ const Documents = () => {
               </div>
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="all">Todos los productos</SelectItem>
+              <SelectItem value="">Todos los productos</SelectItem>
               {productCategories.map(category => (
                 <SelectItem key={category.id} value={category.id.toString()}>
                   {category.name}
@@ -338,25 +292,29 @@ const Documents = () => {
         {/* Documents grid view */}
         <TabsContent value="grid" className="mt-0">
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {filteredDocuments.length > 0 ? (
-              filteredDocuments.map(document => (
+            {filteredDocumentsWithCategoryFilter.length > 0 ? (
+              filteredDocumentsWithCategoryFilter.map(document => (
                 <Card key={document.id}>
                   <CardContent className="p-6">
                     <div className="flex flex-col h-full">
                       <div className="flex items-start justify-between mb-4">
                         <div className="bg-primary/10 p-3 rounded-lg">
-                          {React.createElement(getCategoryIcon(document.category), { 
+                          {React.createElement(getCategoryIcon(document.categoria), { 
                             className: "h-6 w-6 text-primary" 
                           })}
                         </div>
                         <div className="flex gap-2">
-                          <a 
-                            href={document.url}
-                            className="p-2 rounded-md hover:bg-muted transition-colors"
-                            download
-                          >
-                            <Download className="h-4 w-4" />
-                          </a>
+                          {document.archivo_url && (
+                            <a 
+                              href={document.archivo_url}
+                              className="p-2 rounded-md hover:bg-muted transition-colors"
+                              download
+                              target="_blank"
+                              rel="noopener noreferrer"
+                            >
+                              <Download className="h-4 w-4" />
+                            </a>
+                          )}
                           <button 
                             onClick={() => handleDelete(document.id)}
                             className="p-2 rounded-md hover:bg-muted transition-colors"
@@ -366,35 +324,20 @@ const Documents = () => {
                         </div>
                       </div>
                       
-                      <h3 className="font-medium text-lg mb-2">{document.title}</h3>
-                      <p className="text-sm text-muted-foreground mb-4">{document.description}</p>
+                      <h3 className="font-medium text-lg mb-2">{document.nombre}</h3>
+                      <p className="text-sm text-muted-foreground mb-4">{document.descripcion}</p>
                       
                       <div className="mt-auto space-y-2 text-sm">
                         <div className="flex justify-between">
-                          <div className="flex items-center gap-1 text-muted-foreground">
-                            <FileText className="h-4 w-4" />
-                            <span>{document.fileSize}</span>
-                          </div>
-                          <div className="text-primary">{getCategoryName(document.category)}</div>
+                          <div className="text-primary">{getCategoryName(document.categoria)}</div>
                         </div>
                         
                         <div className="flex justify-between">
                           <div className="flex items-center gap-1 text-muted-foreground">
                             <Calendar className="h-4 w-4" />
-                            <span>{formatDate(document.uploadDate)}</span>
-                          </div>
-                          <div className="flex items-center gap-1 text-muted-foreground">
-                            <User className="h-4 w-4" />
-                            <span>{document.uploadedBy}</span>
+                            <span>{formatDate(document.fecha_subida || document.created_at)}</span>
                           </div>
                         </div>
-                        
-                        {document.productCategories.length > 0 && (
-                          <div className="flex items-center gap-1 text-muted-foreground">
-                            <Package className="h-4 w-4" />
-                            <span className="truncate">{getProductCategoryNames(document.productCategories)}</span>
-                          </div>
-                        )}
                       </div>
                     </div>
                   </CardContent>
@@ -419,42 +362,42 @@ const Documents = () => {
                   <tr className="border-b">
                     <th className="text-left p-4">Documento</th>
                     <th className="text-left p-4">Categoría</th>
-                    <th className="text-left p-4">Productos</th>
                     <th className="text-left p-4">Fecha</th>
-                    <th className="text-left p-4">Tamaño</th>
                     <th className="text-right p-4">Acciones</th>
                   </tr>
                 </thead>
                 <tbody>
-                  {filteredDocuments.length > 0 ? (
-                    filteredDocuments.map(document => (
+                  {filteredDocumentsWithCategoryFilter.length > 0 ? (
+                    filteredDocumentsWithCategoryFilter.map(document => (
                       <tr key={document.id} className="border-b">
                         <td className="p-4">
                           <div className="flex items-start gap-3">
                             <div className="bg-primary/10 p-2 rounded-md">
-                              {React.createElement(getCategoryIcon(document.category), { 
+                              {React.createElement(getCategoryIcon(document.categoria), { 
                                 className: "h-5 w-5 text-primary" 
                               })}
                             </div>
                             <div>
-                              <div className="font-medium">{document.title}</div>
-                              <div className="text-sm text-muted-foreground">{document.description}</div>
+                              <div className="font-medium">{document.nombre}</div>
+                              <div className="text-sm text-muted-foreground">{document.descripcion}</div>
                             </div>
                           </div>
                         </td>
-                        <td className="p-4">{getCategoryName(document.category)}</td>
-                        <td className="p-4">{getProductCategoryNames(document.productCategories) || '-'}</td>
-                        <td className="p-4">{formatDate(document.uploadDate)}</td>
-                        <td className="p-4">{document.fileSize}</td>
+                        <td className="p-4">{getCategoryName(document.categoria)}</td>
+                        <td className="p-4">{formatDate(document.fecha_subida || document.created_at)}</td>
                         <td className="p-4">
                           <div className="flex justify-end gap-2">
-                            <a 
-                              href={document.url}
-                              className="p-2 rounded-md hover:bg-muted transition-colors"
-                              download
-                            >
-                              <Download className="h-4 w-4" />
-                            </a>
+                            {document.archivo_url && (
+                              <a 
+                                href={document.archivo_url}
+                                className="p-2 rounded-md hover:bg-muted transition-colors"
+                                download
+                                target="_blank"
+                                rel="noopener noreferrer"
+                              >
+                                <Download className="h-4 w-4" />
+                              </a>
+                            )}
                             <button 
                               onClick={() => handleDelete(document.id)}
                               className="p-2 rounded-md hover:bg-muted transition-colors"
@@ -467,7 +410,7 @@ const Documents = () => {
                     ))
                   ) : (
                     <tr>
-                      <td colSpan={6} className="text-center py-6">
+                      <td colSpan={4} className="text-center py-6">
                         <File className="h-12 w-12 text-muted-foreground mx-auto" />
                         <h3 className="mt-4 text-lg font-medium">No se encontraron documentos</h3>
                         <p className="text-muted-foreground">Intenta con otros criterios de búsqueda o sube un nuevo documento</p>
@@ -493,11 +436,11 @@ const Documents = () => {
           <form onSubmit={handleSubmit}>
             <div className="space-y-4 py-4">
               <div className="space-y-2">
-                <Label htmlFor="title">Título *</Label>
+                <Label htmlFor="nombre">Título *</Label>
                 <Input
-                  id="title"
-                  name="title"
-                  value={newDocument.title}
+                  id="nombre"
+                  name="nombre"
+                  value={newDocument.nombre}
                   onChange={handleInputChange}
                   placeholder="Título del documento"
                   required
@@ -505,11 +448,11 @@ const Documents = () => {
               </div>
               
               <div className="space-y-2">
-                <Label htmlFor="description">Descripción</Label>
+                <Label htmlFor="descripcion">Descripción</Label>
                 <Textarea
-                  id="description"
-                  name="description"
-                  value={newDocument.description}
+                  id="descripcion"
+                  name="descripcion"
+                  value={newDocument.descripcion || ''}
                   onChange={handleInputChange}
                   placeholder="Descripción del documento"
                   rows={3}
@@ -517,9 +460,9 @@ const Documents = () => {
               </div>
               
               <div className="space-y-2">
-                <Label htmlFor="category">Categoría</Label>
+                <Label htmlFor="categoria">Categoría</Label>
                 <Select
-                  value={newDocument.category?.toString()}
+                  value={documentCategories.find(cat => cat.name.toLowerCase() === newDocument.categoria)?.id.toString() || ''}
                   onValueChange={handleCategoryChange}
                 >
                   <SelectTrigger>
@@ -536,26 +479,6 @@ const Documents = () => {
               </div>
               
               <div className="space-y-2">
-                <Label>Categorías de Productos</Label>
-                <div className="grid grid-cols-2 gap-2 mt-2">
-                  {productCategories.map(category => (
-                    <div key={category.id} className="flex items-center space-x-2">
-                      <Checkbox 
-                        id={`product-category-${category.id}`} 
-                        checked={(newDocument.productCategories || []).includes(category.id)}
-                        onCheckedChange={(checked) => 
-                          handleProductCategoryChange(category.id, checked === true)
-                        }
-                      />
-                      <Label htmlFor={`product-category-${category.id}`} className="text-sm">
-                        {category.name}
-                      </Label>
-                    </div>
-                  ))}
-                </div>
-              </div>
-              
-              <div className="space-y-2">
                 <Label htmlFor="file">Archivo *</Label>
                 <Input
                   id="file"
@@ -569,7 +492,9 @@ const Documents = () => {
               </div>
             </div>
             <DialogFooter>
-              <Button type="submit">Subir documento</Button>
+              <Button type="submit" disabled={uploading}>
+                {uploading ? 'Subiendo...' : 'Subir documento'}
+              </Button>
             </DialogFooter>
           </form>
         </DialogContent>
