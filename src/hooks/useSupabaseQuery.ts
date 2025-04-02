@@ -2,9 +2,10 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from '@/components/ui/use-toast';
+import { Database } from '@/types/database.types';
 
 // Tipo genérico para los parámetros de filtrado
-type FilterParams = Record<string, any>;
+export type FilterParams = Record<string, any>;
 
 // Hook para obtener datos de una tabla
 export function useSupabaseQuery<T>(
@@ -22,7 +23,7 @@ export function useSupabaseQuery<T>(
     queryKey: [tableName, ...queryKey, filters],
     queryFn: async () => {
       let query = supabase
-        .from(tableName)
+        .from(tableName as any)
         .select(options?.select || '*');
       
       // Aplicar filtros si existen
@@ -84,8 +85,8 @@ export function useSupabaseCreate<T>(tableName: string) {
   return useMutation({
     mutationFn: async (newItem: Partial<T>) => {
       const { data, error } = await supabase
-        .from(tableName)
-        .insert(newItem)
+        .from(tableName as any)
+        .insert(newItem as any)
         .select();
       
       if (error) {
@@ -116,8 +117,8 @@ export function useSupabaseUpdate<T>(tableName: string) {
   return useMutation({
     mutationFn: async ({ id, data }: { id: string | number; data: Partial<T> }) => {
       const { data: updatedData, error } = await supabase
-        .from(tableName)
-        .update(data)
+        .from(tableName as any)
+        .update(data as any)
         .eq('id', id)
         .select();
       
@@ -149,7 +150,7 @@ export function useSupabaseDelete(tableName: string) {
   return useMutation({
     mutationFn: async (id: string | number) => {
       const { error } = await supabase
-        .from(tableName)
+        .from(tableName as any)
         .delete()
         .eq('id', id);
       
