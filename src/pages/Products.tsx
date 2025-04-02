@@ -20,18 +20,13 @@ import { toast } from 'sonner';
 import { useProductos } from '@/hooks/useProductos';
 import { ProductoFormData } from '@/types/database';
 
-// Mock data for product categories
-const productCategories = [
-  { id: 1, name: 'Automóvil' },
-  { id: 2, name: 'Hogar' },
-  { id: 3, name: 'Vida' },
-];
-
 const Products = () => {
   const { 
     productos, 
+    categorias,
     filteredProductos, 
     isLoading, 
+    loadingCategorias,
     error, 
     searchTerm, 
     setSearchTerm, 
@@ -70,10 +65,19 @@ const Products = () => {
   const handleCategoryChange = (value: string) => {
     setNewProduct({
       ...newProduct,
-      categoria: value
+      categoria: value === 'none' ? null : value
     });
-    setCategoria(value);
-    setFiltrosActivos(true);
+    
+    if (value !== 'none') {
+      setCategoria(value);
+      setFiltrosActivos(true);
+    }
+  };
+
+  // Handle filter category selection
+  const handleFilterCategoryChange = (value: string) => {
+    setCategoria(value === 'all' ? null : value);
+    setFiltrosActivos(value !== 'all');
   };
 
   // Handle form submission
@@ -173,7 +177,7 @@ const Products = () => {
     }
   }, [filtrosActivos]);
 
-  if (isLoading) {
+  if (isLoading || loadingCategorias) {
     return <div className="flex justify-center p-8">Cargando productos...</div>;
   }
 
@@ -198,7 +202,7 @@ const Products = () => {
         <div className="flex flex-col md:flex-row gap-2">
           <Select 
             value={categoria || 'all'} 
-            onValueChange={handleCategoryChange}
+            onValueChange={handleFilterCategoryChange}
           >
             <SelectTrigger className="w-[180px]">
               <div className="flex items-center">
@@ -208,9 +212,9 @@ const Products = () => {
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="all">Todas las categorías</SelectItem>
-              {productCategories.map(cat => (
-                <SelectItem key={cat.id} value={cat.name}>
-                  {cat.name}
+              {categorias.map(cat => (
+                <SelectItem key={cat.id} value={cat.nombre}>
+                  {cat.nombre}
                 </SelectItem>
               ))}
             </SelectContent>
@@ -337,11 +341,10 @@ const Products = () => {
                     <SelectValue placeholder="Selecciona una categoría" />
                   </SelectTrigger>
                   <SelectContent>
-                    {/* Fixed the empty string value issue by using a placeholder value */}
                     <SelectItem value="none">Sin categoría</SelectItem>
-                    {productCategories.map(cat => (
-                      <SelectItem key={cat.id} value={cat.name}>
-                        {cat.name}
+                    {categorias.map(cat => (
+                      <SelectItem key={cat.id} value={cat.nombre}>
+                        {cat.nombre}
                       </SelectItem>
                     ))}
                   </SelectContent>

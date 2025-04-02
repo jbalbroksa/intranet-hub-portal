@@ -1,7 +1,7 @@
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useSupabaseQuery, useSupabaseCreate, useSupabaseUpdate, useSupabaseDelete } from './useSupabaseQuery';
-import { Producto } from '@/types/database';
+import { Producto, CategoriaProducto } from '@/types/database';
 
 export const useProductos = () => {
   const [searchTerm, setSearchTerm] = useState('');
@@ -16,6 +16,19 @@ export const useProductos = () => {
   } = useSupabaseQuery<Producto>(
     'productos',
     ['productos'],
+    undefined,
+    {
+      select: '*',
+      orderBy: { column: 'nombre', ascending: true }
+    }
+  );
+
+  const {
+    data: categorias = [],
+    isLoading: loadingCategorias,
+  } = useSupabaseQuery<CategoriaProducto>(
+    'categorias_productos',
+    ['categorias_productos'],
     undefined,
     {
       select: '*',
@@ -41,8 +54,10 @@ export const useProductos = () => {
 
   return {
     productos,
+    categorias,
     filteredProductos,
     isLoading,
+    loadingCategorias,
     error,
     searchTerm,
     setSearchTerm,

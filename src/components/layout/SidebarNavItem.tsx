@@ -17,7 +17,9 @@ const SidebarNavItem = ({ href, title, icon, isActive, onClick }: SidebarNavItem
       to={href}
       className={cn(
         "flex items-center px-4 py-2 text-sm font-medium rounded-md hover:bg-secondary hover:text-foreground transition-colors",
-        isActive ? "bg-secondary text-foreground" : "text-muted-foreground"
+        isActive 
+          ? "bg-primary/10 text-primary" 
+          : "text-muted-foreground"
       )}
       onClick={onClick}
     >

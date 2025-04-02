@@ -91,7 +91,7 @@ const Sidebar = () => {
       {/* Desktop Sidebar */}
       <aside className="hidden lg:flex flex-col w-64 border-r bg-background h-screen sticky top-0">
         <div className="flex items-center justify-center h-16 border-b">
-          <Link to="/" className="text-lg font-semibold">Intranet</Link>
+          <Link to="/" className="text-lg font-semibold text-primary">Intranet</Link>
         </div>
 
         <nav className="flex-1 py-4 overflow-y-auto">
@@ -151,7 +151,7 @@ const Sidebar = () => {
           </SheetTrigger>
           <SheetContent side="left" className="w-64 p-0">
             <SheetHeader className="h-16 border-b flex items-center justify-center">
-              <SheetTitle className="text-lg">Intranet</SheetTitle>
+              <SheetTitle className="text-lg text-primary">Intranet</SheetTitle>
             </SheetHeader>
 
             <nav className="py-4 overflow-y-auto h-[calc(100vh-8rem)]">
