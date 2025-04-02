@@ -9,7 +9,7 @@ export type FilterParams = Record<string, any>;
 
 // Hook para obtener datos de una tabla
 export function useSupabaseQuery<T>(
-  tableName: string, 
+  tableName: keyof Database['public']['Tables'] | string, 
   queryKey: string[], 
   filters?: FilterParams,
   options?: { 
@@ -40,6 +40,12 @@ export function useSupabaseQuery<T>(
                 query = query.gt(key, value.value);
               } else if (value.operator === 'lt') {
                 query = query.lt(key, value.value);
+              } else if (value.operator === 'gte') {
+                query = query.gte(key, value.value);
+              } else if (value.operator === 'lte') {
+                query = query.lte(key, value.value);
+              } else if (value.operator === 'eq') {
+                query = query.eq(key, value.value);
               }
             } else {
               // Filtro de igualdad predeterminado
@@ -79,7 +85,7 @@ export function useSupabaseQuery<T>(
 }
 
 // Hook para crear un nuevo registro
-export function useSupabaseCreate<T>(tableName: string) {
+export function useSupabaseCreate<T>(tableName: keyof Database['public']['Tables'] | string) {
   const queryClient = useQueryClient();
   
   return useMutation({
@@ -111,7 +117,7 @@ export function useSupabaseCreate<T>(tableName: string) {
 }
 
 // Hook para actualizar un registro
-export function useSupabaseUpdate<T>(tableName: string) {
+export function useSupabaseUpdate<T>(tableName: keyof Database['public']['Tables'] | string) {
   const queryClient = useQueryClient();
   
   return useMutation({
@@ -144,7 +150,7 @@ export function useSupabaseUpdate<T>(tableName: string) {
 }
 
 // Hook para eliminar un registro
-export function useSupabaseDelete(tableName: string) {
+export function useSupabaseDelete(tableName: keyof Database['public']['Tables'] | string) {
   const queryClient = useQueryClient();
   
   return useMutation({
@@ -205,12 +211,20 @@ export function useSupabaseUpload() {
       }
       
       return data.path;
+    },
+    onSuccess: () => {
+      toast({
+        title: "Éxito",
+        description: "Archivo subido correctamente",
+      });
     }
   });
 }
 
 // Función para obtener la URL pública de un archivo
 export function getPublicUrl(bucketName: string, filePath: string) {
+  if (!filePath) return '';
+  
   const { data } = supabase
     .storage
     .from(bucketName)

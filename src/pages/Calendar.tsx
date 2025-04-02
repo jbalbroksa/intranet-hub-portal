@@ -1,130 +1,113 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Calendar } from '@/components/ui/calendar';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { format, isSameDay } from 'date-fns';
-import { CalendarIcon, Clock, Plus, Edit, Trash, Users } from 'lucide-react';
+import { format, isSameDay, parseISO } from 'date-fns';
+import { CalendarIcon, Clock, Plus, Edit, Trash, Users, Loader2 } from 'lucide-react';
 import WysiwygEditor from '@/components/WysiwygEditor';
+import { Evento } from '@/types/database';
+import { useSupabaseQuery, useSupabaseCreate, useSupabaseUpdate, useSupabaseDelete } from '@/hooks/useSupabaseQuery';
+import { toast } from '@/components/ui/use-toast';
 
-// Event type definitions
+// Event type definition using our Supabase type
 type EventCategory = 'meeting' | 'deadline' | 'reminder' | 'holiday' | 'other';
 
-interface CalendarEvent {
-  id: number;
-  title: string;
-  description: string;
-  date: Date;
-  startTime?: string;
-  endTime?: string;
-  category: EventCategory;
-  participants?: string[];
-  location?: string;
+interface EventFormData {
+  titulo: string;
+  descripcion: string;
+  fecha_inicio: string;
+  fecha_fin: string;
+  todo_el_dia: boolean;
+  ubicacion?: string;
+  color?: string;
 }
 
-// Mock event data
-const mockEvents: CalendarEvent[] = [
-  {
-    id: 1,
-    title: 'Reunión con Mapfre',
-    description: '<p>Discutir nuevos productos y comisiones para el próximo trimestre</p>',
-    date: new Date(2023, 6, 15),
-    startTime: '10:00',
-    endTime: '11:30',
-    category: 'meeting',
-    participants: ['María García', 'Carlos Rodríguez'],
-    location: 'Sala de reuniones 3'
-  },
-  {
-    id: 2,
-    title: 'Entrega de documentación',
-    description: '<p>Fecha límite para la entrega de documentación trimestral</p>',
-    date: new Date(2023, 6, 20),
-    category: 'deadline'
-  },
-  {
-    id: 3,
-    title: 'Formación nueva plataforma',
-    description: '<p>Sesión formativa sobre la nueva plataforma de gestión</p>',
-    date: new Date(2023, 6, 25),
-    startTime: '09:00',
-    endTime: '13:00',
-    category: 'meeting',
-    location: 'Online - Microsoft Teams'
-  },
-  {
-    id: 4,
-    title: 'Festivo local',
-    description: '<p>Oficinas cerradas por festivo local</p>',
-    date: new Date(2023, 7, 5),
-    category: 'holiday'
-  }
-];
-
 const CalendarPage = () => {
-  const [events, setEvents] = useState<CalendarEvent[]>(mockEvents);
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
   const [isDialogOpen, setIsDialogOpen] = useState<boolean>(false);
   const [isEditMode, setIsEditMode] = useState<boolean>(false);
-  const [selectedEvent, setSelectedEvent] = useState<CalendarEvent | null>(null);
+  const [selectedEvent, setSelectedEvent] = useState<Evento | null>(null);
   
-  const [formData, setFormData] = useState<Omit<CalendarEvent, 'id'>>({
-    title: '',
-    description: '',
-    date: new Date(),
-    startTime: '',
-    endTime: '',
-    category: 'other',
-    participants: [],
-    location: ''
+  // Form state
+  const [formData, setFormData] = useState<EventFormData>({
+    titulo: '',
+    descripcion: '',
+    fecha_inicio: format(new Date(), "yyyy-MM-dd'T'HH:mm"),
+    fecha_fin: format(new Date(), "yyyy-MM-dd'T'HH:mm"),
+    todo_el_dia: false,
+    ubicacion: '',
+    color: '#3b82f6' // Default blue color
   });
+
+  // Query events from Supabase
+  const { data: events = [], isLoading, refetch } = useSupabaseQuery<Evento>(
+    'eventos',
+    ['all'],
+    {},
+    { orderBy: { column: 'fecha_inicio', ascending: true } }
+  );
+
+  // Mutations for CRUD operations
+  const createMutation = useSupabaseCreate<Evento>('eventos');
+  const updateMutation = useSupabaseUpdate<Evento>('eventos');
+  const deleteMutation = useSupabaseDelete('eventos');
 
   // Get events for the selected date
   const eventsForSelectedDate = events.filter(event => 
-    isSameDay(new Date(event.date), selectedDate)
+    isSameDay(parseISO(event.fecha_inicio), selectedDate)
   );
 
   // Function to highlight dates with events
   const isDayWithEvent = (date: Date) => {
-    return events.some(event => isSameDay(new Date(event.date), date));
+    return events.some(event => isSameDay(parseISO(event.fecha_inicio), date));
   };
 
   // Open dialog to create a new event
   const handleAddEvent = () => {
     setIsEditMode(false);
     setSelectedEvent(null);
+    
+    // Set default start and end times for the selected date
+    const today = new Date();
+    const selectedDateTime = new Date(selectedDate);
+    selectedDateTime.setHours(today.getHours(), today.getMinutes(), 0, 0);
+    
+    const endDateTime = new Date(selectedDateTime);
+    endDateTime.setHours(endDateTime.getHours() + 1);
+    
     setFormData({
-      title: '',
-      description: '',
-      date: selectedDate,
-      startTime: '',
-      endTime: '',
-      category: 'other',
-      participants: [],
-      location: ''
+      titulo: '',
+      descripcion: '',
+      fecha_inicio: format(selectedDateTime, "yyyy-MM-dd'T'HH:mm"),
+      fecha_fin: format(endDateTime, "yyyy-MM-dd'T'HH:mm"),
+      todo_el_dia: false,
+      ubicacion: '',
+      color: '#3b82f6'
     });
+    
     setIsDialogOpen(true);
   };
 
   // Open dialog to edit an existing event
-  const handleEditEvent = (event: CalendarEvent) => {
+  const handleEditEvent = (event: Evento) => {
     setIsEditMode(true);
     setSelectedEvent(event);
+    
     setFormData({
-      title: event.title,
-      description: event.description,
-      date: new Date(event.date),
-      startTime: event.startTime || '',
-      endTime: event.endTime || '',
-      category: event.category,
-      participants: event.participants || [],
-      location: event.location || ''
+      titulo: event.titulo,
+      descripcion: event.descripcion || '',
+      fecha_inicio: format(parseISO(event.fecha_inicio), "yyyy-MM-dd'T'HH:mm"),
+      fecha_fin: format(parseISO(event.fecha_fin), "yyyy-MM-dd'T'HH:mm"),
+      todo_el_dia: event.todo_el_dia || false,
+      ubicacion: event.ubicacion || '',
+      color: event.color || '#3b82f6'
     });
+    
     setIsDialogOpen(true);
   };
 
@@ -137,60 +120,96 @@ const CalendarPage = () => {
     });
   };
 
+  // Handle select changes
+  const handleSelectChange = (name: string, value: string) => {
+    setFormData({
+      ...formData,
+      [name]: value
+    });
+  };
+
+  // Handle checkbox changes
+  const handleCheckboxChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, checked } = e.target;
+    setFormData({
+      ...formData,
+      [name]: checked
+    });
+  };
+
   // Handle rich text editor changes
   const handleDescriptionChange = (content: string) => {
     setFormData({
       ...formData,
-      description: content
+      descripcion: content
     });
   };
 
   // Handle form submission
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (isEditMode && selectedEvent) {
-      // Update existing event
-      setEvents(events.map(event => 
-        event.id === selectedEvent.id ? { ...event, ...formData } : event
-      ));
-    } else {
-      // Create new event
-      const newEvent: CalendarEvent = {
-        id: Math.max(0, ...events.map(e => e.id)) + 1,
-        ...formData
-      };
-      setEvents([...events, newEvent]);
+    try {
+      if (isEditMode && selectedEvent) {
+        // Update existing event
+        await updateMutation.mutateAsync({
+          id: selectedEvent.id,
+          data: {
+            ...formData,
+          }
+        });
+      } else {
+        // Create new event
+        await createMutation.mutateAsync({
+          ...formData,
+        });
+      }
+      
+      setIsDialogOpen(false);
+      refetch(); // Refresh the events list
+    } catch (error) {
+      console.error("Error saving event:", error);
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "No se pudo guardar el evento. Por favor, inténtalo de nuevo."
+      });
     }
-    
-    setIsDialogOpen(false);
   };
 
   // Delete an event
-  const handleDeleteEvent = (id: number) => {
+  const handleDeleteEvent = async (id: string) => {
     if (window.confirm('¿Estás seguro de que quieres eliminar este evento?')) {
-      setEvents(events.filter(event => event.id !== id));
+      try {
+        await deleteMutation.mutateAsync(id);
+        refetch(); // Refresh the events list
+      } catch (error) {
+        console.error("Error deleting event:", error);
+      }
     }
   };
 
-  // Get color based on event category
-  const getCategoryColor = (category: EventCategory) => {
-    switch (category) {
-      case 'meeting': return 'bg-blue-100 border-blue-300 text-blue-700';
-      case 'deadline': return 'bg-red-100 border-red-300 text-red-700';
-      case 'reminder': return 'bg-yellow-100 border-yellow-300 text-yellow-700';
-      case 'holiday': return 'bg-green-100 border-green-300 text-green-700';
-      default: return 'bg-purple-100 border-purple-300 text-purple-700';
+  // Get color based on event color or default by category
+  const getEventColorClass = (event: Evento) => {
+    if (event.color) {
+      // If the event has a custom color, use inline style
+      return {
+        backgroundColor: `${event.color}20`, // 20% opacity
+        borderColor: event.color,
+        color: event.color
+      };
     }
-  };
-
-  // Category labels
-  const categoryLabels: Record<EventCategory, string> = {
-    meeting: 'Reunión',
-    deadline: 'Fecha límite',
-    reminder: 'Recordatorio',
-    holiday: 'Festivo',
-    other: 'Otro'
+    
+    // Default colors by category type if no custom color
+    const categoryColor = {
+      meeting: 'bg-blue-100 border-blue-300 text-blue-700',
+      deadline: 'bg-red-100 border-red-300 text-red-700',
+      reminder: 'bg-yellow-100 border-yellow-300 text-yellow-700',
+      holiday: 'bg-green-100 border-green-300 text-green-700',
+      other: 'bg-purple-100 border-purple-300 text-purple-700'
+    };
+    
+    return categoryColor.other; // Default
   };
 
   return (
@@ -235,43 +254,45 @@ const CalendarPage = () => {
             </CardDescription>
           </CardHeader>
           <CardContent>
-            {eventsForSelectedDate.length > 0 ? (
+            {isLoading ? (
+              <div className="flex items-center justify-center py-10">
+                <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+                <span className="ml-2 text-muted-foreground">Cargando eventos...</span>
+              </div>
+            ) : eventsForSelectedDate.length > 0 ? (
               <div className="space-y-4">
                 {eventsForSelectedDate.map((event) => (
                   <div 
                     key={event.id} 
-                    className={`p-4 border rounded-lg ${getCategoryColor(event.category)}`}
+                    className="p-4 border rounded-lg"
+                    style={getEventColorClass(event)}
                   >
                     <div className="flex justify-between items-start">
                       <div>
-                        <h3 className="font-medium text-lg">{event.title}</h3>
+                        <h3 className="font-medium text-lg">{event.titulo}</h3>
                         <div className="space-y-2 mt-2">
-                          {event.startTime && (
+                          {!event.todo_el_dia && (
                             <div className="flex items-center text-sm">
                               <Clock className="h-4 w-4 mr-2" />
-                              {event.startTime} {event.endTime ? `- ${event.endTime}` : ''}
+                              {format(parseISO(event.fecha_inicio), 'HH:mm')} - {format(parseISO(event.fecha_fin), 'HH:mm')}
                             </div>
                           )}
-                          {event.location && (
+                          {event.ubicacion && (
                             <div className="flex items-center text-sm">
                               <CalendarIcon className="h-4 w-4 mr-2" />
-                              {event.location}
-                            </div>
-                          )}
-                          {event.participants && event.participants.length > 0 && (
-                            <div className="flex items-center text-sm">
-                              <Users className="h-4 w-4 mr-2" />
-                              {event.participants.join(', ')}
+                              {event.ubicacion}
                             </div>
                           )}
                         </div>
-                        <div 
-                          className="mt-2 text-sm prose prose-sm max-w-none"
-                          dangerouslySetInnerHTML={{ __html: event.description }}
-                        />
+                        {event.descripcion && (
+                          <div 
+                            className="mt-2 text-sm prose prose-sm max-w-none"
+                            dangerouslySetInnerHTML={{ __html: event.descripcion }}
+                          />
+                        )}
                         <div className="mt-2">
                           <span className="inline-block px-2 py-1 text-xs rounded-full bg-white/50">
-                            {categoryLabels[event.category]}
+                            {event.todo_el_dia ? 'Todo el día' : 'Evento'}
                           </span>
                         </div>
                       </div>
@@ -287,6 +308,7 @@ const CalendarPage = () => {
                           variant="ghost" 
                           size="sm" 
                           onClick={() => handleDeleteEvent(event.id)}
+                          disabled={deleteMutation.isPending}
                         >
                           <Trash className="h-4 w-4" />
                         </Button>
@@ -328,91 +350,123 @@ const CalendarPage = () => {
             
             <div className="grid gap-4 py-4">
               <div className="grid gap-2">
-                <Label htmlFor="title">Título</Label>
+                <Label htmlFor="titulo">Título</Label>
                 <Input 
-                  id="title" 
-                  name="title"
-                  value={formData.title}
+                  id="titulo" 
+                  name="titulo"
+                  value={formData.titulo}
                   onChange={handleInputChange}
                   required
                 />
               </div>
               
               <div className="grid gap-2">
-                <Label htmlFor="category">Categoría</Label>
-                <Select 
-                  value={formData.category} 
-                  onValueChange={(value: EventCategory) => setFormData({...formData, category: value})}
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Selecciona una categoría" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="meeting">Reunión</SelectItem>
-                    <SelectItem value="deadline">Fecha límite</SelectItem>
-                    <SelectItem value="reminder">Recordatorio</SelectItem>
-                    <SelectItem value="holiday">Festivo</SelectItem>
-                    <SelectItem value="other">Otro</SelectItem>
-                  </SelectContent>
-                </Select>
+                <Label htmlFor="color">Color</Label>
+                <Input
+                  id="color"
+                  name="color"
+                  type="color"
+                  value={formData.color}
+                  onChange={handleInputChange}
+                  className="h-10 w-full"
+                />
               </div>
               
-              <div className="grid grid-cols-2 gap-4">
-                <div className="grid gap-2">
-                  <Label htmlFor="startTime">Hora de inicio</Label>
-                  <Input 
-                    id="startTime" 
-                    name="startTime"
-                    type="time"
-                    value={formData.startTime}
-                    onChange={handleInputChange}
-                  />
-                </div>
-                <div className="grid gap-2">
-                  <Label htmlFor="endTime">Hora de finalización</Label>
-                  <Input 
-                    id="endTime" 
-                    name="endTime"
-                    type="time"
-                    value={formData.endTime}
-                    onChange={handleInputChange}
-                  />
-                </div>
+              <div className="flex items-center gap-2">
+                <input
+                  id="todo_el_dia"
+                  name="todo_el_dia"
+                  type="checkbox"
+                  checked={formData.todo_el_dia}
+                  onChange={handleCheckboxChange}
+                  className="h-4 w-4 rounded border-gray-300"
+                />
+                <Label htmlFor="todo_el_dia">Todo el día</Label>
               </div>
+              
+              {!formData.todo_el_dia && (
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="grid gap-2">
+                    <Label htmlFor="fecha_inicio">Fecha y hora de inicio</Label>
+                    <Input 
+                      id="fecha_inicio" 
+                      name="fecha_inicio"
+                      type="datetime-local"
+                      value={formData.fecha_inicio}
+                      onChange={handleInputChange}
+                      required
+                    />
+                  </div>
+                  <div className="grid gap-2">
+                    <Label htmlFor="fecha_fin">Fecha y hora de finalización</Label>
+                    <Input 
+                      id="fecha_fin" 
+                      name="fecha_fin"
+                      type="datetime-local"
+                      value={formData.fecha_fin}
+                      onChange={handleInputChange}
+                      required
+                    />
+                  </div>
+                </div>
+              )}
+              
+              {formData.todo_el_dia && (
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="grid gap-2">
+                    <Label htmlFor="fecha_inicio">Fecha de inicio</Label>
+                    <Input 
+                      id="fecha_inicio" 
+                      name="fecha_inicio"
+                      type="date"
+                      value={formData.fecha_inicio.split('T')[0]}
+                      onChange={(e) => {
+                        const date = e.target.value;
+                        setFormData({
+                          ...formData,
+                          fecha_inicio: `${date}T00:00`,
+                          fecha_fin: `${date}T23:59`
+                        });
+                      }}
+                      required
+                    />
+                  </div>
+                  <div className="grid gap-2">
+                    <Label htmlFor="fecha_fin">Fecha de finalización</Label>
+                    <Input 
+                      id="fecha_fin" 
+                      name="fecha_fin"
+                      type="date"
+                      value={formData.fecha_fin.split('T')[0]}
+                      onChange={(e) => {
+                        const date = e.target.value;
+                        setFormData({
+                          ...formData,
+                          fecha_fin: `${date}T23:59`
+                        });
+                      }}
+                      required
+                    />
+                  </div>
+                </div>
+              )}
               
               <div className="grid gap-2">
-                <Label htmlFor="location">Ubicación</Label>
+                <Label htmlFor="ubicacion">Ubicación</Label>
                 <Input 
-                  id="location" 
-                  name="location"
-                  value={formData.location || ''}
+                  id="ubicacion" 
+                  name="ubicacion"
+                  value={formData.ubicacion || ''}
                   onChange={handleInputChange}
                   placeholder="Opcional"
                 />
               </div>
               
               <div className="grid gap-2">
-                <Label htmlFor="participants">Participantes</Label>
-                <Input 
-                  id="participants" 
-                  name="participants"
-                  value={(formData.participants || []).join(', ')}
-                  onChange={(e) => {
-                    const participantsList = e.target.value
-                      .split(',')
-                      .map(p => p.trim())
-                      .filter(Boolean);
-                    setFormData({...formData, participants: participantsList});
-                  }}
-                  placeholder="Nombres separados por comas (Opcional)"
-                />
-              </div>
-              
-              <div className="grid gap-2">
-                <Label htmlFor="description">Descripción</Label>
+                <Label htmlFor="descripcion">Descripción</Label>
                 <div className="min-h-[200px]">
                   <WysiwygEditor
-                    value={formData.description}
+                    value={formData.descripcion}
                     onChange={handleDescriptionChange}
                     placeholder="Describe el evento..."
                   />
@@ -421,8 +475,23 @@ const CalendarPage = () => {
             </div>
             
             <DialogFooter>
-              <Button variant="outline" type="button" onClick={() => setIsDialogOpen(false)}>Cancelar</Button>
-              <Button type="submit">{isEditMode ? 'Guardar cambios' : 'Crear evento'}</Button>
+              <Button 
+                variant="outline" 
+                type="button" 
+                onClick={() => setIsDialogOpen(false)}
+                disabled={createMutation.isPending || updateMutation.isPending}
+              >
+                Cancelar
+              </Button>
+              <Button 
+                type="submit"
+                disabled={createMutation.isPending || updateMutation.isPending}
+              >
+                {(createMutation.isPending || updateMutation.isPending) && (
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                )}
+                {isEditMode ? 'Guardar cambios' : 'Crear evento'}
+              </Button>
             </DialogFooter>
           </form>
         </DialogContent>
