@@ -7,6 +7,9 @@ export type Company = {
   mediatorAccess: string;
   responsibleEmail: string;
   category: 'specific' | 'preferred' | 'all';
+  descripcion?: string;
+  direccion?: string;
+  telefono?: string;
 };
 
 export type SpecificationCategory = 'requirements' | 'procedures' | 'commercial' | 'contacts' | 'other';

@@ -9,7 +9,7 @@ type CompanyTableProps = {
   companies: Company[];
   onView: (company: Company) => void;
   onEdit: (company: Company) => void;
-  onDelete: (id: number) => void;
+  onDelete: (id: string) => void;
   getCategoryLabel: (category: string) => string;
 };
 

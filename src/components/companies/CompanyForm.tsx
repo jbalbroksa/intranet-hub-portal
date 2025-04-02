@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -7,14 +7,28 @@ import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { DialogFooter } from '@/components/ui/dialog';
 import { Upload } from 'lucide-react';
 import { Company } from '@/types/company';
+import { Textarea } from '@/components/ui/textarea';
+
+// Define FormData type that matches both CompaniaFormData and Company structure
+export type CompanyFormData = {
+  name: string;
+  logo: string;
+  website: string;
+  mediatorAccess: string;
+  responsibleEmail: string;
+  category: 'specific' | 'preferred' | 'all';
+  descripcion?: string;
+  direccion?: string;
+  telefono?: string;
+};
 
 type CompanyFormProps = {
-  formData: Omit<Company, 'id'>;
+  formData: CompanyFormData;
   formMode: 'create' | 'edit';
   logoUrl: string;
   onSubmit: (e: React.FormEvent) => void;
   onCancel: () => void;
-  onInputChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
+  onInputChange: (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => void;
   onCategoryChange: (value: string) => void;
   onLogoUpload: (e: React.ChangeEvent<HTMLInputElement>) => void;
 };
@@ -103,6 +117,38 @@ const CompanyForm: React.FC<CompanyFormProps> = ({
               required 
             />
           </div>
+          
+          <div className="space-y-2">
+            <Label htmlFor="telefono">Teléfono</Label>
+            <Input 
+              id="telefono" 
+              name="telefono" 
+              value={formData.telefono || ""} 
+              onChange={onInputChange}
+            />
+          </div>
+        </div>
+        
+        <div className="space-y-2">
+          <Label htmlFor="descripcion">Descripción</Label>
+          <Textarea 
+            id="descripcion" 
+            name="descripcion" 
+            value={formData.descripcion || ""} 
+            onChange={onInputChange}
+            rows={3}
+          />
+        </div>
+        
+        <div className="space-y-2">
+          <Label htmlFor="direccion">Dirección</Label>
+          <Textarea 
+            id="direccion" 
+            name="direccion" 
+            value={formData.direccion || ""} 
+            onChange={onInputChange}
+            rows={2}
+          />
         </div>
         
         <div className="space-y-2">

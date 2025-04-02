@@ -2,22 +2,21 @@ import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { toast } from 'sonner';
-import { CompaniaFormData } from '@/types/database';
 import CompanyFilters from '@/components/companies/CompanyFilters';
 import CompanyList from '@/components/companies/CompanyList';
 import CompanyDetail from '@/components/companies/CompanyDetail';
-import CompanyForm from '@/components/companies/CompanyForm';
+import CompanyForm, { CompanyFormData } from '@/components/companies/CompanyForm';
 import SpecificationForm from '@/components/companies/SpecificationForm';
 import CategoryForm from '@/components/companies/CategoryForm';
 import { useCompanias } from '@/hooks/useCompanias';
-import { Company, Specification, SpecCategory } from '@/types/company';
+import { Company, Specification, SpecCategory, SpecificationCategory } from '@/types/company';
 
 type FormMode = 'create' | 'edit';
 type ViewMode = 'grid' | 'list';
 type CategoryFilter = 'all' | 'specific' | 'preferred';
 
-// Mock data for specifications
-const mockSpecifications = [
+// Mock data for specifications with correct types
+const mockSpecifications: Specification[] = [
   { id: 1, companyId: "1", title: 'Requisitos de Contratación', content: 'Documentación necesaria para la contratación de pólizas.', category: 'requirements' },
   { id: 2, companyId: "1", title: 'Proceso de Siniestros', content: 'Pasos a seguir para la gestión de siniestros con esta compañía.', category: 'procedures' },
   { id: 3, companyId: "2", title: 'Comisiones', content: 'Detalles sobre las comisiones por producto.', category: 'commercial' },
@@ -26,7 +25,7 @@ const mockSpecifications = [
 ];
 
 // Mock data for specification categories
-const mockSpecCategories = [
+const mockSpecCategories: SpecCategory[] = [
   { id: 1, name: 'Requisitos', slug: 'requirements' },
   { id: 2, name: 'Procedimientos', slug: 'procedures' },
   { id: 3, name: 'Comercial', slug: 'commercial' },
@@ -65,21 +64,22 @@ const Companies = () => {
     slug: '',
   });
 
-  const [formData, setFormData] = useState<CompaniaFormData>({
-    nombre: '',
+  const [formData, setFormData] = useState<CompanyFormData>({
+    name: '',
+    logo: '/placeholder.svg',
+    website: '',
+    mediatorAccess: '',
+    responsibleEmail: '',
+    category: 'all',
     descripcion: '',
-    logo_url: '/placeholder.svg',
-    sitio_web: '',
     direccion: '',
     telefono: '',
-    email: '',
-    categoria: '',
   });
 
-  const [specFormData, setSpecFormData] = useState<any>({
+  const [specFormData, setSpecFormData] = useState({
     title: '',
     content: '',
-    category: 'procedures',
+    category: 'procedures' as SpecificationCategory,
   });
 
   const applyFilters = () => {
@@ -97,7 +97,7 @@ const Companies = () => {
     return selectedCompany ? spec.companyId === selectedCompany.id : false;
   });
 
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
     setFormData({
       ...formData,
@@ -108,7 +108,7 @@ const Companies = () => {
   const handleCategoryChange = (value: string) => {
     setFormData({
       ...formData,
-      categoria: value,
+      category: value as 'specific' | 'preferred' | 'all',
     });
   };
 
@@ -123,20 +123,21 @@ const Companies = () => {
   const handleSpecCategoryChange = (value: string) => {
     setSpecFormData({
       ...specFormData,
-      category: value as 'requirements' | 'procedures' | 'commercial' | 'contacts' | 'other',
+      category: value as SpecificationCategory,
     });
   };
 
   const resetForm = () => {
     setFormData({
-      nombre: '',
+      name: '',
+      logo: '/placeholder.svg',
+      website: '',
+      mediatorAccess: '',
+      responsibleEmail: '',
+      category: 'all',
       descripcion: '',
-      logo_url: '/placeholder.svg',
-      sitio_web: '',
       direccion: '',
       telefono: '',
-      email: '',
-      categoria: '',
     });
     setLogoUrl('/placeholder.svg');
   };
@@ -158,16 +159,19 @@ const Companies = () => {
   const openEditDialog = (company: any) => {
     setFormMode('edit');
     setCurrentCompany(company);
+    
     setFormData({
-      nombre: company.nombre,
+      name: company.nombre,
+      logo: company.logo_url || '/placeholder.svg',
+      website: company.sitio_web || '',
+      mediatorAccess: company.sitio_web || '', // Using sitio_web as default for mediatorAccess
+      responsibleEmail: company.email || '',
+      category: (company.categoria as 'specific' | 'preferred' | 'all') || 'all',
       descripcion: company.descripcion || '',
-      logo_url: company.logo_url || '/placeholder.svg',
-      sitio_web: company.sitio_web || '',
       direccion: company.direccion || '',
       telefono: company.telefono || '',
-      email: company.email || '',
-      categoria: company.categoria || '',
     });
+    
     setLogoUrl(company.logo_url || '/placeholder.svg');
     setDialogOpen(true);
   };
@@ -194,7 +198,7 @@ const Companies = () => {
       setLogoUrl(url);
       setFormData({
         ...formData,
-        logo_url: url,
+        logo: url,
       });
     }
   };
@@ -202,8 +206,19 @@ const Companies = () => {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     
+    const databaseModel = {
+      nombre: formData.name,
+      logo_url: formData.logo,
+      sitio_web: formData.website,
+      email: formData.responsibleEmail,
+      categoria: formData.category,
+      descripcion: formData.descripcion,
+      direccion: formData.direccion,
+      telefono: formData.telefono,
+    };
+    
     if (formMode === 'create') {
-      createCompania.mutate(formData, {
+      createCompania.mutate(databaseModel, {
         onSuccess: () => {
           setDialogOpen(false);
           resetForm();
@@ -214,7 +229,7 @@ const Companies = () => {
     } else if (formMode === 'edit' && currentCompany) {
       updateCompania.mutate({
         id: currentCompany.id,
-        data: formData
+        data: databaseModel
       }, {
         onSuccess: () => {
           setDialogOpen(false);
@@ -235,13 +250,13 @@ const Companies = () => {
     
     if (!selectedCompany) return;
     
-    const newSpecification = {
+    const newSpecification: Specification = {
       id: Math.max(0, ...specifications.map(s => s.id)) + 1,
       companyId: selectedCompany.id,
       title: specFormData.title,
       content: specFormData.content,
       category: specFormData.category,
-    } as Specification;
+    };
     
     setSpecifications([...specifications, newSpecification]);
     setSpecDialogOpen(false);
@@ -307,11 +322,11 @@ const Companies = () => {
   const handleCategorySubmit = (e: React.FormEvent) => {
     e.preventDefault();
     
-    const newCategory = {
+    const newCategory: SpecCategory = {
       id: Math.max(0, ...specCategories.map(c => c.id)) + 1,
       name: categoryFormData.name,
       slug: categoryFormData.slug,
-    } as SpecCategory;
+    };
     
     setSpecCategories([...specCategories, newCategory]);
     setCategoryDialogOpen(false);
@@ -393,6 +408,9 @@ const Companies = () => {
     mediatorAccess: company.sitio_web || '',  // Using sitio_web as a default for mediatorAccess
     responsibleEmail: company.email || '',
     category: (company.categoria as 'specific' | 'preferred' | 'all') || 'all',
+    descripcion: company.descripcion,
+    direccion: company.direccion,
+    telefono: company.telefono,
   }));
 
   return (
