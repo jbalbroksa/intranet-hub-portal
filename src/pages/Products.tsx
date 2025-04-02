@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
@@ -196,7 +197,7 @@ const Products = () => {
         
         <div className="flex flex-col md:flex-row gap-2">
           <Select 
-            value={categoria || ''} 
+            value={categoria || 'all'} 
             onValueChange={handleCategoryChange}
           >
             <SelectTrigger className="w-[180px]">
@@ -206,7 +207,7 @@ const Products = () => {
               </div>
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="">Todas las categorías</SelectItem>
+              <SelectItem value="all">Todas las categorías</SelectItem>
               {productCategories.map(cat => (
                 <SelectItem key={cat.id} value={cat.name}>
                   {cat.name}
@@ -329,13 +330,15 @@ const Products = () => {
               <div className="space-y-2">
                 <Label htmlFor="categoria">Categoría</Label>
                 <Select
-                  value={newProduct.categoria || ''}
+                  value={newProduct.categoria || 'none'}
                   onValueChange={handleCategoryChange}
                 >
                   <SelectTrigger>
                     <SelectValue placeholder="Selecciona una categoría" />
                   </SelectTrigger>
                   <SelectContent>
+                    {/* Fixed the empty string value issue by using a placeholder value */}
+                    <SelectItem value="none">Sin categoría</SelectItem>
                     {productCategories.map(cat => (
                       <SelectItem key={cat.id} value={cat.name}>
                         {cat.name}

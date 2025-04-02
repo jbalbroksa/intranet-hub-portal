@@ -33,7 +33,7 @@ export const useProductos = () => {
     const matchesSearchTerm = producto.nombre.toLowerCase().includes(searchTerm.toLowerCase());
     
     // Filtro por categoría
-    const matchesCategoria = !categoria || 
+    const matchesCategoria = !categoria || categoria === 'all' || 
       (producto.categoria && producto.categoria.toLowerCase() === categoria.toLowerCase());
     
     return matchesSearchTerm && matchesCategoria;
