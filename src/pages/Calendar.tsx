@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Calendar } from '@/components/ui/calendar';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
@@ -14,7 +13,6 @@ import { Evento } from '@/types/database';
 import { useSupabaseQuery, useSupabaseCreate, useSupabaseUpdate, useSupabaseDelete } from '@/hooks/useSupabaseQuery';
 import { toast } from '@/components/ui/use-toast';
 
-// Event type definition using our Supabase type
 type EventCategory = 'meeting' | 'deadline' | 'reminder' | 'holiday' | 'other';
 
 interface EventFormData {
@@ -33,7 +31,6 @@ const CalendarPage = () => {
   const [isEditMode, setIsEditMode] = useState<boolean>(false);
   const [selectedEvent, setSelectedEvent] = useState<Evento | null>(null);
   
-  // Form state
   const [formData, setFormData] = useState<EventFormData>({
     titulo: '',
     descripcion: '',
@@ -41,10 +38,9 @@ const CalendarPage = () => {
     fecha_fin: format(new Date(), "yyyy-MM-dd'T'HH:mm"),
     todo_el_dia: false,
     ubicacion: '',
-    color: '#3b82f6' // Default blue color
+    color: '#3b82f6'
   });
 
-  // Query events from Supabase
   const { data: events = [], isLoading, refetch } = useSupabaseQuery<Evento>(
     'eventos',
     ['all'],
@@ -52,27 +48,22 @@ const CalendarPage = () => {
     { orderBy: { column: 'fecha_inicio', ascending: true } }
   );
 
-  // Mutations for CRUD operations
   const createMutation = useSupabaseCreate<Evento>('eventos');
   const updateMutation = useSupabaseUpdate<Evento>('eventos');
   const deleteMutation = useSupabaseDelete('eventos');
 
-  // Get events for the selected date
   const eventsForSelectedDate = events.filter(event => 
     isSameDay(parseISO(event.fecha_inicio), selectedDate)
   );
 
-  // Function to highlight dates with events
   const isDayWithEvent = (date: Date) => {
     return events.some(event => isSameDay(parseISO(event.fecha_inicio), date));
   };
 
-  // Open dialog to create a new event
   const handleAddEvent = () => {
     setIsEditMode(false);
     setSelectedEvent(null);
     
-    // Set default start and end times for the selected date
     const today = new Date();
     const selectedDateTime = new Date(selectedDate);
     selectedDateTime.setHours(today.getHours(), today.getMinutes(), 0, 0);
@@ -93,7 +84,6 @@ const CalendarPage = () => {
     setIsDialogOpen(true);
   };
 
-  // Open dialog to edit an existing event
   const handleEditEvent = (event: Evento) => {
     setIsEditMode(true);
     setSelectedEvent(event);
@@ -111,7 +101,6 @@ const CalendarPage = () => {
     setIsDialogOpen(true);
   };
 
-  // Handle form input changes
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
     setFormData({
@@ -120,7 +109,6 @@ const CalendarPage = () => {
     });
   };
 
-  // Handle select changes
   const handleSelectChange = (name: string, value: string) => {
     setFormData({
       ...formData,
@@ -128,7 +116,6 @@ const CalendarPage = () => {
     });
   };
 
-  // Handle checkbox changes
   const handleCheckboxChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, checked } = e.target;
     setFormData({
@@ -137,7 +124,6 @@ const CalendarPage = () => {
     });
   };
 
-  // Handle rich text editor changes
   const handleDescriptionChange = (content: string) => {
     setFormData({
       ...formData,
@@ -145,13 +131,11 @@ const CalendarPage = () => {
     });
   };
 
-  // Handle form submission
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
     try {
       if (isEditMode && selectedEvent) {
-        // Update existing event
         await updateMutation.mutateAsync({
           id: selectedEvent.id,
           data: {
@@ -159,14 +143,13 @@ const CalendarPage = () => {
           }
         });
       } else {
-        // Create new event
         await createMutation.mutateAsync({
           ...formData,
         });
       }
       
       setIsDialogOpen(false);
-      refetch(); // Refresh the events list
+      refetch();
     } catch (error) {
       console.error("Error saving event:", error);
       toast({
@@ -177,39 +160,31 @@ const CalendarPage = () => {
     }
   };
 
-  // Delete an event
   const handleDeleteEvent = async (id: string) => {
     if (window.confirm('¿Estás seguro de que quieres eliminar este evento?')) {
       try {
         await deleteMutation.mutateAsync(id);
-        refetch(); // Refresh the events list
+        refetch();
       } catch (error) {
         console.error("Error deleting event:", error);
       }
     }
   };
 
-  // Get color based on event color or default by category
   const getEventColorClass = (event: Evento) => {
     if (event.color) {
-      // If the event has a custom color, use inline style
       return {
-        backgroundColor: `${event.color}20`, // 20% opacity
+        backgroundColor: `${event.color}20`,
         borderColor: event.color,
         color: event.color
       };
     }
     
-    // Default colors by category type if no custom color
-    const categoryColor = {
-      meeting: 'bg-blue-100 border-blue-300 text-blue-700',
-      deadline: 'bg-red-100 border-red-300 text-red-700',
-      reminder: 'bg-yellow-100 border-yellow-300 text-yellow-700',
-      holiday: 'bg-green-100 border-green-300 text-green-700',
-      other: 'bg-purple-100 border-purple-300 text-purple-700'
+    return {
+      backgroundColor: '#f3f4f6',
+      borderColor: '#d1d5db',
+      color: '#4b5563'
     };
-    
-    return categoryColor.other; // Default
   };
 
   return (
@@ -335,7 +310,6 @@ const CalendarPage = () => {
         </Card>
       </div>
 
-      {/* Add/Edit Event Dialog */}
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
         <DialogContent className="sm:max-w-[600px]">
           <form onSubmit={handleSubmit}>
