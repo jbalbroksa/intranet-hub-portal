@@ -212,7 +212,7 @@ const Documents = () => {
   }
 
   if (error) {
-    return <div className="text-red-500 p-8">Error al cargar documentos: {error.message}</div>;
+    return <div className="text-red-500 p-8">Error al cargar productos: {error.message}</div>;
   }
 
   return (
@@ -231,7 +231,7 @@ const Documents = () => {
         
         <div className="flex flex-col md:flex-row gap-2">
           <Select 
-            value={selectedCategory?.toString() || ''} 
+            value={selectedCategory?.toString() || 'all'} 
             onValueChange={(value) => setSelectedCategory(value ? parseInt(value) : null)}
           >
             <SelectTrigger className="w-[180px]">
@@ -241,7 +241,7 @@ const Documents = () => {
               </div>
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="">Todas las categorías</SelectItem>
+              <SelectItem value="all">Todas las categorías</SelectItem>
               {documentCategories.map(category => (
                 <SelectItem key={category.id} value={category.id.toString()}>
                   {category.name}
@@ -251,7 +251,7 @@ const Documents = () => {
           </Select>
           
           <Select 
-            value={selectedProductCategory?.toString() || ''} 
+            value={selectedProductCategory?.toString() || 'all'} 
             onValueChange={(value) => setSelectedProductCategory(value ? parseInt(value) : null)}
           >
             <SelectTrigger className="w-[180px]">
@@ -261,7 +261,7 @@ const Documents = () => {
               </div>
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="">Todos los productos</SelectItem>
+              <SelectItem value="all">Todos los productos</SelectItem>
               {productCategories.map(category => (
                 <SelectItem key={category.id} value={category.id.toString()}>
                   {category.name}
