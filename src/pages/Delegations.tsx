@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -41,12 +40,10 @@ const Delegations = () => {
     responsable: '',
   });
 
-  // Handle search input change
   const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setSearchTerm(e.target.value);
   };
 
-  // Handle form input changes
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
     setFormData({
@@ -55,7 +52,6 @@ const Delegations = () => {
     });
   };
 
-  // Reset form data
   const resetForm = () => {
     setFormData({
       nombre: '',
@@ -69,14 +65,12 @@ const Delegations = () => {
     });
   };
 
-  // Open dialog for creating a new delegation
   const openCreateDialog = () => {
     setFormMode('create');
     resetForm();
     setDialogOpen(true);
   };
 
-  // Open dialog for editing an existing delegation
   const openEditDialog = (delegacion: Delegacion) => {
     setFormMode('edit');
     setCurrentDelegacion(delegacion);
@@ -93,20 +87,17 @@ const Delegations = () => {
     setDialogOpen(true);
   };
 
-  // Handle form submission
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
     try {
       if (formMode === 'create') {
-        // Create new delegation
         await createDelegacion.mutateAsync(formData);
         toast({
           title: "Delegación creada",
           description: "La delegación ha sido creada exitosamente",
         });
       } else if (formMode === 'edit' && currentDelegacion) {
-        // Update existing delegation
         await updateDelegacion.mutateAsync({ 
           id: currentDelegacion.id, 
           data: formData 
@@ -129,7 +120,6 @@ const Delegations = () => {
     }
   };
 
-  // Handle delegation deletion
   const handleDelete = async (id: string) => {
     if (window.confirm('¿Estás seguro de que quieres eliminar esta delegación?')) {
       try {
@@ -151,7 +141,6 @@ const Delegations = () => {
 
   return (
     <div className="space-y-6 animate-slideInUp">
-      {/* Search and filter bar */}
       <div className="flex flex-col md:flex-row gap-4 items-start md:items-center justify-between">
         <div className="relative w-full md:w-96">
           <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
@@ -175,7 +164,6 @@ const Delegations = () => {
         </div>
       </div>
 
-      {/* Delegations table */}
       <Card>
         <CardContent className="p-0">
           <Table>
@@ -191,7 +179,6 @@ const Delegations = () => {
             </TableHeader>
             <TableBody>
               {isLoading ? (
-                // Loading state
                 Array.from({ length: 5 }).map((_, index) => (
                   <TableRow key={`skeleton-${index}`}>
                     <TableCell><Skeleton className="h-5 w-full" /></TableCell>
@@ -239,7 +226,6 @@ const Delegations = () => {
         </CardContent>
       </Card>
 
-      {/* Create/Edit dialog */}
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
         <DialogContent className="sm:max-w-[600px]">
           <DialogHeader>
