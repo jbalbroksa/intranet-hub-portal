@@ -5,14 +5,13 @@ import { Noticia } from '@/types/database';
 
 export const useNoticias = () => {
   const [searchTerm, setSearchTerm] = useState('');
-  const [showFeaturedOnly, setShowFeaturedOnly] = useState(false);
   
   const {
     data: noticias = [],
     isLoading,
     error,
     refetch,
-  } = useSupabaseQuery<Noticia[]>(
+  } = useSupabaseQuery<Noticia>(
     'noticias',
     ['noticias'],
     undefined,
@@ -26,12 +25,11 @@ export const useNoticias = () => {
   const updateNoticia = useSupabaseUpdate<Noticia>('noticias');
   const deleteNoticia = useSupabaseDelete('noticias');
 
-  // Filtra las noticias según el término de búsqueda y si son destacadas
-  const filteredNoticias = noticias.filter(noticia => {
-    const matchesSearch = noticia.titulo.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesFeatured = !showFeaturedOnly || noticia.es_destacada;
-    return matchesSearch && matchesFeatured;
-  });
+  // Filtra las noticias según el término de búsqueda
+  const filteredNoticias = noticias.filter(noticia =>
+    noticia.titulo.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    (noticia.es_destacada && searchTerm.toLowerCase().includes('destacad'))
+  );
 
   return {
     noticias,
@@ -40,8 +38,6 @@ export const useNoticias = () => {
     error,
     searchTerm,
     setSearchTerm,
-    showFeaturedOnly,
-    setShowFeaturedOnly,
     createNoticia,
     updateNoticia,
     deleteNoticia,

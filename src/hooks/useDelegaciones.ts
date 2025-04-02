@@ -11,7 +11,7 @@ export const useDelegaciones = () => {
     isLoading,
     error,
     refetch,
-  } = useSupabaseQuery<Delegacion[]>(
+  } = useSupabaseQuery<Delegacion>(
     'delegaciones',
     ['delegaciones'],
     undefined,

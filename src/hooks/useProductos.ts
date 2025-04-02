@@ -1,33 +1,21 @@
 
 import { useState } from 'react';
 import { useSupabaseQuery, useSupabaseCreate, useSupabaseUpdate, useSupabaseDelete } from './useSupabaseQuery';
-import { Producto, CategoriaProducto } from '@/types/database';
+import { Producto } from '@/types/database';
 
 export const useProductos = () => {
   const [searchTerm, setSearchTerm] = useState('');
-  const [categoryFilter, setCategoryFilter] = useState<string | null>(null);
+  const [categoria, setCategoria] = useState<string | null>(null);
+  const [filtrosActivos, setFiltrosActivos] = useState(false);
   
   const {
     data: productos = [],
     isLoading,
     error,
     refetch,
-  } = useSupabaseQuery<Producto[]>(
+  } = useSupabaseQuery<Producto>(
     'productos',
     ['productos'],
-    undefined,
-    {
-      select: '*',
-      orderBy: { column: 'nombre', ascending: true }
-    }
-  );
-
-  const {
-    data: categorias = [],
-    isLoading: isLoadingCategorias,
-  } = useSupabaseQuery<CategoriaProducto[]>(
-    'categorias_productos',
-    ['categorias_productos'],
     undefined,
     {
       select: '*',
@@ -39,34 +27,32 @@ export const useProductos = () => {
   const updateProducto = useSupabaseUpdate<Producto>('productos');
   const deleteProducto = useSupabaseDelete('productos');
 
-  const createCategoria = useSupabaseCreate<CategoriaProducto>('categorias_productos');
-  const updateCategoria = useSupabaseUpdate<CategoriaProducto>('categorias_productos');
-  const deleteCategoria = useSupabaseDelete('categorias_productos');
-
-  // Filtra los productos según el término de búsqueda y la categoría
+  // Filtra los productos según varios criterios
   const filteredProductos = productos.filter(producto => {
-    const matchesSearch = producto.nombre.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesCategory = !categoryFilter || producto.categoria === categoryFilter;
-    return matchesSearch && matchesCategory;
+    // Filtro por término de búsqueda
+    const matchesSearchTerm = producto.nombre.toLowerCase().includes(searchTerm.toLowerCase());
+    
+    // Filtro por categoría
+    const matchesCategoria = !categoria || 
+      (producto.categoria && producto.categoria.toLowerCase() === categoria.toLowerCase());
+    
+    return matchesSearchTerm && matchesCategoria;
   });
 
   return {
     productos,
     filteredProductos,
-    categorias,
     isLoading,
-    isLoadingCategorias,
     error,
     searchTerm,
     setSearchTerm,
-    categoryFilter,
-    setCategoryFilter,
+    categoria,
+    setCategoria,
+    filtrosActivos,
+    setFiltrosActivos,
     createProducto,
     updateProducto,
     deleteProducto,
-    createCategoria,
-    updateCategoria,
-    deleteCategoria,
     refetch,
   };
 };
