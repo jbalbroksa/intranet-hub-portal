@@ -10,6 +10,7 @@ import CompanyForm from '@/components/companies/CompanyForm';
 import SpecificationForm from '@/components/companies/SpecificationForm';
 import CategoryForm from '@/components/companies/CategoryForm';
 import { useCompanias } from '@/hooks/useCompanias';
+import { Company, Specification, SpecCategory } from '@/types/company';
 
 type FormMode = 'create' | 'edit';
 type ViewMode = 'grid' | 'list';
@@ -47,17 +48,17 @@ const Companies = () => {
     refetch 
   } = useCompanias();
 
-  const [specifications, setSpecifications] = useState(mockSpecifications);
+  const [specifications, setSpecifications] = useState<Specification[]>(mockSpecifications);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [specDialogOpen, setSpecDialogOpen] = useState(false);
   const [formMode, setFormMode] = useState<FormMode>('create');
   const [currentCompany, setCurrentCompany] = useState<any | null>(null);
-  const [selectedCompany, setSelectedCompany] = useState<any | null>(null);
+  const [selectedCompany, setSelectedCompany] = useState<Company | null>(null);
   const [viewMode, setViewMode] = useState<ViewMode>('grid');
   const [categoryFilter, setCategoryFilter] = useState<CategoryFilter>('all');
   const [logoUrl, setLogoUrl] = useState<string>('/placeholder.svg');
   const [activeTab, setActiveTab] = useState<string>('info');
-  const [specCategories, setSpecCategories] = useState(mockSpecCategories);
+  const [specCategories, setSpecCategories] = useState<SpecCategory[]>(mockSpecCategories);
   const [categoryDialogOpen, setCategoryDialogOpen] = useState(false);
   const [categoryFormData, setCategoryFormData] = useState({
     name: '',
@@ -177,7 +178,7 @@ const Companies = () => {
     setSpecDialogOpen(true);
   };
 
-  const viewCompanyDetails = (company: any) => {
+  const viewCompanyDetails = (company: Company) => {
     setSelectedCompany(company);
     setActiveTab('info');
   };
@@ -234,11 +235,13 @@ const Companies = () => {
     
     if (!selectedCompany) return;
     
-    const newSpecification: Specification = {
+    const newSpecification = {
       id: Math.max(0, ...specifications.map(s => s.id)) + 1,
       companyId: selectedCompany.id,
-      ...specFormData,
-    };
+      title: specFormData.title,
+      content: specFormData.content,
+      category: specFormData.category,
+    } as Specification;
     
     setSpecifications([...specifications, newSpecification]);
     setSpecDialogOpen(false);
@@ -304,10 +307,11 @@ const Companies = () => {
   const handleCategorySubmit = (e: React.FormEvent) => {
     e.preventDefault();
     
-    const newCategory: SpecCategory = {
+    const newCategory = {
       id: Math.max(0, ...specCategories.map(c => c.id)) + 1,
-      ...categoryFormData,
-    };
+      name: categoryFormData.name,
+      slug: categoryFormData.slug,
+    } as SpecCategory;
     
     setSpecCategories([...specCategories, newCategory]);
     setCategoryDialogOpen(false);
@@ -381,6 +385,16 @@ const Companies = () => {
     );
   }
 
+  const convertedCompanies: Company[] = filteredCompaniesWithCategoryFilter.map(company => ({
+    id: company.id,
+    logo: company.logo_url || '/placeholder.svg',
+    name: company.nombre,
+    website: company.sitio_web || '',
+    mediatorAccess: company.sitio_web || '',  // Using sitio_web as a default for mediatorAccess
+    responsibleEmail: company.email || '',
+    category: (company.categoria as 'specific' | 'preferred' | 'all') || 'all',
+  }));
+
   return (
     <div className="space-y-6 animate-slideInUp">
       <CompanyFilters
@@ -394,15 +408,7 @@ const Companies = () => {
       />
 
       <CompanyList
-        companies={filteredCompaniesWithCategoryFilter.map(company => ({
-          id: company.id,
-          logo: company.logo_url || '/placeholder.svg',
-          name: company.nombre,
-          website: company.sitio_web || '',
-          mediatorAccess: '',  // No direct mapping in the database model
-          responsibleEmail: company.email || '',
-          category: company.categoria || 'all',
-        }))}
+        companies={convertedCompanies}
         viewMode={viewMode}
         getCategoryLabel={getCategoryLabel}
         onViewCompany={(company) => {
@@ -423,7 +429,7 @@ const Companies = () => {
             openEditDialog(originalCompany);
           }
         }}
-        onDeleteCompany={handleDelete}
+        onDeleteCompany={(id) => handleDelete(id.toString())}
       />
 
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>

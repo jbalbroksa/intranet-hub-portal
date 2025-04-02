@@ -15,7 +15,7 @@ type CompanyListProps = {
   getCategoryLabel: (category: string) => string;
   onViewCompany: (company: Company) => void;
   onEditCompany: (company: Company) => void;
-  onDeleteCompany: (id: number) => void;
+  onDeleteCompany: (id: string) => void;
 };
 
 const CompanyList: React.FC<CompanyListProps> = ({

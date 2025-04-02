@@ -1,6 +1,6 @@
 
 export type Company = {
-  id: number;
+  id: string;
   logo: string;
   name: string;
   website: string;
@@ -13,7 +13,7 @@ export type SpecificationCategory = 'requirements' | 'procedures' | 'commercial'
 
 export type Specification = {
   id: number;
-  companyId: number;
+  companyId: string;
   title: string;
   content: string;
   category: SpecificationCategory;
