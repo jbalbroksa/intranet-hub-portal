@@ -4,61 +4,47 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
 import { Search, Plus, Edit, Trash, Filter } from 'lucide-react';
-
-// Mock data for delegations
-const mockDelegations = [
-  { id: 1, name: 'Delegación Madrid', address: 'Calle Gran Vía 28', postalCode: '28013', city: 'Madrid', province: 'Madrid', email: 'madrid@example.com', phone: '915555555', website: 'madrid.example.com' },
-  { id: 2, name: 'Delegación Barcelona', address: 'Passeig de Gràcia 43', postalCode: '08007', city: 'Barcelona', province: 'Barcelona', email: 'barcelona@example.com', phone: '935555555', website: 'barcelona.example.com' },
-  { id: 3, name: 'Delegación Valencia', address: 'Calle Colón 60', postalCode: '46004', city: 'Valencia', province: 'Valencia', email: 'valencia@example.com', phone: '965555555', website: 'valencia.example.com' },
-  { id: 4, name: 'Delegación Sevilla', address: 'Avenida de la Constitución 20', postalCode: '41004', city: 'Sevilla', province: 'Sevilla', email: 'sevilla@example.com', phone: '955555555', website: 'sevilla.example.com' },
-  { id: 5, name: 'Delegación Bilbao', address: 'Gran Vía 15', postalCode: '48001', city: 'Bilbao', province: 'Vizcaya', email: 'bilbao@example.com', phone: '945555555', website: 'bilbao.example.com' },
-];
-
-type Delegation = {
-  id: number;
-  name: string;
-  address: string;
-  postalCode: string;
-  city: string;
-  province: string;
-  email: string;
-  phone: string;
-  website: string;
-};
+import { useDelegaciones } from '@/hooks/useDelegaciones';
+import { Delegacion } from '@/types/database';
+import { toast } from '@/components/ui/use-toast';
+import { format } from 'date-fns';
+import { es } from 'date-fns/locale';
+import { Skeleton } from '@/components/ui/skeleton';
 
 type FormMode = 'create' | 'edit';
 
 const Delegations = () => {
-  const [delegations, setDelegations] = useState<Delegation[]>(mockDelegations);
-  const [searchTerm, setSearchTerm] = useState('');
+  const {
+    filteredDelegaciones,
+    isLoading,
+    searchTerm,
+    setSearchTerm,
+    createDelegacion,
+    updateDelegacion,
+    deleteDelegacion
+  } = useDelegaciones();
+
   const [dialogOpen, setDialogOpen] = useState(false);
   const [formMode, setFormMode] = useState<FormMode>('create');
-  const [currentDelegation, setCurrentDelegation] = useState<Delegation | null>(null);
-  const [formData, setFormData] = useState<Omit<Delegation, 'id'>>({
-    name: '',
-    address: '',
-    postalCode: '',
-    city: '',
-    province: '',
+  const [currentDelegacion, setCurrentDelegacion] = useState<Delegacion | null>(null);
+  const [formData, setFormData] = useState<Partial<Delegacion>>({
+    nombre: '',
+    direccion: '',
+    codigo_postal: '',
+    ciudad: '',
+    pais: '',
     email: '',
-    phone: '',
-    website: '',
+    telefono: '',
+    responsable: '',
   });
 
   // Handle search input change
   const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setSearchTerm(e.target.value);
   };
-
-  // Filter delegations based on search term
-  const filteredDelegations = delegations.filter(delegation => 
-    delegation.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    delegation.city.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    delegation.province.toLowerCase().includes(searchTerm.toLowerCase())
-  );
 
   // Handle form input changes
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -72,14 +58,14 @@ const Delegations = () => {
   // Reset form data
   const resetForm = () => {
     setFormData({
-      name: '',
-      address: '',
-      postalCode: '',
-      city: '',
-      province: '',
+      nombre: '',
+      direccion: '',
+      codigo_postal: '',
+      ciudad: '',
+      pais: '',
       email: '',
-      phone: '',
-      website: '',
+      telefono: '',
+      responsable: '',
     });
   };
 
@@ -91,49 +77,75 @@ const Delegations = () => {
   };
 
   // Open dialog for editing an existing delegation
-  const openEditDialog = (delegation: Delegation) => {
+  const openEditDialog = (delegacion: Delegacion) => {
     setFormMode('edit');
-    setCurrentDelegation(delegation);
+    setCurrentDelegacion(delegacion);
     setFormData({
-      name: delegation.name,
-      address: delegation.address,
-      postalCode: delegation.postalCode,
-      city: delegation.city,
-      province: delegation.province,
-      email: delegation.email,
-      phone: delegation.phone,
-      website: delegation.website,
+      nombre: delegacion.nombre,
+      direccion: delegacion.direccion || '',
+      codigo_postal: delegacion.codigo_postal || '',
+      ciudad: delegacion.ciudad || '',
+      pais: delegacion.pais || '',
+      email: delegacion.email || '',
+      telefono: delegacion.telefono || '',
+      responsable: delegacion.responsable || '',
     });
     setDialogOpen(true);
   };
 
   // Handle form submission
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (formMode === 'create') {
-      // Create new delegation
-      const newDelegation: Delegation = {
-        id: Math.max(0, ...delegations.map(d => d.id)) + 1,
-        ...formData,
-      };
-      setDelegations([...delegations, newDelegation]);
-    } else if (formMode === 'edit' && currentDelegation) {
-      // Update existing delegation
-      const updatedDelegations = delegations.map(delegation => 
-        delegation.id === currentDelegation.id ? { ...delegation, ...formData } : delegation
-      );
-      setDelegations(updatedDelegations);
+    try {
+      if (formMode === 'create') {
+        // Create new delegation
+        await createDelegacion.mutateAsync(formData);
+        toast({
+          title: "Delegación creada",
+          description: "La delegación ha sido creada exitosamente",
+        });
+      } else if (formMode === 'edit' && currentDelegacion) {
+        // Update existing delegation
+        await updateDelegacion.mutateAsync({ 
+          id: currentDelegacion.id, 
+          data: formData 
+        });
+        toast({
+          title: "Delegación actualizada",
+          description: "La delegación ha sido actualizada exitosamente",
+        });
+      }
+      
+      setDialogOpen(false);
+      resetForm();
+    } catch (error) {
+      console.error('Error al guardar delegación:', error);
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "Ha ocurrido un error al guardar la delegación",
+      });
     }
-    
-    setDialogOpen(false);
-    resetForm();
   };
 
   // Handle delegation deletion
-  const handleDelete = (id: number) => {
+  const handleDelete = async (id: string) => {
     if (window.confirm('¿Estás seguro de que quieres eliminar esta delegación?')) {
-      setDelegations(delegations.filter(delegation => delegation.id !== id));
+      try {
+        await deleteDelegacion.mutateAsync(id);
+        toast({
+          title: "Delegación eliminada",
+          description: "La delegación ha sido eliminada exitosamente",
+        });
+      } catch (error) {
+        console.error('Error al eliminar delegación:', error);
+        toast({
+          variant: "destructive",
+          title: "Error",
+          description: "Ha ocurrido un error al eliminar la delegación",
+        });
+      }
     }
   };
 
@@ -171,27 +183,44 @@ const Delegations = () => {
               <TableRow>
                 <TableHead>Nombre</TableHead>
                 <TableHead className="hidden md:table-cell">Ciudad</TableHead>
-                <TableHead className="hidden md:table-cell">Provincia</TableHead>
+                <TableHead className="hidden md:table-cell">País</TableHead>
                 <TableHead className="hidden md:table-cell">Teléfono</TableHead>
                 <TableHead className="hidden md:table-cell">Email</TableHead>
                 <TableHead className="text-right">Acciones</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
-              {filteredDelegations.length > 0 ? (
-                filteredDelegations.map((delegation) => (
-                  <TableRow key={delegation.id}>
-                    <TableCell className="font-medium">{delegation.name}</TableCell>
-                    <TableCell className="hidden md:table-cell">{delegation.city}</TableCell>
-                    <TableCell className="hidden md:table-cell">{delegation.province}</TableCell>
-                    <TableCell className="hidden md:table-cell">{delegation.phone}</TableCell>
-                    <TableCell className="hidden md:table-cell">{delegation.email}</TableCell>
+              {isLoading ? (
+                // Loading state
+                Array.from({ length: 5 }).map((_, index) => (
+                  <TableRow key={`skeleton-${index}`}>
+                    <TableCell><Skeleton className="h-5 w-full" /></TableCell>
+                    <TableCell className="hidden md:table-cell"><Skeleton className="h-5 w-full" /></TableCell>
+                    <TableCell className="hidden md:table-cell"><Skeleton className="h-5 w-full" /></TableCell>
+                    <TableCell className="hidden md:table-cell"><Skeleton className="h-5 w-full" /></TableCell>
+                    <TableCell className="hidden md:table-cell"><Skeleton className="h-5 w-full" /></TableCell>
                     <TableCell className="text-right">
                       <div className="flex justify-end gap-2">
-                        <Button variant="ghost" size="sm" onClick={() => openEditDialog(delegation)}>
+                        <Skeleton className="h-8 w-8" />
+                        <Skeleton className="h-8 w-8" />
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                ))
+              ) : filteredDelegaciones.length > 0 ? (
+                filteredDelegaciones.map((delegacion) => (
+                  <TableRow key={delegacion.id}>
+                    <TableCell className="font-medium">{delegacion.nombre}</TableCell>
+                    <TableCell className="hidden md:table-cell">{delegacion.ciudad || '-'}</TableCell>
+                    <TableCell className="hidden md:table-cell">{delegacion.pais || '-'}</TableCell>
+                    <TableCell className="hidden md:table-cell">{delegacion.telefono || '-'}</TableCell>
+                    <TableCell className="hidden md:table-cell">{delegacion.email || '-'}</TableCell>
+                    <TableCell className="text-right">
+                      <div className="flex justify-end gap-2">
+                        <Button variant="ghost" size="sm" onClick={() => openEditDialog(delegacion)}>
                           <Edit className="h-4 w-4" />
                         </Button>
-                        <Button variant="ghost" size="sm" onClick={() => handleDelete(delegation.id)}>
+                        <Button variant="ghost" size="sm" onClick={() => handleDelete(delegacion.id)}>
                           <Trash className="h-4 w-4" />
                         </Button>
                       </div>
@@ -225,57 +254,53 @@ const Delegations = () => {
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label htmlFor="name">Nombre</Label>
+                <Label htmlFor="nombre">Nombre</Label>
                 <Input 
-                  id="name" 
-                  name="name" 
-                  value={formData.name} 
+                  id="nombre" 
+                  name="nombre" 
+                  value={formData.nombre || ''} 
                   onChange={handleInputChange} 
                   required 
                 />
               </div>
               
               <div className="space-y-2">
-                <Label htmlFor="address">Dirección</Label>
+                <Label htmlFor="direccion">Dirección</Label>
                 <Input 
-                  id="address" 
-                  name="address" 
-                  value={formData.address} 
-                  onChange={handleInputChange} 
-                  required 
+                  id="direccion" 
+                  name="direccion" 
+                  value={formData.direccion || ''} 
+                  onChange={handleInputChange}
                 />
               </div>
               
               <div className="space-y-2">
-                <Label htmlFor="postalCode">Código Postal</Label>
+                <Label htmlFor="codigo_postal">Código Postal</Label>
                 <Input 
-                  id="postalCode" 
-                  name="postalCode" 
-                  value={formData.postalCode} 
-                  onChange={handleInputChange} 
-                  required 
+                  id="codigo_postal" 
+                  name="codigo_postal" 
+                  value={formData.codigo_postal || ''} 
+                  onChange={handleInputChange}
                 />
               </div>
               
               <div className="space-y-2">
-                <Label htmlFor="city">Localidad</Label>
+                <Label htmlFor="ciudad">Localidad</Label>
                 <Input 
-                  id="city" 
-                  name="city" 
-                  value={formData.city} 
-                  onChange={handleInputChange} 
-                  required 
+                  id="ciudad" 
+                  name="ciudad" 
+                  value={formData.ciudad || ''} 
+                  onChange={handleInputChange}
                 />
               </div>
               
               <div className="space-y-2">
-                <Label htmlFor="province">Provincia</Label>
+                <Label htmlFor="pais">País</Label>
                 <Input 
-                  id="province" 
-                  name="province" 
-                  value={formData.province} 
-                  onChange={handleInputChange} 
-                  required 
+                  id="pais" 
+                  name="pais" 
+                  value={formData.pais || ''} 
+                  onChange={handleInputChange}
                 />
               </div>
               
@@ -285,30 +310,28 @@ const Delegations = () => {
                   id="email" 
                   name="email" 
                   type="email" 
-                  value={formData.email} 
-                  onChange={handleInputChange} 
-                  required 
+                  value={formData.email || ''} 
+                  onChange={handleInputChange}
                 />
               </div>
               
               <div className="space-y-2">
-                <Label htmlFor="phone">Teléfono</Label>
+                <Label htmlFor="telefono">Teléfono</Label>
                 <Input 
-                  id="phone" 
-                  name="phone" 
-                  value={formData.phone} 
-                  onChange={handleInputChange} 
-                  required 
+                  id="telefono" 
+                  name="telefono" 
+                  value={formData.telefono || ''} 
+                  onChange={handleInputChange}
                 />
               </div>
               
               <div className="space-y-2">
-                <Label htmlFor="website">Web</Label>
+                <Label htmlFor="responsable">Responsable</Label>
                 <Input 
-                  id="website" 
-                  name="website" 
-                  value={formData.website} 
-                  onChange={handleInputChange} 
+                  id="responsable" 
+                  name="responsable" 
+                  value={formData.responsable || ''} 
+                  onChange={handleInputChange}
                 />
               </div>
             </div>
@@ -317,8 +340,8 @@ const Delegations = () => {
               <Button variant="outline" type="button" onClick={() => setDialogOpen(false)}>
                 Cancelar
               </Button>
-              <Button type="submit">
-                {formMode === 'create' ? 'Crear' : 'Guardar cambios'}
+              <Button type="submit" disabled={createDelegacion.isPending || updateDelegacion.isPending}>
+                {(createDelegacion.isPending || updateDelegacion.isPending) ? 'Guardando...' : formMode === 'create' ? 'Crear' : 'Guardar cambios'}
               </Button>
             </DialogFooter>
           </form>
