@@ -2,8 +2,8 @@
 import React from 'react';
 import { Separator } from '@/components/ui/separator';
 import WelcomeSection from '@/components/dashboard/WelcomeSection';
-import AlertsList from '@/components/dashboard/AlertsList';
-import EventsList from '@/components/dashboard/EventsList';
+import AlertsSection from '@/components/dashboard/AlertsSection';
+import EventsSection from '@/components/dashboard/EventsSection';
 import QuickAccess from '@/components/dashboard/QuickAccess';
 import RecentActivities from '@/components/dashboard/RecentActivities';
 
@@ -14,10 +14,10 @@ const Index = () => {
       <WelcomeSection />
 
       {/* Alerts section */}
-      <AlertsList />
+      <AlertsSection />
 
       {/* Events section */}
-      <EventsList />
+      <EventsSection />
 
       <Separator />
 

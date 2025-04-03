@@ -4,60 +4,11 @@ import { Button } from '@/components/ui/button';
 import { Bell, Check, Trash } from 'lucide-react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { toast } from 'sonner';
-import { Notification } from '@/components/notifications/NotificationCard';
 import NotificationsList from '@/components/notifications/NotificationsList';
-
-// Mock notifications data
-const mockNotifications: Notification[] = [
-  {
-    id: 1,
-    title: 'Nuevo documento disponible',
-    message: 'Se ha añadido un nuevo documento a Pólizas de automóvil',
-    createdAt: '2023-07-15T10:30:00',
-    read: false,
-    type: 'info',
-    category: 'documents'
-  },
-  {
-    id: 2,
-    title: 'Actualización de producto',
-    message: 'El producto "Seguro Todo Riesgo Plus" ha sido actualizado',
-    createdAt: '2023-07-14T14:45:00',
-    read: true,
-    type: 'update',
-    category: 'products'
-  },
-  {
-    id: 3,
-    title: 'Alerta de caducidad',
-    message: 'La póliza #12345 caducará en 7 días',
-    createdAt: '2023-07-13T09:15:00',
-    read: false,
-    type: 'alert',
-    category: 'policies'
-  },
-  {
-    id: 4,
-    title: 'Nuevo usuario registrado',
-    message: 'El usuario Juan Pérez se ha registrado en el sistema',
-    createdAt: '2023-07-12T16:20:00',
-    read: true,
-    type: 'info',
-    category: 'users'
-  },
-  {
-    id: 5,
-    title: 'Recordatorio de reunión',
-    message: 'Tienes una reunión programada con el equipo comercial mañana a las 10:00',
-    createdAt: '2023-07-11T11:05:00',
-    read: false,
-    type: 'reminder',
-    category: 'meetings'
-  }
-];
+import { useAlertas } from '@/hooks/useAlertas';
 
 const Notifications: React.FC = () => {
-  const [notifications, setNotifications] = useState<Notification[]>(mockNotifications);
+  const { alertas, isLoading, error, deleteAlerta, markAsRead, markAllAsRead, refetch } = useAlertas();
   const [activeTab, setActiveTab] = useState<'all' | 'unread'>('all');
 
   // Format date to a more readable format
@@ -71,38 +22,45 @@ const Notifications: React.FC = () => {
     });
   };
 
-  // Mark a notification as read
-  const markAsRead = (id: number) => {
-    setNotifications(notifications.map(notification => 
-      notification.id === id ? { ...notification, read: true } : notification
-    ));
-    toast.success('Notificación marcada como leída');
-  };
-
-  // Mark all notifications as read
-  const markAllAsRead = () => {
-    setNotifications(notifications.map(notification => ({ ...notification, read: true })));
-    toast.success('Todas las notificaciones marcadas como leídas');
-  };
-
   // Delete a notification
-  const deleteNotification = (id: number) => {
-    setNotifications(notifications.filter(notification => notification.id !== id));
-    toast.success('Notificación eliminada');
+  const handleDeleteNotification = (id: string) => {
+    deleteAlerta.mutate(id, {
+      onSuccess: () => {
+        refetch();
+        toast.success('Notificación eliminada');
+      },
+      onError: (error) => {
+        toast.error(`Error al eliminar notificación: ${error.message}`);
+      }
+    });
   };
 
   // Delete all notifications
-  const deleteAllNotifications = () => {
-    setNotifications([]);
-    toast.success('Todas las notificaciones eliminadas');
+  const deleteAllNotifications = async () => {
+    try {
+      const promises = alertas.map(alerta => deleteAlerta.mutateAsync(alerta.id));
+      await Promise.all(promises);
+      toast.success('Todas las notificaciones eliminadas');
+      refetch();
+    } catch (error: any) {
+      toast.error(`Error al eliminar notificaciones: ${error.message}`);
+    }
   };
 
   // Get notifications based on active tab
   const filteredNotifications = activeTab === 'all' 
-    ? notifications 
-    : notifications.filter(notification => !notification.read);
+    ? alertas 
+    : alertas.filter(notification => !notification.es_leida);
 
-  const unreadCount = notifications.filter(notification => !notification.read).length;
+  const unreadCount = alertas.filter(notification => !notification.es_leida).length;
+
+  if (isLoading) {
+    return <div className="text-center py-8">Cargando notificaciones...</div>;
+  }
+
+  if (error) {
+    return <div className="text-red-500 py-8">Error al cargar notificaciones: {error.message}</div>;
+  }
 
   return (
     <div className="space-y-6 animate-slideInUp">
@@ -132,7 +90,7 @@ const Notifications: React.FC = () => {
             variant="outline" 
             size="sm"
             onClick={deleteAllNotifications}
-            disabled={notifications.length === 0}
+            disabled={alertas.length === 0}
           >
             <Trash className="h-4 w-4 mr-2" />
             Eliminar todas
@@ -143,7 +101,7 @@ const Notifications: React.FC = () => {
       <Tabs value={activeTab} onValueChange={(value) => setActiveTab(value as 'all' | 'unread')}>
         <TabsList>
           <TabsTrigger value="all">
-            Todas <span className="ml-1 text-xs text-muted-foreground">({notifications.length})</span>
+            Todas <span className="ml-1 text-xs text-muted-foreground">({alertas.length})</span>
           </TabsTrigger>
           <TabsTrigger value="unread">
             No leídas <span className="ml-1 text-xs text-muted-foreground">({unreadCount})</span>
@@ -154,7 +112,7 @@ const Notifications: React.FC = () => {
           <NotificationsList 
             notifications={filteredNotifications} 
             onMarkAsRead={markAsRead}
-            onDelete={deleteNotification}
+            onDelete={handleDeleteNotification}
             formatDate={formatDate}
           />
         </TabsContent>
@@ -163,7 +121,7 @@ const Notifications: React.FC = () => {
           <NotificationsList 
             notifications={filteredNotifications} 
             onMarkAsRead={markAsRead}
-            onDelete={deleteNotification}
+            onDelete={handleDeleteNotification}
             formatDate={formatDate}
           />
         </TabsContent>

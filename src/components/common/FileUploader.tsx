@@ -2,8 +2,8 @@
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
-import { Upload, X } from 'lucide-react';
-import { useSupabaseUpload } from '@/hooks/useSupabaseQuery';
+import { Upload, X, File } from 'lucide-react';
+import { useSupabaseUpload, getPublicUrl } from '@/hooks/useSupabaseQuery';
 
 type FileUploaderProps = {
   bucketName: string;
@@ -37,7 +37,7 @@ const FileUploader: React.FC<FileUploaderProps> = ({
     }
     
     // Validar el tipo de archivo
-    if (!fileTypes.includes(selectedFile.type)) {
+    if (fileTypes.length > 0 && !fileTypes.includes(selectedFile.type)) {
       setError(`Tipo de archivo no admitido. Tipos admitidos: ${fileTypes.join(', ')}`);
       return;
     }
@@ -73,7 +73,7 @@ const FileUploader: React.FC<FileUploaderProps> = ({
     try {
       // Generar un nombre de archivo único
       const fileExt = file.name.split('.').pop();
-      const fileName = `${Date.now()}.${fileExt}`;
+      const fileName = `${Date.now()}_${fileExt}`;
       const filePath = folderPath ? `${folderPath}/${fileName}` : fileName;
       
       // Simular progreso mientras se sube
@@ -82,7 +82,7 @@ const FileUploader: React.FC<FileUploaderProps> = ({
       }, 200);
       
       // Subir archivo
-      await uploadMutation.mutateAsync({
+      const path = await uploadMutation.mutateAsync({
         bucketName,
         filePath,
         file
@@ -92,7 +92,7 @@ const FileUploader: React.FC<FileUploaderProps> = ({
       setProgress(100);
       
       // Obtener URL pública y notificar al componente padre
-      const publicUrl = `${bucketName}/${filePath}`;
+      const publicUrl = getPublicUrl(bucketName, path);
       onFileUploaded(publicUrl);
       
       // Limpiar después de unos segundos
@@ -200,23 +200,7 @@ const FileUploader: React.FC<FileUploaderProps> = ({
 // Componente auxiliar para mostrar un icono según el tipo de archivo
 const FileIcon = ({ fileType }: { fileType: string }) => {
   // Simplificado para mostrar solo un icono de archivo genérico
-  return (
-    <svg
-      xmlns="http://www.w3.org/2000/svg"
-      width="32"
-      height="32"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      className="mx-auto text-muted-foreground"
-    >
-      <path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z" />
-      <path d="M14 2v4a2 2 0 0 0 2 2h4" />
-    </svg>
-  );
+  return <File className="h-12 w-12 mx-auto text-muted-foreground" />;
 };
 
 export default FileUploader;
