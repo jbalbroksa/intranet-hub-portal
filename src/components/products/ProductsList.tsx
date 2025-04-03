@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Edit, Trash } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Skeleton } from '@/components/ui/skeleton';
 
 type Product = {
   id: number;
@@ -27,6 +28,8 @@ type ProductsListProps = {
   getCompanyNames: (companyIds: number[]) => string;
   onEditProduct: (product: Product) => void;
   onDeleteProduct: (id: number) => void;
+  isLoading?: boolean;
+  error?: Error | null;
 };
 
 const ProductsList: React.FC<ProductsListProps> = ({
@@ -35,8 +38,35 @@ const ProductsList: React.FC<ProductsListProps> = ({
   getSubcategoryName,
   getCompanyNames,
   onEditProduct,
-  onDeleteProduct
+  onDeleteProduct,
+  isLoading = false,
+  error = null
 }) => {
+  if (isLoading) {
+    return (
+      <Card>
+        <CardContent className="pt-6">
+          <div className="space-y-2">
+            <Skeleton className="h-6 w-1/4" />
+            <Skeleton className="h-10 w-full" />
+            <Skeleton className="h-10 w-full" />
+            <Skeleton className="h-10 w-full" />
+          </div>
+        </CardContent>
+      </Card>
+    );
+  }
+
+  if (error) {
+    return (
+      <Card>
+        <CardContent className="pt-6 text-center text-destructive">
+          Error al cargar productos: {error.message}
+        </CardContent>
+      </Card>
+    );
+  }
+
   if (products.length === 0) {
     return (
       <Card>
