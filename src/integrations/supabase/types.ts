@@ -9,6 +9,35 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
+      caracteristicas_productos: {
+        Row: {
+          created_at: string | null
+          id: string
+          nombre: string
+          producto_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          nombre: string
+          producto_id: string
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          nombre?: string
+          producto_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "caracteristicas_productos_producto_id_fkey"
+            columns: ["producto_id"]
+            isOneToOne: false
+            referencedRelation: "productos"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       categorias_companias: {
         Row: {
           created_at: string | null
@@ -277,37 +306,103 @@ export type Database = {
         Row: {
           categoria: string | null
           created_at: string | null
+          debilidades: string | null
           descripcion: string | null
+          fortalezas: string | null
           id: string
           imagen_url: string | null
+          nivel3_id: string | null
           nombre: string
+          observaciones: string | null
           precio: number | null
           stock: number | null
+          subcategoria_id: string | null
           updated_at: string | null
         }
         Insert: {
           categoria?: string | null
           created_at?: string | null
+          debilidades?: string | null
           descripcion?: string | null
+          fortalezas?: string | null
           id?: string
           imagen_url?: string | null
+          nivel3_id?: string | null
           nombre: string
+          observaciones?: string | null
           precio?: number | null
           stock?: number | null
+          subcategoria_id?: string | null
           updated_at?: string | null
         }
         Update: {
           categoria?: string | null
           created_at?: string | null
+          debilidades?: string | null
           descripcion?: string | null
+          fortalezas?: string | null
           id?: string
           imagen_url?: string | null
+          nivel3_id?: string | null
           nombre?: string
+          observaciones?: string | null
           precio?: number | null
           stock?: number | null
+          subcategoria_id?: string | null
           updated_at?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "productos_nivel3_id_fkey"
+            columns: ["nivel3_id"]
+            isOneToOne: false
+            referencedRelation: "categorias_productos"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "productos_subcategoria_id_fkey"
+            columns: ["subcategoria_id"]
+            isOneToOne: false
+            referencedRelation: "categorias_productos"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      productos_companias: {
+        Row: {
+          compania_id: string
+          created_at: string | null
+          id: string
+          producto_id: string
+        }
+        Insert: {
+          compania_id: string
+          created_at?: string | null
+          id?: string
+          producto_id: string
+        }
+        Update: {
+          compania_id?: string
+          created_at?: string | null
+          id?: string
+          producto_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "productos_companias_compania_id_fkey"
+            columns: ["compania_id"]
+            isOneToOne: false
+            referencedRelation: "companias"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "productos_companias_producto_id_fkey"
+            columns: ["producto_id"]
+            isOneToOne: false
+            referencedRelation: "productos"
+            referencedColumns: ["id"]
+          },
+        ]
       }
     }
     Views: {

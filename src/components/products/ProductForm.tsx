@@ -3,11 +3,11 @@ import React from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
 import { DialogFooter } from '@/components/ui/dialog';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Checkbox } from '@/components/ui/checkbox';
 import { X } from 'lucide-react';
+import WysiwygEditor from '@/components/WysiwygEditor';
 
 type Category = {
   id: number;
@@ -29,7 +29,7 @@ type Level3Category = {
 };
 
 type Company = {
-  id: number;
+  id: string;
   name: string;
 };
 
@@ -39,7 +39,7 @@ type FormData = {
   categoryId: number;
   subcategoryId: number;
   level3CategoryId?: number;
-  companies: number[];
+  companies: string[];
   features: string[];
   strengths?: string;
   weaknesses?: string;
@@ -54,6 +54,7 @@ type ProductFormProps = {
   onCancel: () => void;
   onInputChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
   onTextAreaChange: (e: React.ChangeEvent<HTMLTextAreaElement>) => void;
+  onWysiwygChange: (name: string, content: string) => void;
   onCategoryChange: (value: string) => void;
   onSubcategoryChange: (value: string) => void;
   onLevel3Change: (value: string) => void;
@@ -61,6 +62,7 @@ type ProductFormProps = {
   onFeatureChange: (index: number, value: string) => void;
   addFeature: () => void;
   removeFeature: (index: number) => void;
+  isLoading?: boolean;
 };
 
 const ProductForm: React.FC<ProductFormProps> = ({
@@ -71,13 +73,15 @@ const ProductForm: React.FC<ProductFormProps> = ({
   onCancel,
   onInputChange,
   onTextAreaChange,
+  onWysiwygChange,
   onCategoryChange,
   onSubcategoryChange,
   onLevel3Change,
   onCompanyChange,
   onFeatureChange,
   addFeature,
-  removeFeature
+  removeFeature,
+  isLoading = false
 }) => {
   // Helper function to get available subcategories based on selected category
   const getAvailableSubcategories = () => {
@@ -173,13 +177,11 @@ const ProductForm: React.FC<ProductFormProps> = ({
       
       <div className="space-y-2">
         <Label htmlFor="description">Descripción</Label>
-        <Textarea
-          id="description"
-          name="description"
+        <WysiwygEditor
           value={formData.description}
-          onChange={onTextAreaChange}
-          rows={2}
-          required
+          onChange={(content) => onWysiwygChange('description', content)}
+          placeholder="Descripción detallada del producto"
+          className="min-h-[100px]"
         />
       </div>
       
@@ -191,7 +193,7 @@ const ProductForm: React.FC<ProductFormProps> = ({
               <Checkbox
                 id={`company-${company.id}`}
                 checked={formData.companies.includes(company.id)}
-                onCheckedChange={() => onCompanyChange(company.id.toString())}
+                onCheckedChange={() => onCompanyChange(company.id)}
               />
               <Label htmlFor={`company-${company.id}`} className="cursor-pointer">
                 {company.name}
@@ -233,44 +235,41 @@ const ProductForm: React.FC<ProductFormProps> = ({
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div className="space-y-2">
           <Label htmlFor="strengths">Puntos Fuertes</Label>
-          <Textarea
-            id="strengths"
-            name="strengths"
+          <WysiwygEditor
             value={formData.strengths || ''}
-            onChange={onTextAreaChange}
-            rows={3}
+            onChange={(content) => onWysiwygChange('strengths', content)}
+            placeholder="Fortalezas del producto"
+            className="min-h-[100px]"
           />
         </div>
         
         <div className="space-y-2">
           <Label htmlFor="weaknesses">Puntos Débiles</Label>
-          <Textarea
-            id="weaknesses"
-            name="weaknesses"
+          <WysiwygEditor
             value={formData.weaknesses || ''}
-            onChange={onTextAreaChange}
-            rows={3}
+            onChange={(content) => onWysiwygChange('weaknesses', content)}
+            placeholder="Debilidades o limitaciones del producto"
+            className="min-h-[100px]"
           />
         </div>
       </div>
       
       <div className="space-y-2">
         <Label htmlFor="observations">Observaciones</Label>
-        <Textarea
-          id="observations"
-          name="observations"
+        <WysiwygEditor
           value={formData.observations || ''}
-          onChange={onTextAreaChange}
-          rows={3}
+          onChange={(content) => onWysiwygChange('observations', content)}
+          placeholder="Observaciones adicionales sobre el producto"
+          className="min-h-[100px]"
         />
       </div>
       
       <DialogFooter>
-        <Button variant="outline" type="button" onClick={onCancel}>
+        <Button variant="outline" type="button" onClick={onCancel} disabled={isLoading}>
           Cancelar
         </Button>
-        <Button type="submit">
-          Guardar
+        <Button type="submit" disabled={isLoading}>
+          {isLoading ? 'Guardando...' : 'Guardar'}
         </Button>
       </DialogFooter>
     </form>

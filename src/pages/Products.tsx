@@ -1,54 +1,79 @@
 
-import React, { useState } from 'react';
+import React from 'react';
 import ProductsList from '@/components/products/ProductsList';
 import ProductFilters from '@/components/products/ProductFilters';
 import { useProductos } from '@/hooks/useProductos';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import CategoriesManager from '@/components/products/CategoriesManager';
+import ProductDialog from '@/components/products/ProductDialog';
 import { Plus } from 'lucide-react';
 
 const Products = () => {
-  const [activeTab, setActiveTab] = useState<string>('products');
+  const [activeTab, setActiveTab] = React.useState<string>('products');
   
   const {
-    productos,
     filteredProductos,
     categorias,
+    companias,
     isLoading,
     error,
     searchTerm,
     setSearchTerm,
     categoria,
-    setCategoria
+    setCategoria,
+    productFormOpen,
+    setProductFormOpen,
+    currentProduct,
+    saveProducto,
+    editProducto,
+    newProducto,
+    deleteProducto
   } = useProductos();
 
   // Convert database Producto type to the Product type expected by ProductsList
   const mappedProducts = filteredProductos.map(producto => ({
-    id: Number(producto.id),
+    id: producto.id as string,
     name: producto.nombre,
     description: producto.descripcion || '',
-    categoryId: producto.categoria ? Number(producto.categoria) : 0,
-    subcategoryId: 0, // Default value since our database schema doesn't have this
-    companies: [],
-    features: []
+    categoryId: producto.categoria ? producto.categoria : '',
+    subcategoryId: producto.subcategoria_id || '',
+    level3CategoryId: producto.nivel3_id,
+    companies: producto.companias || [],
+    features: producto.caracteristicas || []
   }));
 
   // Map categories to the format expected by ProductFilters
   const mappedCategories = categorias.map(cat => ({
-    id: Number(cat.id),
+    id: cat.id as string,
     name: cat.nombre
+  }));
+
+  // Map companies to the format expected by ProductFilters
+  const mappedCompanies = companias.map(comp => ({
+    id: comp.id as string,
+    name: comp.nombre
   }));
 
   const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setSearchTerm(e.target.value);
   };
 
+  const handleDeleteProduct = async (id: string) => {
+    if (window.confirm('¿Estás seguro de que deseas eliminar este producto?')) {
+      try {
+        await deleteProducto.mutateAsync(id);
+      } catch (error) {
+        console.error('Error al eliminar producto:', error);
+      }
+    }
+  };
+
   return (
     <div className="space-y-6 animate-slideInUp">
       <div className="flex justify-between items-center">
         <h1 className="text-2xl font-semibold">Productos</h1>
-        <Button onClick={() => {}} className="flex items-center gap-2">
+        <Button onClick={newProducto} className="flex items-center gap-2">
           <Plus className="h-4 w-4" />
           Crear producto
         </Button>
@@ -64,17 +89,17 @@ const Products = () => {
           <ProductFilters
             searchTerm={searchTerm}
             categories={mappedCategories}
-            companies={[]}
-            selectedCategoryFilter={categoria ? Number(categoria) : null}
+            companies={mappedCompanies}
+            selectedCategoryFilter={categoria}
             selectedCompanyFilter={null}
             onSearchChange={handleSearchChange}
-            onCategoryFilterChange={(value) => setCategoria(value ? String(value) : null)}
+            onCategoryFilterChange={(value) => setCategoria(value)}
             onCompanyFilterChange={() => {}}
             onClearFilters={() => {
               setSearchTerm('');
               setCategoria(null);
             }}
-            onCreateClick={() => {}}
+            onCreateClick={newProducto}
           />
           
           <ProductsList 
@@ -82,13 +107,27 @@ const Products = () => {
             isLoading={isLoading} 
             error={error}
             getCategoryName={(id) => {
-              const category = categorias.find(cat => Number(cat.id) === id);
+              const category = categorias.find(cat => cat.id === id);
               return category ? category.nombre : 'Sin categoría';
             }}
-            getSubcategoryName={() => 'Sin subcategoría'}
-            getCompanyNames={() => 'Sin compañías'}
-            onEditProduct={() => {}}
-            onDeleteProduct={() => {}}
+            getSubcategoryName={() => 'Sin subcategoría'} // Necesitaríamos implementar esto adecuadamente
+            getCompanyNames={(companyIds) => {
+              if (!companyIds.length) return 'Sin compañías';
+              return companyIds
+                .map(id => {
+                  const company = companias.find(c => c.id === id);
+                  return company ? company.nombre : '';
+                })
+                .filter(Boolean)
+                .join(', ');
+            }}
+            onEditProduct={(product) => {
+              const productoToEdit = filteredProductos.find(p => p.id === product.id);
+              if (productoToEdit) {
+                editProducto(productoToEdit);
+              }
+            }}
+            onDeleteProduct={handleDeleteProduct}
           />
         </TabsContent>
         
@@ -96,6 +135,13 @@ const Products = () => {
           <CategoriesManager />
         </TabsContent>
       </Tabs>
+
+      <ProductDialog
+        open={productFormOpen}
+        onOpenChange={setProductFormOpen}
+        onSave={saveProducto}
+        currentProduct={currentProduct}
+      />
     </div>
   );
 };
