@@ -122,7 +122,7 @@ const ProductForm: React.FC<ProductFormProps> = ({
               <SelectValue placeholder="Seleccionar categoría" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="0" disabled>Seleccionar categoría</SelectItem>
+              <SelectItem value="0">Seleccionar categoría</SelectItem>
               {categories.map(category => (
                 <SelectItem key={category.id} value={category.id.toString()}>
                   {category.name}
@@ -143,7 +143,7 @@ const ProductForm: React.FC<ProductFormProps> = ({
               <SelectValue placeholder="Seleccionar subcategoría" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="0" disabled>Seleccionar subcategoría</SelectItem>
+              <SelectItem value="0">Seleccionar subcategoría</SelectItem>
               {getAvailableSubcategories().map(subcategory => (
                 <SelectItem key={subcategory.id} value={subcategory.id.toString()}>
                   {subcategory.name}

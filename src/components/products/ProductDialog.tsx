@@ -42,11 +42,26 @@ const ProductDialog: React.FC<ProductDialogProps> = ({
   const [isLoading, setIsLoading] = useState(false);
 
   // Mapear las categorías y compañías al formato esperado por el formulario
-  const mappedCategories = categorias.map(cat => ({
-    id: Number(cat.id),
-    name: cat.nombre,
-    subcategories: []
-  }));
+  const mappedCategories = categorias
+    .filter(cat => !cat.es_subcategoria) // Solo categorías principales para el primer nivel
+    .map(cat => ({
+      id: Number(cat.id),
+      name: cat.nombre,
+      subcategories: categorias
+        .filter(subcat => subcat.es_subcategoria && subcat.parent_id === cat.id && subcat.nivel === 2)
+        .map(subcat => ({
+          id: Number(subcat.id),
+          name: subcat.nombre,
+          parent_id: Number(cat.id),
+          level3: categorias
+            .filter(level3 => level3.es_subcategoria && level3.parent_id === subcat.id && level3.nivel === 3)
+            .map(level3 => ({
+              id: Number(level3.id),
+              name: level3.nombre,
+              parent_id: Number(subcat.id)
+            }))
+        }))
+    }));
 
   const mappedCompanies = companias.map(comp => ({
     id: comp.id,
@@ -120,7 +135,7 @@ const ProductDialog: React.FC<ProductDialogProps> = ({
   const handleCategoryChange = (value: string) => {
     setFormData(prev => ({ 
       ...prev, 
-      categoria: value,
+      categoria: value === "0" ? "" : value,
       subcategoria_id: undefined,
       nivel3_id: undefined
     }));
@@ -129,13 +144,16 @@ const ProductDialog: React.FC<ProductDialogProps> = ({
   const handleSubcategoryChange = (value: string) => {
     setFormData(prev => ({ 
       ...prev, 
-      subcategoria_id: value,
+      subcategoria_id: value === "0" ? undefined : value,
       nivel3_id: undefined
     }));
   };
 
   const handleLevel3Change = (value: string) => {
-    setFormData(prev => ({ ...prev, nivel3_id: value }));
+    setFormData(prev => ({ 
+      ...prev, 
+      nivel3_id: value === "0" ? undefined : value 
+    }));
   };
 
   const handleCompanyChange = (companiaId: string) => {

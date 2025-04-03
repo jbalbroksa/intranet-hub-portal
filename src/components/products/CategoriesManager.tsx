@@ -151,12 +151,13 @@ const CategoriesManager = () => {
             <div className="space-y-2">
               <Label htmlFor="parent">Categoría Padre (Opcional)</Label>
               <Select 
-                value={categoryFormData.parentId || ''} 
+                value={categoryFormData.parentId || 'none'} 
                 onValueChange={(value) => {
-                  const selectedCategory = categorias.find(cat => cat.id === value);
+                  const selectedParentId = value === 'none' ? null : value;
+                  const selectedCategory = categorias.find(cat => cat.id === selectedParentId);
                   const newNivel = selectedCategory?.nivel === 2 ? 3 : 2;
                   
-                  handleCategoryFormChange('parentId', value || null);
+                  handleCategoryFormChange('parentId', selectedParentId);
                   handleCategoryFormChange('nivel', newNivel.toString());
                 }}
               >
@@ -164,7 +165,7 @@ const CategoriesManager = () => {
                   <SelectValue placeholder="Seleccionar categoría padre" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">Ninguna (Categoría Principal)</SelectItem>
+                  <SelectItem value="none">Ninguna (Categoría Principal)</SelectItem>
                   {/* Solo mostrar categorías principales y subcategorías como posibles padres */}
                   {categorias
                     .filter(cat => !cat.es_subcategoria || (cat.es_subcategoria && cat.nivel === 2))
