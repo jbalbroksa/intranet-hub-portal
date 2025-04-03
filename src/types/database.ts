@@ -63,6 +63,7 @@ export type Noticia = {
   autor?: string;
   fecha_publicacion: string;
   es_destacada: boolean;
+  compania_id?: string | null;
   created_at: string;
   updated_at: string;
 };

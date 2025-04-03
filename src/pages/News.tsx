@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+
+import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -18,22 +19,15 @@ import {
   Calendar, 
   User,
   Filter,
-  Package 
+  Package,
+  Building2 
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { useNoticias } from '@/hooks/useNoticias';
 import { useSupabaseUpload, getPublicUrl } from '@/hooks/useSupabaseQuery';
 import { NoticiaFormData } from '@/types/database';
 import { useNavigate } from 'react-router-dom';
-
-// Mock data for document categories
-const documentCategories = [
-  { id: 1, name: 'Pólizas', icon: FileText },
-  { id: 2, name: 'Normativas', icon: File },
-  { id: 3, name: 'Manuales', icon: FileText },
-  { id: 4, name: 'Contratos', icon: FileText },
-  { id: 5, name: 'Otros', icon: File },
-];
+import { supabase } from "@/integrations/supabase/client";
 
 // Mock data for product categories
 const productCategories = [
@@ -47,10 +41,14 @@ const News = () => {
   const { 
     noticias, 
     filteredNoticias, 
+    companias,
     isLoading, 
+    loadingCompanias,
     error, 
     searchTerm, 
-    setSearchTerm, 
+    setSearchTerm,
+    companiaFilter,
+    setCompaniaFilter,
     createNoticia, 
     updateNoticia, 
     deleteNoticia, 
@@ -59,20 +57,33 @@ const News = () => {
   
   const uploadFile = useSupabaseUpload();
   
-  const [selectedCategory, setSelectedCategory] = useState<number | null>(null);
-  const [selectedProductCategory, setSelectedProductCategory] = useState<number | null>(null);
+  const [currentUser, setCurrentUser] = useState<string>('Administrador');
   const [dialogOpen, setDialogOpen] = useState(false);
   const [newNoticia, setNewNoticia] = useState<NoticiaFormData>({
     titulo: '',
     contenido: '',
     imagen_url: '',
-    autor: '',
+    autor: currentUser,
     fecha_publicacion: new Date().toISOString(),
     es_destacada: false,
+    compania_id: null
   });
   const [fileSelected, setFileSelected] = useState<File | null>(null);
   const [currentView, setCurrentView] = useState<'grid' | 'list'>('grid');
   const [uploading, setUploading] = useState(false);
+
+  // Get current user on component mount
+  useEffect(() => {
+    const getCurrentUser = async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (session?.user) {
+        setCurrentUser(session.user.email || 'Usuario');
+        setNewNoticia(prev => ({ ...prev, autor: session.user.email || 'Usuario' }));
+      }
+    };
+    
+    getCurrentUser();
+  }, []);
 
   // Format date to a more readable format
   const formatDate = (dateString: string): string => {
@@ -109,7 +120,15 @@ const News = () => {
     });
   };
 
-  // Handle form submission
+  // Handle company selection
+  const handleCompanyChange = (value: string) => {
+    setNewNoticia({
+      ...newNoticia,
+      compania_id: value
+    });
+  };
+
+  // Form submission
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
@@ -140,7 +159,8 @@ const News = () => {
       const noticiaData: NoticiaFormData = {
         ...newNoticia,
         imagen_url: imageUrl || newNoticia.imagen_url,
-        fecha_publicacion: newNoticia.fecha_publicacion || new Date().toISOString()
+        fecha_publicacion: newNoticia.fecha_publicacion || new Date().toISOString(),
+        autor: newNoticia.autor || currentUser
       };
       
       await createNoticia.mutateAsync(noticiaData);
@@ -150,9 +170,10 @@ const News = () => {
         titulo: '',
         contenido: '',
         imagen_url: '',
-        autor: '',
+        autor: currentUser,
         fecha_publicacion: new Date().toISOString(),
         es_destacada: false,
+        compania_id: null
       });
       setFileSelected(null);
       setDialogOpen(false);
@@ -187,12 +208,19 @@ const News = () => {
     navigate(`/noticias/${id}`);
   };
 
+  // Get company name from ID
+  const getCompanyName = (id: string | null): string => {
+    if (!id) return 'Sin compañía';
+    const company = companias.find(c => c.id === id);
+    return company ? company.nombre : 'Sin compañía';
+  };
+
   if (isLoading) {
     return <div className="flex justify-center p-8">Cargando noticias...</div>;
   }
 
   if (error) {
-    return <div className="text-red-500 p-8">Error al cargar noticias: {error.message}</div>;
+    return <div className="text-destructive p-8">Error al cargar noticias: {error.message}</div>;
   }
 
   return (
@@ -210,6 +238,21 @@ const News = () => {
         </div>
         
         <div className="flex flex-col md:flex-row gap-2">
+          {/* Company filter */}
+          <Select value={companiaFilter || ''} onValueChange={setCompaniaFilter}>
+            <SelectTrigger className="w-full md:w-48">
+              <SelectValue placeholder="Filtrar por compañía" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="">Todas las compañías</SelectItem>
+              {companias.map(company => (
+                <SelectItem key={company.id} value={company.id}>
+                  {company.nombre}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          
           <Button onClick={() => setDialogOpen(true)}>
             <Plus className="h-4 w-4 mr-2" />
             Crear noticia
@@ -259,6 +302,15 @@ const News = () => {
                       <p className="text-sm text-muted-foreground mb-4 line-clamp-3">{noticia.contenido}</p>
                       
                       <div className="mt-auto space-y-2 text-sm">
+                        <div className="flex flex-wrap gap-2 mb-2">
+                          {noticia.compania_id && (
+                            <Badge variant="outline" className="flex items-center gap-1">
+                              <Building2 className="h-3 w-3" />
+                              {getCompanyName(noticia.compania_id)}
+                            </Badge>
+                          )}
+                        </div>
+                        
                         <div className="flex justify-between">
                           <div className="flex items-center gap-1 text-muted-foreground">
                             <Calendar className="h-4 w-4" />
@@ -303,6 +355,7 @@ const News = () => {
                 <thead>
                   <tr className="border-b">
                     <th className="text-left p-4">Noticia</th>
+                    <th className="text-left p-4 hidden md:table-cell">Compañía</th>
                     <th className="text-left p-4 hidden md:table-cell">Autor</th>
                     <th className="text-left p-4">Fecha</th>
                     <th className="text-left p-4 hidden md:table-cell">Destacada</th>
@@ -334,6 +387,9 @@ const News = () => {
                             </div>
                           </div>
                         </td>
+                        <td className="p-4 hidden md:table-cell">
+                          {noticia.compania_id ? getCompanyName(noticia.compania_id) : '-'}
+                        </td>
                         <td className="p-4 hidden md:table-cell">{noticia.autor || '-'}</td>
                         <td className="p-4">{formatDate(noticia.fecha_publicacion)}</td>
                         <td className="p-4 hidden md:table-cell">
@@ -357,7 +413,7 @@ const News = () => {
                     ))
                   ) : (
                     <tr>
-                      <td colSpan={5} className="text-center py-6">
+                      <td colSpan={6} className="text-center py-6">
                         <FileText className="h-12 w-12 text-muted-foreground mx-auto" />
                         <h3 className="mt-4 text-lg font-medium">No se encontraron noticias</h3>
                         <p className="text-muted-foreground">Intenta con otros criterios de búsqueda o crea una nueva noticia</p>
@@ -405,16 +461,41 @@ const News = () => {
                   rows={5}
                 />
               </div>
+
+              {/* Compañía relacionada */}
+              <div className="space-y-2">
+                <Label htmlFor="compania">Compañía relacionada</Label>
+                <Select 
+                  value={newNoticia.compania_id || ''} 
+                  onValueChange={handleCompanyChange}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Seleccionar compañía" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="">Sin compañía</SelectItem>
+                    {companias.map(company => (
+                      <SelectItem key={company.id} value={company.id}>
+                        {company.nombre}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
               
               <div className="space-y-2">
                 <Label htmlFor="autor">Autor</Label>
                 <Input
                   id="autor"
                   name="autor"
-                  value={newNoticia.autor || ''}
+                  value={newNoticia.autor || currentUser}
                   onChange={handleInputChange}
                   placeholder="Autor de la noticia"
+                  disabled
                 />
+                <p className="text-xs text-muted-foreground">
+                  El autor se asigna automáticamente al usuario actual
+                </p>
               </div>
               
               <div className="space-y-2">

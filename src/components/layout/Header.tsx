@@ -5,6 +5,7 @@ import { Bell, Search, User, X } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import ThemeSwitcher from './ThemeSwitcher';
 
 type HeaderProps = {
   className?: string;
@@ -15,7 +16,7 @@ const Header = ({ className }: HeaderProps) => {
   const [notifications, setNotifications] = useState(3); // Example notification count
 
   return (
-    <header className={cn("h-16 bg-white border-b border-border flex items-center px-4 md:px-6", className)}>
+    <header className={cn("h-16 bg-background border-b border-border flex items-center px-4 md:px-6", className)}>
       <div className="max-w-[1200px] w-full mx-auto flex items-center justify-between">
         {/* Left side */}
         <div className="flex items-center">
@@ -32,7 +33,7 @@ const Header = ({ className }: HeaderProps) => {
           <div className={cn(
             "transition-all duration-300 ease-in-out",
             searchOpen 
-              ? "fixed inset-0 bg-white z-50 flex items-center p-4" 
+              ? "fixed inset-0 bg-background z-50 flex items-center p-4" 
               : "relative hidden md:block"
           )}>
             {searchOpen && (
@@ -65,13 +66,20 @@ const Header = ({ className }: HeaderProps) => {
             </button>
           )}
 
+          {/* Theme Switcher */}
+          {!searchOpen && (
+            <div className="mx-2">
+              <ThemeSwitcher />
+            </div>
+          )}
+
           {/* Notifications */}
           {!searchOpen && (
             <div className="relative">
               <Link to="/notificaciones" className="p-2 rounded-md hover:bg-muted relative">
                 <Bell className="h-5 w-5" />
                 {notifications > 0 && (
-                  <span className="absolute top-1 right-1 bg-primary text-white text-xs rounded-full w-4 h-4 flex items-center justify-center">
+                  <span className="absolute top-1 right-1 bg-primary text-primary-foreground text-xs rounded-full w-4 h-4 flex items-center justify-center">
                     {notifications}
                   </span>
                 )}
@@ -104,7 +112,7 @@ const Header = ({ className }: HeaderProps) => {
                   <Link to="/configuracion" className="w-full text-left block px-2 py-1.5 text-sm rounded-md hover:bg-muted">
                     Configuración
                   </Link>
-                  <button className="w-full text-left px-2 py-1.5 text-sm rounded-md hover:bg-muted text-red-500">
+                  <button className="w-full text-left px-2 py-1.5 text-sm rounded-md hover:bg-muted text-destructive">
                     Cerrar Sesión
                   </button>
                 </div>

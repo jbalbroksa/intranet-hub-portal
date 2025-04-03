@@ -1,10 +1,16 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import ProductsList from '@/components/products/ProductsList';
 import ProductFilters from '@/components/products/ProductFilters';
 import { useProductos } from '@/hooks/useProductos';
+import { Button } from '@/components/ui/button';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import CategoriesManager from '@/components/products/CategoriesManager';
+import { Plus } from 'lucide-react';
 
 const Products = () => {
+  const [activeTab, setActiveTab] = useState<string>('products');
+  
   const {
     productos,
     filteredProductos,
@@ -40,37 +46,56 @@ const Products = () => {
 
   return (
     <div className="space-y-6 animate-slideInUp">
-      <h1 className="text-2xl font-semibold">Productos</h1>
+      <div className="flex justify-between items-center">
+        <h1 className="text-2xl font-semibold">Productos</h1>
+        <Button onClick={() => {}} className="flex items-center gap-2">
+          <Plus className="h-4 w-4" />
+          Crear producto
+        </Button>
+      </div>
       
-      <ProductFilters
-        searchTerm={searchTerm}
-        categories={mappedCategories}
-        companies={[]}
-        selectedCategoryFilter={categoria ? Number(categoria) : null}
-        selectedCompanyFilter={null}
-        onSearchChange={handleSearchChange}
-        onCategoryFilterChange={(value) => setCategoria(value ? String(value) : null)}
-        onCompanyFilterChange={() => {}}
-        onClearFilters={() => {
-          setSearchTerm('');
-          setCategoria(null);
-        }}
-        onCreateClick={() => {}}
-      />
-      
-      <ProductsList 
-        products={mappedProducts}
-        isLoading={isLoading} 
-        error={error}
-        getCategoryName={(id) => {
-          const category = categorias.find(cat => Number(cat.id) === id);
-          return category ? category.nombre : 'Sin categoría';
-        }}
-        getSubcategoryName={() => 'Sin subcategoría'}
-        getCompanyNames={() => 'Sin compañías'}
-        onEditProduct={() => {}}
-        onDeleteProduct={() => {}}
-      />
+      <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4">
+        <TabsList>
+          <TabsTrigger value="products">Productos</TabsTrigger>
+          <TabsTrigger value="categories">Gestionar Categorías</TabsTrigger>
+        </TabsList>
+        
+        <TabsContent value="products" className="space-y-4">
+          <ProductFilters
+            searchTerm={searchTerm}
+            categories={mappedCategories}
+            companies={[]}
+            selectedCategoryFilter={categoria ? Number(categoria) : null}
+            selectedCompanyFilter={null}
+            onSearchChange={handleSearchChange}
+            onCategoryFilterChange={(value) => setCategoria(value ? String(value) : null)}
+            onCompanyFilterChange={() => {}}
+            onClearFilters={() => {
+              setSearchTerm('');
+              setCategoria(null);
+            }}
+            onCreateClick={() => {}}
+          />
+          
+          <ProductsList 
+            products={mappedProducts}
+            isLoading={isLoading} 
+            error={error}
+            getCategoryName={(id) => {
+              const category = categorias.find(cat => Number(cat.id) === id);
+              return category ? category.nombre : 'Sin categoría';
+            }}
+            getSubcategoryName={() => 'Sin subcategoría'}
+            getCompanyNames={() => 'Sin compañías'}
+            onEditProduct={() => {}}
+            onDeleteProduct={() => {}}
+          />
+        </TabsContent>
+        
+        <TabsContent value="categories">
+          <CategoriesManager />
+        </TabsContent>
+      </Tabs>
     </div>
   );
 };
