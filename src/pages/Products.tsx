@@ -12,12 +12,8 @@ const Products = () => {
     error,
     searchTerm,
     setSearchTerm,
-    selectedCategory,
-    setSelectedCategory,
-    priceRange,
-    setPriceRange,
-    stockFilter,
-    setStockFilter
+    categoria,
+    setCategoria
   } = useProductos();
 
   return (
@@ -26,17 +22,13 @@ const Products = () => {
       
       <ProductFilters
         searchTerm={searchTerm}
-        setSearchTerm={setSearchTerm}
-        selectedCategory={selectedCategory}
-        setSelectedCategory={setSelectedCategory}
-        priceRange={priceRange}
-        setPriceRange={setPriceRange}
-        stockFilter={stockFilter}
-        setStockFilter={setStockFilter}
+        onSearchChange={(value) => setSearchTerm(value)}
+        category={categoria || ''}
+        onCategoryChange={(value) => setCategoria(value)}
       />
       
       <ProductsList 
-        productos={filteredProductos} 
+        products={filteredProductos} 
         isLoading={isLoading} 
         error={error} 
       />

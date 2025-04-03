@@ -1,13 +1,13 @@
 
 import React from 'react';
-import { Notification } from './NotificationCard';
+import { Notificacion } from '@/types/database';
 import NotificationCard from './NotificationCard';
 import EmptyNotifications from './EmptyNotifications';
 
 type NotificationsListProps = {
-  notifications: Notification[];
-  onMarkAsRead: (id: number) => void;
-  onDelete: (id: number) => void;
+  notifications: Notificacion[];
+  onMarkAsRead: (id: string) => void;
+  onDelete: (id: string) => void;
   formatDate: (date: string) => string;
 };
 
