@@ -7,11 +7,12 @@ import {
   DialogTitle
 } from '@/components/ui/dialog';
 import { toast } from 'sonner';
-import ProductForm from './ProductForm';
+import ProductForm from './form/ProductForm';
 import { useProductFormData } from '@/hooks/useProductFormData';
 import { useCompanias } from '@/hooks/useCompanias';
 import { useCategoriaProductos } from '@/hooks/useCategoriaProductos';
 import { ProductoDetallado } from '@/hooks/useProductos';
+import { Category, Company } from '@/types/product';
 
 type ProductDialogProps = {
   open: boolean;
@@ -45,60 +46,14 @@ const ProductDialog: React.FC<ProductDialogProps> = ({
   
   const [isLoading, setIsLoading] = useState(false);
 
-  // Mapear las categorías y compañías al formato esperado por el formulario
-  const mappedCategories = categorias
-    .filter(cat => !cat.es_subcategoria) // Solo categorías principales para el primer nivel
-    .map(cat => ({
-      id: Number(cat.id),
-      name: cat.nombre,
-      subcategories: categorias
-        .filter(subcat => subcat.es_subcategoria && subcat.parent_id === cat.id && subcat.nivel === 2)
-        .map(subcat => ({
-          id: Number(subcat.id),
-          name: subcat.nombre,
-          parent_id: Number(cat.id),
-          level3: categorias
-            .filter(level3 => level3.es_subcategoria && level3.parent_id === subcat.id && level3.nivel === 3)
-            .map(level3 => ({
-              id: Number(level3.id),
-              name: level3.nombre,
-              parent_id: Number(subcat.id)
-            }))
-        }))
-    }));
+  // Map categories and companies to the expected format
+  const mappedCategories: Category[] = mapCategoriesToFormFormat(categorias);
+  const mappedCompanies: Company[] = mapCompaniesToFormFormat(companias);
 
-  const mappedCompanies = companias.map(comp => ({
-    id: comp.id,
-    name: comp.nombre
-  }));
-
-  // Inicializar el formulario cuando se abre el diálogo o cambia el producto actual
+  // Initialize form when dialog opens or product changes
   useEffect(() => {
-    if (currentProduct) {
-      setFormData({
-        id: currentProduct.id,
-        nombre: currentProduct.nombre,
-        descripcion: currentProduct.descripcion || '',
-        categoria: currentProduct.categoria || '',
-        subcategoria_id: currentProduct.subcategoria_id,
-        nivel3_id: currentProduct.nivel3_id,
-        caracteristicas: currentProduct.caracteristicas || [],
-        companias: currentProduct.companias || [],
-        fortalezas: currentProduct.fortalezas || '',
-        debilidades: currentProduct.debilidades || '',
-        observaciones: currentProduct.observaciones || ''
-      });
-    } else {
-      setFormData({
-        nombre: '',
-        descripcion: '',
-        categoria: '',
-        caracteristicas: [],
-        companias: [],
-        fortalezas: '',
-        debilidades: '',
-        observaciones: ''
-      });
+    if (open) {
+      initializeFormData(currentProduct, setFormData);
     }
   }, [currentProduct, open, setFormData]);
 
@@ -164,5 +119,65 @@ const ProductDialog: React.FC<ProductDialogProps> = ({
     </Dialog>
   );
 };
+
+// Helper functions
+function mapCategoriesToFormFormat(categorias: any[]): Category[] {
+  return categorias
+    .filter(cat => !cat.es_subcategoria)
+    .map(cat => ({
+      id: Number(cat.id),
+      name: cat.nombre,
+      subcategories: categorias
+        .filter(subcat => subcat.es_subcategoria && subcat.parent_id === cat.id && subcat.nivel === 2)
+        .map(subcat => ({
+          id: Number(subcat.id),
+          name: subcat.nombre,
+          parent_id: Number(cat.id),
+          level3: categorias
+            .filter(level3 => level3.es_subcategoria && level3.parent_id === subcat.id && level3.nivel === 3)
+            .map(level3 => ({
+              id: Number(level3.id),
+              name: level3.nombre,
+              parent_id: Number(subcat.id)
+            }))
+        }))
+    }));
+}
+
+function mapCompaniesToFormFormat(companias: any[]): Company[] {
+  return companias.map(comp => ({
+    id: comp.id,
+    name: comp.nombre
+  }));
+}
+
+function initializeFormData(currentProduct: ProductoDetallado | null, setFormData: React.Dispatch<React.SetStateAction<ProductoDetallado>>) {
+  if (currentProduct) {
+    setFormData({
+      id: currentProduct.id,
+      nombre: currentProduct.nombre,
+      descripcion: currentProduct.descripcion || '',
+      categoria: currentProduct.categoria || '',
+      subcategoria_id: currentProduct.subcategoria_id,
+      nivel3_id: currentProduct.nivel3_id,
+      caracteristicas: currentProduct.caracteristicas || [],
+      companias: currentProduct.companias || [],
+      fortalezas: currentProduct.fortalezas || '',
+      debilidades: currentProduct.debilidades || '',
+      observaciones: currentProduct.observaciones || ''
+    });
+  } else {
+    setFormData({
+      nombre: '',
+      descripcion: '',
+      categoria: '',
+      caracteristicas: [],
+      companias: [],
+      fortalezas: '',
+      debilidades: '',
+      observaciones: ''
+    });
+  }
+}
 
 export default ProductDialog;

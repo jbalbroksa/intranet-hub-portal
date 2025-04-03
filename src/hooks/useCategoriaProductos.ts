@@ -19,16 +19,19 @@ export type CategoriaConSubcategorias = {
 };
 
 export const useCategoriaProductos = () => {
+  // UI state
   const [activeCategoryTab, setActiveCategoryTab] = useState<string>('list');
   const [expandedCategories, setExpandedCategories] = useState<string[]>([]);
   const [expandedSubcategories, setExpandedSubcategories] = useState<string[]>([]);
+  
+  // Form state
   const [categoryFormData, setCategoryFormData] = useState({
     name: '',
     parentId: null as string | null,
     nivel: 1
   });
 
-  // Get category data and queries
+  // Get category data through queries
   const {
     categorias,
     categoriasOrganizadas,
@@ -57,20 +60,27 @@ export const useCategoriaProductos = () => {
   });
 
   return {
+    // Data
     categorias,
     categoriasOrganizadas,
     loadingCategorias,
     categoriasError,
+    
+    // UI state
     activeCategoryTab,
     setActiveCategoryTab,
     expandedCategories,
     expandedSubcategories,
-    toggleCategoryExpansion,
-    toggleSubcategoryExpansion,
+    
+    // Form state
     categoryFormData,
+    
+    // Actions
     handleCategoryFormChange,
     handleCategorySubmit,
     handleDeleteCategory,
+    toggleCategoryExpansion,
+    toggleSubcategoryExpansion,
     getNivel3Categories,
     refetchCategorias
   };

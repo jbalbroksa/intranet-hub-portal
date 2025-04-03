@@ -18,13 +18,14 @@ export type ProductoDetallado = {
 };
 
 export const useProductos = () => {
+  // UI state
   const [searchTerm, setSearchTerm] = useState('');
   const [categoria, setCategoria] = useState<string | null>(null);
   const [filtrosActivos, setFiltrosActivos] = useState(false);
   const [productFormOpen, setProductFormOpen] = useState(false);
   const [currentProduct, setCurrentProduct] = useState<ProductoDetallado | null>(null);
   
-  // Get queries from separate hook
+  // Data fetching - get queries from separate hook
   const { 
     productos, 
     productosDetallados,
@@ -39,7 +40,7 @@ export const useProductos = () => {
     refetchProductosCompanias
   } = useProductQueries();
 
-  // Get mutations from separate hook
+  // Data mutations - get from separate hook
   const {
     saveProducto,
     deleteProducto
@@ -49,28 +50,24 @@ export const useProductos = () => {
     refetchProductosCompanias
   });
 
-  // Filtra los productos según varios criterios
-  const filteredProductos = productosDetallados.filter(producto => {
-    // Filtro por término de búsqueda
-    const matchesSearchTerm = producto.nombre.toLowerCase().includes(searchTerm.toLowerCase());
-    
-    // Filtro por categoría
-    const matchesCategoria = !categoria || categoria === 'all' || 
-      (producto.categoria && producto.categoria.toLowerCase() === categoria.toLowerCase());
-    
-    return matchesSearchTerm && matchesCategoria;
-  });
+  // Filter products based on search term and category
+  const filteredProductos = filterProductos(productosDetallados, searchTerm, categoria);
 
-  // Función para abrir el formulario para editar un producto
+  // Product form actions
   const editProducto = (producto: ProductoDetallado) => {
     setCurrentProduct(producto);
     setProductFormOpen(true);
   };
 
-  // Función para abrir el formulario para crear un nuevo producto
   const newProducto = () => {
     setCurrentProduct(null);
     setProductFormOpen(true);
+  };
+
+  const clearFilters = () => {
+    setSearchTerm('');
+    setCategoria(null);
+    setFiltrosActivos(false);
   };
 
   return {
@@ -96,6 +93,25 @@ export const useProductos = () => {
     editProducto,
     newProducto,
     deleteProducto,
+    clearFilters,
     refetch
   };
 };
+
+// Helper function to filter products
+function filterProductos(
+  productos: ProductoDetallado[],
+  searchTerm: string, 
+  categoria: string | null
+): ProductoDetallado[] {
+  return productos.filter(producto => {
+    // Filter by search term
+    const matchesSearchTerm = producto.nombre.toLowerCase().includes(searchTerm.toLowerCase());
+    
+    // Filter by category
+    const matchesCategoria = !categoria || categoria === 'all' || 
+      (producto.categoria && producto.categoria.toLowerCase() === categoria.toLowerCase());
+    
+    return matchesSearchTerm && matchesCategoria;
+  });
+}
