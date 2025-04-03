@@ -8,6 +8,7 @@ import {
 } from '@/components/ui/dialog';
 import { toast } from 'sonner';
 import ProductForm from './ProductForm';
+import { useProductFormData } from '@/hooks/useProductFormData';
 import { useCompanias } from '@/hooks/useCompanias';
 import { useCategoriaProductos } from '@/hooks/useCategoriaProductos';
 import { ProductoDetallado } from '@/hooks/useProductos';
@@ -27,17 +28,20 @@ const ProductDialog: React.FC<ProductDialogProps> = ({
 }) => {
   const { companias } = useCompanias();
   const { categorias } = useCategoriaProductos();
-  
-  const [formData, setFormData] = useState<ProductoDetallado>({
-    nombre: '',
-    descripcion: '',
-    categoria: '',
-    caracteristicas: [],
-    companias: [],
-    fortalezas: '',
-    debilidades: '',
-    observaciones: ''
-  });
+  const { 
+    formData, 
+    setFormData,
+    handleInputChange,
+    handleTextAreaChange,
+    handleWysiwygChange,
+    handleCategoryChange,
+    handleSubcategoryChange,
+    handleLevel3Change,
+    handleCompanyChange,
+    handleFeatureChange,
+    addFeature,
+    removeFeature
+  } = useProductFormData(currentProduct);
   
   const [isLoading, setIsLoading] = useState(false);
 
@@ -96,7 +100,7 @@ const ProductDialog: React.FC<ProductDialogProps> = ({
         observaciones: ''
       });
     }
-  }, [currentProduct, open]);
+  }, [currentProduct, open, setFormData]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -116,85 +120,6 @@ const ProductDialog: React.FC<ProductDialogProps> = ({
     } finally {
       setIsLoading(false);
     }
-  };
-
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { name, value } = e.target;
-    setFormData(prev => ({ ...prev, [name]: value }));
-  };
-
-  const handleTextAreaChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
-    const { name, value } = e.target;
-    setFormData(prev => ({ ...prev, [name]: value }));
-  };
-
-  const handleWysiwygChange = (name: string, content: string) => {
-    setFormData(prev => ({ ...prev, [name]: content }));
-  };
-
-  const handleCategoryChange = (value: string) => {
-    setFormData(prev => ({ 
-      ...prev, 
-      categoria: value === "0" ? "" : value,
-      subcategoria_id: undefined,
-      nivel3_id: undefined
-    }));
-  };
-
-  const handleSubcategoryChange = (value: string) => {
-    setFormData(prev => ({ 
-      ...prev, 
-      subcategoria_id: value === "0" ? undefined : value,
-      nivel3_id: undefined
-    }));
-  };
-
-  const handleLevel3Change = (value: string) => {
-    setFormData(prev => ({ 
-      ...prev, 
-      nivel3_id: value === "0" ? undefined : value 
-    }));
-  };
-
-  const handleCompanyChange = (companiaId: string) => {
-    setFormData(prev => {
-      const currentCompanias = prev.companias || [];
-      
-      if (currentCompanias.includes(companiaId)) {
-        return { 
-          ...prev, 
-          companias: currentCompanias.filter(id => id !== companiaId) 
-        };
-      } else {
-        return { 
-          ...prev, 
-          companias: [...currentCompanias, companiaId] 
-        };
-      }
-    });
-  };
-
-  const handleFeatureChange = (index: number, value: string) => {
-    setFormData(prev => {
-      const caracteristicas = [...(prev.caracteristicas || [])];
-      caracteristicas[index] = value;
-      return { ...prev, caracteristicas };
-    });
-  };
-
-  const addFeature = () => {
-    setFormData(prev => ({
-      ...prev,
-      caracteristicas: [...(prev.caracteristicas || []), '']
-    }));
-  };
-
-  const removeFeature = (index: number) => {
-    setFormData(prev => {
-      const caracteristicas = [...(prev.caracteristicas || [])];
-      caracteristicas.splice(index, 1);
-      return { ...prev, caracteristicas };
-    });
   };
 
   return (
