@@ -35,6 +35,11 @@ const ProductCompanies: React.FC<ProductCompaniesProps> = ({
             </Label>
           </div>
         ))}
+        {companies.length === 0 && (
+          <div className="col-span-full text-muted-foreground">
+            No hay compañías disponibles
+          </div>
+        )}
       </div>
     </div>
   );

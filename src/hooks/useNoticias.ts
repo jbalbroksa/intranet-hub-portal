@@ -44,7 +44,7 @@ export const useNoticias = () => {
     (noticia.titulo.toLowerCase().includes(searchTerm.toLowerCase()) ||
     (noticia.contenido && noticia.contenido.toLowerCase().includes(searchTerm.toLowerCase())) ||
     (noticia.es_destacada && searchTerm.toLowerCase().includes('destacad'))) &&
-    (!companiaFilter || (noticia.compania_id && noticia.compania_id === companiaFilter))
+    (!companiaFilter || companiaFilter === 'none' || (noticia.compania_id && noticia.compania_id === companiaFilter))
   );
 
   return {

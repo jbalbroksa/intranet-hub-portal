@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
@@ -240,12 +239,12 @@ const News = () => {
         
         <div className="flex flex-col md:flex-row gap-2">
           {/* Company filter */}
-          <Select value={companiaFilter || ''} onValueChange={setCompaniaFilter}>
+          <Select value={companiaFilter || 'none'} onValueChange={setCompaniaFilter}>
             <SelectTrigger className="w-full md:w-48">
               <SelectValue placeholder="Filtrar por compañía" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="">Todas las compañías</SelectItem>
+              <SelectItem value="none">Todas las compañías</SelectItem>
               {companias.map(company => (
                 <SelectItem key={company.id} value={company.id}>
                   {company.nombre}
@@ -467,14 +466,14 @@ const News = () => {
               <div className="space-y-2">
                 <Label htmlFor="compania">Compañía relacionada</Label>
                 <Select 
-                  value={newNoticia.compania_id || ''} 
+                  value={newNoticia.compania_id || 'none'} 
                   onValueChange={handleCompanyChange}
                 >
                   <SelectTrigger>
                     <SelectValue placeholder="Seleccionar compañía" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="">Sin compañía</SelectItem>
+                    <SelectItem value="none">Sin compañía</SelectItem>
                     {companias.map(company => (
                       <SelectItem key={company.id} value={company.id}>
                         {company.nombre}

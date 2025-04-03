@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -34,7 +33,7 @@ const EventsList = () => {
   };
 
   // Handle event type selection
-  const handleEventTypeChange = (value: string) => {
+  const handleAlertTypeChange = (value: string) => {
     setNewEvent({
       ...newEvent,
       tipo: value
@@ -166,7 +165,7 @@ const EventsList = () => {
                 </Label>
                 <Select
                   value={newEvent.tipo}
-                  onValueChange={handleEventTypeChange}
+                  onValueChange={handleAlertTypeChange}
                 >
                   <SelectTrigger className="col-span-3">
                     <SelectValue placeholder="Seleccionar tipo" />
