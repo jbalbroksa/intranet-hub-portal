@@ -4,7 +4,7 @@ import { useEventos } from '@/hooks/useEventos';
 import EventsList from './EventsList';
 
 const EventsSection = () => {
-  const { eventos, isLoading, error } = useEventos();
+  const { isLoading, error } = useEventos();
 
   return (
     <section>

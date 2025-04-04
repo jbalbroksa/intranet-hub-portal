@@ -4,7 +4,7 @@ import { useAlertas } from '@/hooks/useAlertas';
 import AlertsList from './AlertsList';
 
 const AlertsSection = () => {
-  const { alertas, isLoading, error } = useAlertas();
+  const { isLoading, error } = useAlertas();
 
   return (
     <section>
