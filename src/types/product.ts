@@ -1,21 +1,21 @@
 
 export type Category = {
-  id: number | string;
+  id: string | number;
   name: string;
   subcategories: Subcategory[];
 };
 
 export type Subcategory = {
-  id: number | string;
+  id: string | number;
   name: string;
-  parent_id: number | string;
+  parent_id: string | number;
   level3: Level3Category[];
 };
 
 export type Level3Category = {
-  id: number | string;
+  id: string | number;
   name: string;
-  parent_id: number | string;
+  parent_id: string | number;
 };
 
 export type Company = {
@@ -26,9 +26,9 @@ export type Company = {
 export type ProductFormData = {
   name: string;
   description: string;
-  categoryId: number | string;
-  subcategoryId: number | string;
-  level3CategoryId?: number | string;
+  categoryId: string | number;
+  subcategoryId: string | number;
+  level3CategoryId?: string | number;
   companies: string[];
   features: string[];
   strengths?: string;
@@ -53,4 +53,19 @@ export type ProductFormProps = {
   addFeature: () => void;
   removeFeature: (index: number) => void;
   isLoading?: boolean;
+};
+
+// Add this type for Products.tsx
+export type Product = {
+  id: string | number;
+  name: string;
+  description: string;
+  categoryId: string | number;
+  subcategoryId: string | number;
+  level3CategoryId?: string | number;
+  companies: string[];
+  features: string[];
+  strengths?: string;
+  weaknesses?: string;
+  observations?: string;
 };

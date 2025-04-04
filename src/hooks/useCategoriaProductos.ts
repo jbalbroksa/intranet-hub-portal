@@ -6,7 +6,7 @@ import { useCategoriaActions } from './categoria/useCategoriaActions';
 export type Subcategoria = {
   id: string;
   nombre: string;
-  categoria_id: string;
+  categoria_id?: string; // Made optional to fix type error
   es_subcategoria: boolean;
   parent_id: string | null;
   nivel: number;

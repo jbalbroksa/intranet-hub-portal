@@ -9,27 +9,13 @@ import {
   SelectTrigger, 
   SelectValue 
 } from '@/components/ui/select';
-
-type Category = {
-  id: number;
-  name: string;
-  subcategories: {
-    id: number;
-    name: string;
-    parent_id: number;
-    level3: {
-      id: number;
-      name: string;
-      parent_id: number;
-    }[];
-  }[];
-};
+import { Category } from '@/types/product';
 
 type ProductBasicInfoProps = {
   name: string;
-  categoryId: number;
-  subcategoryId: number;
-  level3CategoryId?: number;
+  categoryId: string | number;
+  subcategoryId: string | number;
+  level3CategoryId?: string | number;
   categories: Category[];
   onInputChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
   onCategoryChange: (value: string) => void;
@@ -50,16 +36,16 @@ const ProductBasicInfo: React.FC<ProductBasicInfoProps> = ({
 }) => {
   // Helper function to get available subcategories based on selected category
   const getAvailableSubcategories = () => {
-    const category = categories.find(c => c.id === categoryId);
+    const category = categories.find(c => c.id.toString() === categoryId.toString());
     return category ? category.subcategories : [];
   };
 
   // Helper function to get available level3 categories based on selected subcategory
   const getAvailableLevel3Categories = () => {
-    const category = categories.find(c => c.id === categoryId);
+    const category = categories.find(c => c.id.toString() === categoryId.toString());
     if (!category) return [];
     
-    const subcategory = category.subcategories.find(s => s.id === subcategoryId);
+    const subcategory = category.subcategories.find(s => s.id.toString() === subcategoryId.toString());
     return subcategory ? subcategory.level3 : [];
   };
 
@@ -88,7 +74,7 @@ const ProductBasicInfo: React.FC<ProductBasicInfoProps> = ({
           <SelectContent>
             <SelectItem value="0">Seleccionar categoría</SelectItem>
             {categories.map(category => (
-              <SelectItem key={category.id} value={category.id.toString()}>
+              <SelectItem key={category.id.toString()} value={category.id.toString()}>
                 {category.name}
               </SelectItem>
             ))}
@@ -109,7 +95,7 @@ const ProductBasicInfo: React.FC<ProductBasicInfoProps> = ({
           <SelectContent>
             <SelectItem value="0">Seleccionar subcategoría</SelectItem>
             {getAvailableSubcategories().map(subcategory => (
-              <SelectItem key={subcategory.id} value={subcategory.id.toString()}>
+              <SelectItem key={subcategory.id.toString()} value={subcategory.id.toString()}>
                 {subcategory.name}
               </SelectItem>
             ))}
@@ -130,7 +116,7 @@ const ProductBasicInfo: React.FC<ProductBasicInfoProps> = ({
           <SelectContent>
             <SelectItem value="0">Ninguno</SelectItem>
             {getAvailableLevel3Categories().map(level3 => (
-              <SelectItem key={level3.id} value={level3.id.toString()}>
+              <SelectItem key={level3.id.toString()} value={level3.id.toString()}>
                 {level3.name}
               </SelectItem>
             ))}

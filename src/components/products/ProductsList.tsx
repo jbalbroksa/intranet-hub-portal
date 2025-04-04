@@ -6,28 +6,15 @@ import { Badge } from '@/components/ui/badge';
 import { Edit, Trash } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
-
-type Product = {
-  id: number;
-  name: string;
-  description: string;
-  categoryId: number;
-  subcategoryId: number;
-  level3CategoryId?: number;
-  companies: number[];
-  features: string[];
-  strengths?: string;
-  weaknesses?: string;
-  observations?: string;
-};
+import { Product } from '@/types/product';
 
 type ProductsListProps = {
   products: Product[];
-  getCategoryName: (categoryId: number) => string;
-  getSubcategoryName: (categoryId: number, subcategoryId: number) => string;
-  getCompanyNames: (companyIds: number[]) => string;
+  getCategoryName: (categoryId: string | number) => string;
+  getSubcategoryName: (categoryId: string | number, subcategoryId: string | number) => string;
+  getCompanyNames: (companyIds: string[]) => string;
   onEditProduct: (product: Product) => void;
-  onDeleteProduct: (id: number) => void;
+  onDeleteProduct: (id: string | number) => void;
   isLoading?: boolean;
   error?: Error | null;
 };
@@ -92,7 +79,7 @@ const ProductsList: React.FC<ProductsListProps> = ({
           </TableHeader>
           <TableBody>
             {products.map((product) => (
-              <TableRow key={product.id}>
+              <TableRow key={product.id.toString()}>
                 <TableCell>
                   <div>
                     <div className="font-medium">{product.name}</div>

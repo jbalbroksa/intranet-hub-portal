@@ -8,13 +8,15 @@ interface WysiwygEditorProps {
   onChange: (content: string) => void;
   placeholder?: string;
   className?: string;
+  name?: string; // Added name property to fix type error
 }
 
 const WysiwygEditor: React.FC<WysiwygEditorProps> = ({ 
   value, 
   onChange, 
   placeholder = "Escribe aquí...", 
-  className = "" 
+  className = "",
+  name = ""  // Default empty string
 }) => {
   const modules = {
     toolbar: [

@@ -42,6 +42,11 @@ export type Producto = {
   descripcion?: string;
   imagen_url?: string;
   categoria?: string;
+  subcategoria_id?: string; // Added this field
+  nivel3_id?: string; // Added this field
+  fortalezas?: string; // Added this field
+  debilidades?: string; // Added this field
+  observaciones?: string; // Added this field
   precio?: number;
   stock?: number;
   created_at: string;
@@ -52,6 +57,9 @@ export type CategoriaProducto = {
   id: string;
   nombre: string;
   slug: string;
+  es_subcategoria?: boolean; // Added this field
+  parent_id?: string; // Added this field
+  nivel?: number; // Added this field
   created_at: string;
 };
 

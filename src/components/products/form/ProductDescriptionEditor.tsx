@@ -31,7 +31,6 @@ const ProductDescriptionEditor: React.FC<ProductDescriptionEditorProps> = ({
             Descripción General
           </label>
           <WysiwygEditor
-            name="descripcion"
             value={ensureString(description)}
             onChange={(content) => onWysiwygChange('descripcion', content)}
             placeholder="Ingrese la descripción del producto..."
@@ -47,7 +46,6 @@ const ProductDescriptionEditor: React.FC<ProductDescriptionEditorProps> = ({
           
           <TabsContent value="strengths">
             <WysiwygEditor
-              name="fortalezas"
               value={ensureString(strengths)}
               onChange={(content) => onWysiwygChange('fortalezas', content)}
               placeholder="Ingrese las fortalezas del producto..."
@@ -56,7 +54,6 @@ const ProductDescriptionEditor: React.FC<ProductDescriptionEditorProps> = ({
           
           <TabsContent value="weaknesses">
             <WysiwygEditor
-              name="debilidades"
               value={ensureString(weaknesses)}
               onChange={(content) => onWysiwygChange('debilidades', content)}
               placeholder="Ingrese las debilidades del producto..."
@@ -65,7 +62,6 @@ const ProductDescriptionEditor: React.FC<ProductDescriptionEditorProps> = ({
           
           <TabsContent value="observations">
             <WysiwygEditor
-              name="observaciones"
               value={ensureString(observations)}
               onChange={(content) => onWysiwygChange('observaciones', content)}
               placeholder="Ingrese observaciones adicionales..."
