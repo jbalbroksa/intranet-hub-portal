@@ -7,7 +7,7 @@ export type Subcategoria = {
   id: string;
   nombre: string;
   categoria_id?: string; // Made optional to fix type error
-  es_subcategoria: boolean;
+  es_subcategoria?: boolean; // Made optional to match the CategoriaProducto type
   parent_id: string | null;
   nivel: number;
 };

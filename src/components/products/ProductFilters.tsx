@@ -6,12 +6,12 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Search, Filter, Plus } from 'lucide-react';
 
 type Category = {
-  id: number;
+  id: string | number;
   name: string;
 };
 
 type Company = {
-  id: number;
+  id: string | number;
   name: string;
 };
 
@@ -19,11 +19,11 @@ type ProductFiltersProps = {
   searchTerm: string;
   categories: Category[];
   companies: Company[];
-  selectedCategoryFilter: number | null;
-  selectedCompanyFilter: number | null;
+  selectedCategoryFilter: string | null;
+  selectedCompanyFilter: string | number | null;
   onSearchChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
-  onCategoryFilterChange: (categoryId: number | null) => void;
-  onCompanyFilterChange: (companyId: number | null) => void;
+  onCategoryFilterChange: (categoryId: string | null) => void;
+  onCompanyFilterChange: (companyId: string | number | null) => void;
   onClearFilters: () => void;
   onCreateClick: () => void;
 };
