@@ -1,11 +1,15 @@
 
 import React from 'react';
+import { EmptyCircle } from 'lucide-react';
+import { EmptyState } from '@/components/common/EmptyState';
 
 const EmptyAlerts = () => {
   return (
-    <div className="text-center py-8 text-muted-foreground">
-      No hay alertas activas actualmente
-    </div>
+    <EmptyState 
+      title="No hay alertas activas"
+      description="Actualmente no hay alertas o notificaciones para mostrar."
+      icon={<EmptyCircle className="w-12 h-12" />}
+    />
   );
 };
 

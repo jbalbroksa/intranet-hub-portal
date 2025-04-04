@@ -2,7 +2,7 @@
 import React from 'react';
 import { useAlertas } from '@/hooks/useAlertas';
 import AlertItem from './alerts/AlertItem';
-import AlertCreateDialog from './alerts/AlertCreateDialog';
+import AlertsHeader from './alerts/AlertsHeader';
 import EmptyAlerts from './alerts/EmptyAlerts';
 
 const AlertsList = () => {
@@ -10,10 +10,7 @@ const AlertsList = () => {
 
   return (
     <section>
-      <div className="flex justify-between items-center mb-4">
-        <h2 className="text-xl font-poppins font-medium">Alertas</h2>
-        <AlertCreateDialog />
-      </div>
+      <AlertsHeader />
 
       <div className="space-y-4">
         {alertas.length > 0 ? (
