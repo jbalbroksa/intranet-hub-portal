@@ -1,45 +1,27 @@
-import React, { useState, useEffect } from 'react';
+
+import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { Checkbox } from '@/components/ui/checkbox';
-import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
 import { 
   Search, 
   Plus, 
-  File, 
   FileText, 
-  Download, 
   Trash, 
   Calendar, 
   User,
-  Filter,
-  Package,
   Building2 
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { useNoticias } from '@/hooks/useNoticias';
-import { useSupabaseUpload, getPublicUrl } from '@/hooks/useSupabaseQuery';
-import { NoticiaFormData } from '@/types/database';
 import { useNavigate } from 'react-router-dom';
-import { supabase } from "@/integrations/supabase/client";
-
-// Mock data for product categories
-const productCategories = [
-  { id: 1, name: 'Automóvil' },
-  { id: 2, name: 'Hogar' },
-  { id: 3, name: 'Vida' },
-];
 
 const News = () => {
   const navigate = useNavigate();
   const { 
-    noticias, 
     filteredNoticias, 
     companias,
     isLoading, 
@@ -49,41 +31,11 @@ const News = () => {
     setSearchTerm,
     companiaFilter,
     setCompaniaFilter,
-    createNoticia, 
-    updateNoticia, 
     deleteNoticia, 
     refetch 
   } = useNoticias();
   
-  const uploadFile = useSupabaseUpload();
-  
-  const [currentUser, setCurrentUser] = useState<string>('Administrador');
-  const [dialogOpen, setDialogOpen] = useState(false);
-  const [newNoticia, setNewNoticia] = useState<NoticiaFormData>({
-    titulo: '',
-    contenido: '',
-    imagen_url: '',
-    autor: currentUser,
-    fecha_publicacion: new Date().toISOString(),
-    es_destacada: false,
-    compania_id: null
-  });
-  const [fileSelected, setFileSelected] = useState<File | null>(null);
   const [currentView, setCurrentView] = useState<'grid' | 'list'>('grid');
-  const [uploading, setUploading] = useState(false);
-
-  // Get current user on component mount
-  useEffect(() => {
-    const getCurrentUser = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (session?.user) {
-        setCurrentUser(session.user.email || 'Usuario');
-        setNewNoticia(prev => ({ ...prev, autor: session.user.email || 'Usuario' }));
-      }
-    };
-    
-    getCurrentUser();
-  }, []);
 
   // Format date to a more readable format
   const formatDate = (dateString: string): string => {
@@ -94,98 +46,6 @@ const News = () => {
       month: 'short',
       day: 'numeric'
     });
-  };
-
-  // Handle file input change
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files && e.target.files[0]) {
-      setFileSelected(e.target.files[0]);
-    }
-  };
-
-  // Handle input changes for the new document form
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
-    const { name, value } = e.target;
-    setNewNoticia({
-      ...newNoticia,
-      [name]: value
-    });
-  };
-
-  // Handle checkbox change
-  const handleCheckboxChange = (checked: boolean) => {
-    setNewNoticia({
-      ...newNoticia,
-      es_destacada: checked
-    });
-  };
-
-  // Handle company selection
-  const handleCompanyChange = (value: string) => {
-    setNewNoticia({
-      ...newNoticia,
-      compania_id: value
-    });
-  };
-
-  // Form submission
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    
-    if (!newNoticia.titulo) {
-      toast.error('Por favor, completa el título de la noticia');
-      return;
-    }
-    
-    setUploading(true);
-    
-    try {
-      let imageUrl = '';
-      
-      // Upload file to Supabase storage if selected
-      if (fileSelected) {
-        const fileName = `${Date.now()}_${fileSelected.name}`;
-        const filePath = await uploadFile.mutateAsync({
-          bucketName: 'noticias',
-          filePath: fileName,
-          file: fileSelected
-        });
-        
-        // Get public URL
-        imageUrl = getPublicUrl('noticias', filePath);
-      }
-      
-      // Create new document in database
-      const noticiaData: NoticiaFormData = {
-        ...newNoticia,
-        imagen_url: imageUrl || newNoticia.imagen_url,
-        fecha_publicacion: newNoticia.fecha_publicacion || new Date().toISOString(),
-        autor: newNoticia.autor || currentUser
-      };
-      
-      await createNoticia.mutateAsync(noticiaData);
-      
-      // Reset form and close dialog
-      setNewNoticia({
-        titulo: '',
-        contenido: '',
-        imagen_url: '',
-        autor: currentUser,
-        fecha_publicacion: new Date().toISOString(),
-        es_destacada: false,
-        compania_id: null
-      });
-      setFileSelected(null);
-      setDialogOpen(false);
-      
-      refetch();
-      toast.success('Noticia creada correctamente');
-    } catch (error) {
-      console.error('Error creating news:', error);
-      toast.error('Error al crear la noticia');
-    } finally {
-      setUploading(false);
-    }
   };
 
   // Handle document deletion
@@ -206,6 +66,11 @@ const News = () => {
   // View news detail
   const handleViewNews = (id: string) => {
     navigate(`/noticias/${id}`);
+  };
+
+  // Create new news
+  const handleCreateNews = () => {
+    navigate('/noticias/crear');
   };
 
   // Get company name from ID
@@ -253,7 +118,7 @@ const News = () => {
             </SelectContent>
           </Select>
           
-          <Button onClick={() => setDialogOpen(true)}>
+          <Button onClick={handleCreateNews}>
             <Plus className="h-4 w-4 mr-2" />
             Crear noticia
           </Button>
@@ -426,119 +291,6 @@ const News = () => {
           </Card>
         </TabsContent>
       </Tabs>
-
-      {/* Create news dialog */}
-      <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-        <DialogContent className="sm:max-w-md">
-          <DialogHeader>
-            <DialogTitle>Crear noticia</DialogTitle>
-            <DialogDescription>
-              Crea una nueva noticia para publicar en el sistema
-            </DialogDescription>
-          </DialogHeader>
-          <form onSubmit={handleSubmit}>
-            <div className="space-y-4 py-4">
-              <div className="space-y-2">
-                <Label htmlFor="titulo">Título *</Label>
-                <Input
-                  id="titulo"
-                  name="titulo"
-                  value={newNoticia.titulo}
-                  onChange={handleInputChange}
-                  placeholder="Título de la noticia"
-                  required
-                />
-              </div>
-              
-              <div className="space-y-2">
-                <Label htmlFor="contenido">Contenido</Label>
-                <Textarea
-                  id="contenido"
-                  name="contenido"
-                  value={newNoticia.contenido || ''}
-                  onChange={handleInputChange}
-                  placeholder="Contenido de la noticia"
-                  rows={5}
-                />
-              </div>
-
-              {/* Compañía relacionada */}
-              <div className="space-y-2">
-                <Label htmlFor="compania">Compañía relacionada</Label>
-                <Select 
-                  value={newNoticia.compania_id || 'none'} 
-                  onValueChange={handleCompanyChange}
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Seleccionar compañía" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="none">Sin compañía</SelectItem>
-                    {companias.map(company => (
-                      <SelectItem key={company.id} value={company.id}>
-                        {company.nombre}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-              
-              <div className="space-y-2">
-                <Label htmlFor="autor">Autor</Label>
-                <Input
-                  id="autor"
-                  name="autor"
-                  value={newNoticia.autor || currentUser}
-                  onChange={handleInputChange}
-                  placeholder="Autor de la noticia"
-                  disabled
-                />
-                <p className="text-xs text-muted-foreground">
-                  El autor se asigna automáticamente al usuario actual
-                </p>
-              </div>
-              
-              <div className="space-y-2">
-                <Label htmlFor="fecha_publicacion">Fecha de publicación</Label>
-                <Input
-                  id="fecha_publicacion"
-                  name="fecha_publicacion"
-                  type="date"
-                  value={newNoticia.fecha_publicacion ? new Date(newNoticia.fecha_publicacion).toISOString().split('T')[0] : ''}
-                  onChange={handleInputChange}
-                />
-              </div>
-              
-              <div className="flex items-center space-x-2">
-                <Checkbox 
-                  id="es_destacada" 
-                  checked={newNoticia.es_destacada}
-                  onCheckedChange={handleCheckboxChange}
-                />
-                <Label htmlFor="es_destacada">Noticia destacada</Label>
-              </div>
-              
-              <div className="space-y-2">
-                <Label htmlFor="file">Imagen</Label>
-                <Input
-                  id="file"
-                  type="file"
-                  accept="image/*"
-                  onChange={handleFileChange}
-                />
-                <p className="text-xs text-muted-foreground">
-                  Formatos soportados: JPG, PNG, GIF. Tamaño máximo: 5MB
-                </p>
-              </div>
-            </div>
-            <DialogFooter>
-              <Button type="submit" disabled={uploading}>
-                {uploading ? 'Creando...' : 'Crear noticia'}
-              </Button>
-            </DialogFooter>
-          </form>
-        </DialogContent>
-      </Dialog>
     </div>
   );
 };

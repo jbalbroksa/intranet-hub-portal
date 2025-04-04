@@ -8,7 +8,6 @@ const AlertsSection = () => {
 
   return (
     <section>
-      <h2 className="text-xl font-poppins font-medium mb-4">Alertas</h2>
       {isLoading ? (
         <div className="text-center py-4">Cargando alertas...</div>
       ) : error ? (

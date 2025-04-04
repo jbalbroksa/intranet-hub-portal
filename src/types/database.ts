@@ -1,4 +1,3 @@
-
 // Tipos para las tablas de la base de datos
 
 export type Delegacion = {
@@ -114,6 +113,18 @@ export type Notificacion = {
 export type DelegacionFormData = Omit<Delegacion, 'id' | 'created_at' | 'updated_at'>;
 export type CompaniaFormData = Omit<Compania, 'id' | 'created_at' | 'updated_at'>;
 export type ProductoFormData = Omit<Producto, 'id' | 'created_at' | 'updated_at'>;
-export type NoticiaFormData = Omit<Noticia, 'id' | 'created_at' | 'updated_at'>;
+export type NoticiaFormData = {
+  id?: string;
+  titulo: string;
+  contenido?: string;
+  imagen_url?: string;
+  autor?: string;
+  fecha_publicacion?: string;
+  es_destacada?: boolean;
+  compania_id?: string | null;
+  categoria_producto_id?: string | null;
+  productos_relacionados?: string[];
+  tags?: string[];
+};
 export type DocumentoFormData = Omit<Documento, 'id' | 'created_at' | 'updated_at'>;
 export type EventoFormData = Omit<Evento, 'id' | 'created_at' | 'updated_at'>;
