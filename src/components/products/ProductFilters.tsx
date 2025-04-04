@@ -55,14 +55,14 @@ const ProductFilters: React.FC<ProductFiltersProps> = ({
       <div className="flex flex-wrap gap-2">
         <Select
           value={selectedCategoryFilter?.toString() || "all"}
-          onValueChange={(value) => onCategoryFilterChange(value === "all" ? null : parseInt(value))}
+          onValueChange={(value) => onCategoryFilterChange(value === "all" ? null : value)}
         >
           <SelectTrigger className="w-[180px]">
             <div className="flex items-center">
               <Filter className="h-4 w-4 mr-2" />
               <span>
                 {selectedCategoryFilter 
-                  ? 'Categoría: ' + categories.find(c => c.id === selectedCategoryFilter)?.name 
+                  ? 'Categoría: ' + categories.find(c => c.id.toString() === selectedCategoryFilter.toString())?.name 
                   : 'Todas las categorías'}
               </span>
             </div>
@@ -79,14 +79,14 @@ const ProductFilters: React.FC<ProductFiltersProps> = ({
         
         <Select
           value={selectedCompanyFilter?.toString() || "all"}
-          onValueChange={(value) => onCompanyFilterChange(value === "all" ? null : parseInt(value))}
+          onValueChange={(value) => onCompanyFilterChange(value === "all" ? null : value)}
         >
           <SelectTrigger className="w-[180px]">
             <div className="flex items-center">
               <Filter className="h-4 w-4 mr-2" />
               <span>
                 {selectedCompanyFilter 
-                  ? 'Compañía: ' + companies.find(c => c.id === selectedCompanyFilter)?.name 
+                  ? 'Compañía: ' + companies.find(c => c.id.toString() === selectedCompanyFilter.toString())?.name 
                   : 'Todas las compañías'}
               </span>
             </div>
