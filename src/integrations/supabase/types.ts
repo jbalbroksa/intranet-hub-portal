@@ -62,23 +62,40 @@ export type Database = {
       categorias_productos: {
         Row: {
           created_at: string | null
+          es_subcategoria: boolean | null
           id: string
+          nivel: number | null
           nombre: string
+          parent_id: string | null
           slug: string
         }
         Insert: {
           created_at?: string | null
+          es_subcategoria?: boolean | null
           id?: string
+          nivel?: number | null
           nombre: string
+          parent_id?: string | null
           slug: string
         }
         Update: {
           created_at?: string | null
+          es_subcategoria?: boolean | null
           id?: string
+          nivel?: number | null
           nombre?: string
+          parent_id?: string | null
           slug?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "categorias_productos_parent_id_fkey"
+            columns: ["parent_id"]
+            isOneToOne: false
+            referencedRelation: "categorias_productos"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       companias: {
         Row: {

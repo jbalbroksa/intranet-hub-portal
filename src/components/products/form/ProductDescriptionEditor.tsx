@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { Label } from '@/components/ui/label';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import WysiwygEditor from '@/components/WysiwygEditor';
 
 type ProductDescriptionEditorProps = {
@@ -18,50 +18,62 @@ const ProductDescriptionEditor: React.FC<ProductDescriptionEditorProps> = ({
   observations,
   onWysiwygChange
 }) => {
+  // Ensure we always have string values for the editor
+  const ensureString = (value?: string): string => value || '';
+
   return (
-    <>
-      <div className="space-y-2">
-        <Label htmlFor="description">Descripción</Label>
-        <WysiwygEditor
-          value={description}
-          onChange={(content) => onWysiwygChange('description', content)}
-          placeholder="Descripción detallada del producto"
-          className="min-h-[100px]"
-        />
-      </div>
+    <div className="space-y-4">
+      <h3 className="text-lg font-semibold mb-2">Descripción y detalles</h3>
       
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <div className="space-y-2">
-          <Label htmlFor="strengths">Puntos Fuertes</Label>
+      <div className="space-y-4">
+        <div>
+          <label className="block text-sm font-medium mb-1">
+            Descripción General
+          </label>
           <WysiwygEditor
-            value={strengths || ''}
-            onChange={(content) => onWysiwygChange('strengths', content)}
-            placeholder="Fortalezas del producto"
-            className="min-h-[100px]"
+            name="descripcion"
+            value={ensureString(description)}
+            onChange={(content) => onWysiwygChange('descripcion', content)}
+            placeholder="Ingrese la descripción del producto..."
           />
         </div>
         
-        <div className="space-y-2">
-          <Label htmlFor="weaknesses">Puntos Débiles</Label>
-          <WysiwygEditor
-            value={weaknesses || ''}
-            onChange={(content) => onWysiwygChange('weaknesses', content)}
-            placeholder="Debilidades o limitaciones del producto"
-            className="min-h-[100px]"
-          />
-        </div>
+        <Tabs defaultValue="strengths">
+          <TabsList className="grid grid-cols-3 mb-2">
+            <TabsTrigger value="strengths">Fortalezas</TabsTrigger>
+            <TabsTrigger value="weaknesses">Debilidades</TabsTrigger>
+            <TabsTrigger value="observations">Observaciones</TabsTrigger>
+          </TabsList>
+          
+          <TabsContent value="strengths">
+            <WysiwygEditor
+              name="fortalezas"
+              value={ensureString(strengths)}
+              onChange={(content) => onWysiwygChange('fortalezas', content)}
+              placeholder="Ingrese las fortalezas del producto..."
+            />
+          </TabsContent>
+          
+          <TabsContent value="weaknesses">
+            <WysiwygEditor
+              name="debilidades"
+              value={ensureString(weaknesses)}
+              onChange={(content) => onWysiwygChange('debilidades', content)}
+              placeholder="Ingrese las debilidades del producto..."
+            />
+          </TabsContent>
+          
+          <TabsContent value="observations">
+            <WysiwygEditor
+              name="observaciones"
+              value={ensureString(observations)}
+              onChange={(content) => onWysiwygChange('observaciones', content)}
+              placeholder="Ingrese observaciones adicionales..."
+            />
+          </TabsContent>
+        </Tabs>
       </div>
-      
-      <div className="space-y-2">
-        <Label htmlFor="observations">Observaciones</Label>
-        <WysiwygEditor
-          value={observations || ''}
-          onChange={(content) => onWysiwygChange('observations', content)}
-          placeholder="Observaciones adicionales sobre el producto"
-          className="min-h-[100px]"
-        />
-      </div>
-    </>
+    </div>
   );
 };
 

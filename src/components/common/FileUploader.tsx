@@ -73,7 +73,7 @@ const FileUploader: React.FC<FileUploaderProps> = ({
     try {
       // Generar un nombre de archivo único
       const fileExt = file.name.split('.').pop();
-      const fileName = `${Date.now()}_${fileExt}`;
+      const fileName = `${Date.now()}.${fileExt}`;
       const filePath = folderPath ? `${folderPath}/${fileName}` : fileName;
       
       // Simular progreso mientras se sube
@@ -100,8 +100,9 @@ const FileUploader: React.FC<FileUploaderProps> = ({
         setProgress(0);
       }, 1000);
       
-    } catch (error) {
-      setError('Error al subir el archivo. Inténtalo de nuevo.');
+    } catch (error: any) {
+      console.error("Error uploading file:", error);
+      setError(`Error al subir el archivo: ${error.message || 'Inténtalo de nuevo'}`);
       setProgress(0);
     }
   };

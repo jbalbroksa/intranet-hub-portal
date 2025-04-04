@@ -1,4 +1,3 @@
-
 import { toast } from 'sonner';
 import { useSupabaseCreate, useSupabaseDelete } from '../useSupabaseQuery';
 import { CategoriaProducto } from '@/types/database';
@@ -68,7 +67,7 @@ export const useCategoriaActions = ({
       const newCategory = {
         nombre: categoryFormData.name,
         slug: slug,
-        es_subcategoria: !!categoryFormData.parentId,
+        es_subcategoria: categoryFormData.parentId ? true : false,
         parent_id: categoryFormData.parentId,
         nivel: categoryFormData.nivel
       };
@@ -89,9 +88,9 @@ export const useCategoriaActions = ({
       });
       
       refetchCategorias();
-    } catch (error) {
-      toast.error('Error al crear la categoría');
-      console.error(error);
+    } catch (error: any) {
+      console.error("Error creating category:", error);
+      toast.error(`Error al crear la categoría: ${error.message || ''}`);
     }
   };
 

@@ -1,4 +1,3 @@
-
 import React, { useState, useCallback, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
@@ -26,7 +25,6 @@ import { useDocumentos } from '@/hooks/useDocumentos';
 import { useSupabaseUpload, getPublicUrl } from '@/hooks/useSupabaseQuery';
 import { DocumentoFormData } from '@/types/database';
 
-// Mock data for document categories
 const documentCategories = [
   { id: 1, name: 'Pólizas', icon: FileText },
   { id: 2, name: 'Normativas', icon: File },
@@ -35,7 +33,6 @@ const documentCategories = [
   { id: 5, name: 'Otros', icon: File },
 ];
 
-// Mock data for product categories
 const productCategories = [
   { id: 1, name: 'Automóvil' },
   { id: 2, name: 'Hogar' },
@@ -72,7 +69,6 @@ const Documents = () => {
   const [currentView, setCurrentView] = useState<'grid' | 'list'>('grid');
   const [uploading, setUploading] = useState(false);
 
-  // Filter documents based on selected category
   const applyFilters = useCallback(() => {
     const filtered = filteredDocumentos.filter(document => {
       const matchesDocCategory = selectedCategory === null || 
@@ -87,7 +83,6 @@ const Documents = () => {
 
   const filteredDocumentsWithCategoryFilter = applyFilters();
 
-  // Format date to a more readable format
   const formatDate = (dateString: string): string => {
     if (!dateString) return '';
     const date = new Date(dateString);
@@ -98,28 +93,24 @@ const Documents = () => {
     });
   };
 
-  // Get category name by id
   const getCategoryName = (categoryName: string | null | undefined): string => {
     if (!categoryName) return 'Sin categoría';
     const category = documentCategories.find(cat => cat.name.toLowerCase() === categoryName.toLowerCase());
     return category ? category.name : 'Sin categoría';
   };
 
-  // Get category icon by name
   const getCategoryIcon = (categoryName: string | null | undefined): React.ElementType => {
     if (!categoryName) return File;
     const category = documentCategories.find(cat => cat.name.toLowerCase() === categoryName.toLowerCase());
     return category ? category.icon : File;
   };
 
-  // Handle file input change
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
       setFileSelected(e.target.files[0]);
     }
   };
 
-  // Handle input changes for the new document form
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
     setNewDocument({
@@ -128,7 +119,6 @@ const Documents = () => {
     });
   };
 
-  // Handle category selection
   const handleCategoryChange = (value: string) => {
     const category = documentCategories.find(cat => cat.id === parseInt(value));
     if (category) {
@@ -139,7 +129,6 @@ const Documents = () => {
     }
   };
 
-  // Handle form submission
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
@@ -151,18 +140,15 @@ const Documents = () => {
     setUploading(true);
     
     try {
-      // Upload file to Supabase storage
-      const fileName = `${Date.now()}_${fileSelected.name}`;
+      const fileName = `${Date.now()}_${fileSelected.name.replace(/\s+/g, '_')}`;
       const filePath = await uploadFile.mutateAsync({
         bucketName: 'documentos',
         filePath: fileName,
         file: fileSelected
       });
       
-      // Get public URL
       const publicUrl = getPublicUrl('documentos', filePath);
       
-      // Create new document in database
       const documentData: DocumentoFormData = {
         ...newDocument,
         archivo_url: publicUrl,
@@ -171,7 +157,6 @@ const Documents = () => {
       
       await createDocumento.mutateAsync(documentData);
       
-      // Reset form and close dialog
       setNewDocument({
         nombre: '',
         descripcion: '',
@@ -184,15 +169,14 @@ const Documents = () => {
       
       refetch();
       toast.success('Documento subido correctamente');
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error uploading document:', error);
-      toast.error('Error al subir documento');
+      toast.error(`Error al subir documento: ${error.message || ''}`);
     } finally {
       setUploading(false);
     }
   };
 
-  // Handle document deletion
   const handleDelete = (id: string) => {
     if (window.confirm('¿Estás seguro de que quieres eliminar este documento?')) {
       deleteDocumento.mutate(id, {
@@ -217,7 +201,6 @@ const Documents = () => {
 
   return (
     <div className="space-y-6 animate-slideInUp">
-      {/* Header with search and buttons */}
       <div className="flex flex-col md:flex-row gap-4 items-start md:items-center justify-between">
         <div className="relative w-full md:w-96">
           <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
@@ -277,7 +260,6 @@ const Documents = () => {
         </div>
       </div>
 
-      {/* View selector */}
       <div className="flex justify-end">
         <Tabs value={currentView} onValueChange={(value) => setCurrentView(value as 'grid' | 'list')}>
           <TabsList>
@@ -287,9 +269,7 @@ const Documents = () => {
         </Tabs>
       </div>
 
-      {/* MAIN TABS - Wrapping all TabsContent components */}
       <Tabs value={currentView} className="mt-0">
-        {/* Documents grid view */}
         <TabsContent value="grid" className="mt-0">
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {filteredDocumentsWithCategoryFilter.length > 0 ? (
@@ -353,7 +333,6 @@ const Documents = () => {
           </div>
         </TabsContent>
 
-        {/* Documents list view */}
         <TabsContent value="list" className="mt-0">
           <Card>
             <CardContent className="p-0">
@@ -424,7 +403,6 @@ const Documents = () => {
         </TabsContent>
       </Tabs>
 
-      {/* Upload document dialog */}
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
         <DialogContent className="sm:max-w-md">
           <DialogHeader>

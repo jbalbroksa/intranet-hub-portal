@@ -1,4 +1,3 @@
-
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from '@/components/ui/use-toast';
@@ -193,31 +192,28 @@ export function useSupabaseUpload() {
       filePath: string; 
       file: File 
     }) => {
+      // Make sure the filename has no spaces
+      const sanitizedFilePath = filePath.replace(/\s+/g, '_');
+      
       const { data, error } = await supabase
         .storage
         .from(bucketName)
-        .upload(filePath, file, {
+        .upload(sanitizedFilePath, file, {
           cacheControl: '3600',
           upsert: true
         });
       
       if (error) {
-        toast({
-          variant: "destructive",
-          title: "Error al subir archivo",
-          description: error.message,
-        });
-        throw error;
+        console.error("Storage upload error:", error);
+        throw new Error(error.message);
+      }
+      
+      if (!data || !data.path) {
+        throw new Error("No file path returned from upload");
       }
       
       return data.path;
     },
-    onSuccess: () => {
-      toast({
-        title: "Éxito",
-        description: "Archivo subido correctamente",
-      });
-    }
   });
 }
 
