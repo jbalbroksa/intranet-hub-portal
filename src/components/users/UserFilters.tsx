@@ -6,7 +6,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Search, Filter, LayoutGrid, List, Plus } from 'lucide-react';
 
 type Delegation = {
-  id: number;
+  id: string;
   name: string;
   address: string;
   phone: string;
@@ -14,7 +14,7 @@ type Delegation = {
 
 type UserFiltersProps = {
   searchTerm: string;
-  selectedDelegationFilter: number | null;
+  selectedDelegationFilter: string | null;
   viewMode: 'grid' | 'list';
   delegations: Delegation[];
   onSearchChange: (e: React.ChangeEvent<HTMLInputElement>) => void;

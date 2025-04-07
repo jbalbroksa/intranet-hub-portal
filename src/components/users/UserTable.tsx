@@ -6,23 +6,23 @@ import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Shield, UserIcon, Edit, Trash } from 'lucide-react';
 
 type User = {
-  id: number;
+  id: string;
   name: string;
   email: string;
   role: 'admin' | 'user';
   lastLogin: string;
-  delegationId: number;
+  delegationId: string;
   position: string;
   bio: string;
 };
 
 type UserTableProps = {
   users: User[];
-  getDelegationName: (delegationId: number) => string;
+  getDelegationName: (delegationId: string) => string;
   getInitials: (name: string) => string;
   onDetailsClick: (user: User) => void;
   onEditClick: (user: User) => void;
-  onDeleteClick: (id: number) => void;
+  onDeleteClick: (user: User) => void;
 };
 
 const UserTable: React.FC<UserTableProps> = ({
@@ -94,7 +94,7 @@ const UserTable: React.FC<UserTableProps> = ({
                 <Button variant="ghost" size="sm" onClick={() => onEditClick(user)}>
                   <Edit className="h-4 w-4" />
                 </Button>
-                <Button variant="ghost" size="sm" onClick={() => onDeleteClick(user.id)}>
+                <Button variant="ghost" size="sm" onClick={() => onDeleteClick(user)}>
                   <Trash className="h-4 w-4" />
                 </Button>
               </div>

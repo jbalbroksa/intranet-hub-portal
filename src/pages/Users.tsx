@@ -59,6 +59,11 @@ const Users = () => {
     return matchesDelegation;
   });
 
+  // Handle search change - this function was missing
+  const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setSearchTerm(e.target.value);
+  };
+
   // Handle form input changes
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
@@ -225,7 +230,7 @@ const Users = () => {
         searchTerm={searchTerm}
         selectedDelegationFilter={selectedDelegationFilter}
         viewMode={viewMode}
-        delegations={delegations.map(d => ({ id: Number(d.id), name: d.nombre, address: d.direccion || '', phone: d.telefono || '' }))}
+        delegations={delegations.map(d => ({ id: d.id, name: d.nombre, address: d.direccion || '', phone: d.telefono || '' }))}
         onSearchChange={handleSearchChange}
         onDelegationFilterChange={handleDelegationFilter}
         onViewModeToggle={toggleViewMode}
@@ -240,12 +245,12 @@ const Users = () => {
               <UserCard
                 key={user.id}
                 user={{
-                  id: Number(user.id),
+                  id: user.id,
                   name: user.name,
                   email: user.email,
                   role: user.role,
                   lastLogin: user.last_login || 'Nunca',
-                  delegationId: Number(user.delegation_id || 0),
+                  delegationId: user.delegation_id || '',
                   position: user.position || '',
                   bio: user.bio || '',
                 }}
@@ -267,38 +272,38 @@ const Users = () => {
           <CardContent className="p-0">
             <UserTable
               users={filteredUsersByDelegation.map(user => ({
-                id: Number(user.id),
+                id: user.id,
                 name: user.name,
                 email: user.email,
                 role: user.role,
                 lastLogin: user.last_login || 'Nunca',
-                delegationId: Number(user.delegation_id || 0),
+                delegationId: user.delegation_id || '',
                 position: user.position || '',
                 bio: user.bio || '',
               }))}
-              getDelegationName={delegationId => getDelegationName(delegationId?.toString())}
+              getDelegationName={getDelegationName}
               getInitials={getInitials}
               onDetailsClick={user => openDetailsDialog({ 
-                id: user.id.toString(),
+                id: user.id,
                 name: user.name,
                 email: user.email,
                 role: user.role,
                 position: user.position,
-                delegation_id: user.delegationId?.toString(),
+                delegation_id: user.delegationId,
                 bio: user.bio,
                 last_login: user.lastLogin
               })}
               onEditClick={user => openEditDialog({ 
-                id: user.id.toString(),
+                id: user.id,
                 name: user.name,
                 email: user.email,
                 role: user.role,
                 position: user.position,
-                delegation_id: user.delegationId?.toString(),
+                delegation_id: user.delegationId,
                 bio: user.bio,
                 last_login: user.lastLogin
               })}
-              onDeleteClick={user => handleDelete(user.id.toString())}
+              onDeleteClick={user => handleDelete(user.id)}
             />
           </CardContent>
         </Card>
@@ -322,10 +327,10 @@ const Users = () => {
               email: formData.email,
               role: formData.role,
               position: formData.position || '',
-              delegationId: Number(formData.delegation_id) || 0,
+              delegationId: formData.delegation_id || '',
               bio: formData.bio || '',
             }}
-            delegations={delegations.map(d => ({ id: Number(d.id), name: d.nombre, address: d.direccion || '', phone: d.telefono || '' }))}
+            delegations={delegations.map(d => ({ id: d.id, name: d.nombre, address: d.direccion || '', phone: d.telefono || '' }))}
             formMode={formMode}
             onSubmit={handleSubmit}
             onCancel={() => setDialogOpen(false)}
@@ -339,17 +344,17 @@ const Users = () => {
       {/* User details dialog */}
       <UserDetail
         user={currentUser ? {
-          id: Number(currentUser.id),
+          id: currentUser.id,
           name: currentUser.name,
           email: currentUser.email,
           role: currentUser.role,
           lastLogin: currentUser.last_login || 'Nunca',
-          delegationId: Number(currentUser.delegation_id || 0),
+          delegationId: currentUser.delegation_id || '',
           position: currentUser.position || '',
           bio: currentUser.bio || '',
         } : null}
         isOpen={detailsDialogOpen}
-        getDelegationName={delegationId => getDelegationName(delegationId?.toString())}
+        getDelegationName={getDelegationName}
         getInitials={getInitials}
         onClose={() => setDetailsDialogOpen(false)}
         onEdit={() => {

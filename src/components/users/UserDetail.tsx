@@ -5,12 +5,12 @@ import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 
 type User = {
-  id: number;
+  id: string;
   name: string;
   email: string;
   role: 'admin' | 'user';
   lastLogin: string;
-  delegationId: number;
+  delegationId: string;
   position: string;
   bio: string;
 };
@@ -18,7 +18,7 @@ type User = {
 type UserDetailProps = {
   user: User | null;
   isOpen: boolean;
-  getDelegationName: (delegationId: number) => string;
+  getDelegationName: (delegationId: string) => string;
   getInitials: (name: string) => string;
   onClose: () => void;
   onEdit: () => void;

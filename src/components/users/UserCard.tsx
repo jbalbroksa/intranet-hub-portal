@@ -6,12 +6,12 @@ import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { UserIcon, Edit, Trash } from 'lucide-react';
 
 type User = {
-  id: number;
+  id: string;
   name: string;
   email: string;
   role: 'admin' | 'user';
   lastLogin: string;
-  delegationId: number;
+  delegationId: string;
   position: string;
   bio: string;
 };

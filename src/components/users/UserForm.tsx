@@ -10,7 +10,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Shield, User as UserIcon } from 'lucide-react';
 
 type Delegation = {
-  id: number;
+  id: string;
   name: string;
   address: string;
   phone: string;
@@ -21,7 +21,7 @@ type UserFormProps = {
     name: string;
     email: string;
     role: 'admin' | 'user';
-    delegationId: number;
+    delegationId: string;
     position: string;
     bio: string;
   };
