@@ -4,7 +4,6 @@ import { Button } from '@/components/ui/button';
 import { DialogFooter } from '@/components/ui/dialog';
 import ProductBasicInfo from './ProductBasicInfo';
 import ProductDescriptionEditor from './ProductDescriptionEditor';
-import ProductFeatures from './ProductFeatures';
 import ProductCompanies from './ProductCompanies';
 import { ProductFormProps } from '@/types/product';
 
@@ -21,9 +20,6 @@ const ProductForm: React.FC<ProductFormProps> = ({
   onSubcategoryChange,
   onLevel3Change,
   onCompanyChange,
-  onFeatureChange,
-  addFeature,
-  removeFeature,
   isLoading = false
 }) => {
   return (
@@ -52,13 +48,6 @@ const ProductForm: React.FC<ProductFormProps> = ({
         companies={companies}
         selectedCompanies={formData.companies}
         onCompanyChange={onCompanyChange}
-      />
-      
-      <ProductFeatures
-        features={formData.features}
-        onFeatureChange={onFeatureChange}
-        addFeature={addFeature}
-        removeFeature={removeFeature}
       />
       
       <DialogFooter>

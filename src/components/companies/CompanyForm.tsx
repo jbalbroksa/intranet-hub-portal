@@ -7,7 +7,6 @@ import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { DialogFooter } from '@/components/ui/dialog';
 import { Upload } from 'lucide-react';
 import { Company } from '@/types/company';
-import { Textarea } from '@/components/ui/textarea';
 
 // Define FormData type that matches both CompaniaFormData and Company structure
 export type CompanyFormData = {
@@ -17,8 +16,6 @@ export type CompanyFormData = {
   mediatorAccess: string;
   responsibleEmail: string;
   category: 'specific' | 'preferred' | 'all';
-  descripcion?: string;
-  direccion?: string;
   telefono?: string;
 };
 
@@ -127,28 +124,6 @@ const CompanyForm: React.FC<CompanyFormProps> = ({
               onChange={onInputChange}
             />
           </div>
-        </div>
-        
-        <div className="space-y-2">
-          <Label htmlFor="descripcion">Descripción</Label>
-          <Textarea 
-            id="descripcion" 
-            name="descripcion" 
-            value={formData.descripcion || ""} 
-            onChange={onInputChange}
-            rows={3}
-          />
-        </div>
-        
-        <div className="space-y-2">
-          <Label htmlFor="direccion">Dirección</Label>
-          <Textarea 
-            id="direccion" 
-            name="direccion" 
-            value={formData.direccion || ""} 
-            onChange={onInputChange}
-            rows={2}
-          />
         </div>
         
         <div className="space-y-2">

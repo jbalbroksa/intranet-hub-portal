@@ -38,10 +38,7 @@ const ProductDialog: React.FC<ProductDialogProps> = ({
     handleCategoryChange,
     handleSubcategoryChange,
     handleLevel3Change,
-    handleCompanyChange,
-    handleFeatureChange,
-    addFeature,
-    removeFeature
+    handleCompanyChange
   } = useProductFormData(currentProduct);
   
   const [isLoading, setIsLoading] = useState(false);
@@ -94,7 +91,7 @@ const ProductDialog: React.FC<ProductDialogProps> = ({
             subcategoryId: formData.subcategoria_id ? Number(formData.subcategoria_id) : 0,
             level3CategoryId: formData.nivel3_id ? Number(formData.nivel3_id) : undefined,
             companies: formData.companias?.map(id => id.toString()) || [],
-            features: formData.caracteristicas || [],
+            features: [],
             strengths: formData.fortalezas,
             weaknesses: formData.debilidades,
             observations: formData.observaciones
@@ -110,9 +107,6 @@ const ProductDialog: React.FC<ProductDialogProps> = ({
           onSubcategoryChange={handleSubcategoryChange}
           onLevel3Change={handleLevel3Change}
           onCompanyChange={handleCompanyChange}
-          onFeatureChange={handleFeatureChange}
-          addFeature={addFeature}
-          removeFeature={removeFeature}
           isLoading={isLoading}
         />
       </DialogContent>
@@ -160,7 +154,6 @@ function initializeFormData(currentProduct: ProductoDetallado | null, setFormDat
       categoria: currentProduct.categoria || '',
       subcategoria_id: currentProduct.subcategoria_id,
       nivel3_id: currentProduct.nivel3_id,
-      caracteristicas: currentProduct.caracteristicas || [],
       companias: currentProduct.companias || [],
       fortalezas: currentProduct.fortalezas || '',
       debilidades: currentProduct.debilidades || '',
@@ -171,7 +164,6 @@ function initializeFormData(currentProduct: ProductoDetallado | null, setFormDat
       nombre: '',
       descripcion: '',
       categoria: '',
-      caracteristicas: [],
       companias: [],
       fortalezas: '',
       debilidades: '',

@@ -16,7 +16,6 @@ import {
 } from '@/components/ui/select';
 import WysiwygEditor from '@/components/WysiwygEditor';
 import { Separator } from '@/components/ui/separator';
-import { useForm } from 'react-hook-form';
 import { toast } from 'sonner';
 import { useNoticias } from '@/hooks/useNoticias';
 import { useSupabaseUpload, getPublicUrl } from '@/hooks/useSupabaseQuery';
@@ -25,18 +24,15 @@ import { supabase } from '@/integrations/supabase/client';
 import { NoticiaFormData } from '@/types/database';
 import { X, ArrowLeft, ImageIcon, Tag } from 'lucide-react';
 import { useProductos } from '@/hooks/useProductos';
+import FileUploader from '@/components/common/FileUploader';
 
 const NewsCreate = () => {
   const navigate = useNavigate();
   const [tags, setTags] = useState<string[]>([]);
   const [newTag, setNewTag] = useState('');
   const [selectedProducts, setSelectedProducts] = useState<string[]>([]);
-  const [fileSelected, setFileSelected] = useState<File | null>(null);
   const [uploading, setUploading] = useState(false);
   const [currentUser, setCurrentUser] = useState<string>('Administrador');
-  const [filePreview, setFilePreview] = useState<string | null>(null);
-  
-  const uploadFile = useSupabaseUpload();
   
   const { companias, createNoticia } = useNoticias();
   const { categoriasOrganizadas } = useCategoriaProductos();
@@ -68,24 +64,12 @@ const NewsCreate = () => {
     getCurrentUser();
   }, []);
 
-  // Preview file when selected
-  useEffect(() => {
-    if (fileSelected) {
-      const reader = new FileReader();
-      reader.onload = () => {
-        setFilePreview(reader.result as string);
-      };
-      reader.readAsDataURL(fileSelected);
-    } else {
-      setFilePreview(null);
-    }
-  }, [fileSelected]);
-
-  // Handle file input change
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files && e.target.files[0]) {
-      setFileSelected(e.target.files[0]);
-    }
+  // Handle file upload completion
+  const handleFileUploaded = (url: string) => {
+    setFormData(prev => ({
+      ...prev,
+      imagen_url: url
+    }));
   };
 
   // Handle input changes
@@ -171,25 +155,9 @@ const NewsCreate = () => {
     setUploading(true);
     
     try {
-      let imageUrl = '';
-      
-      // Upload file to Supabase storage if selected
-      if (fileSelected) {
-        const fileName = `${Date.now()}_${fileSelected.name}`;
-        const filePath = await uploadFile.mutateAsync({
-          bucketName: 'noticias',
-          filePath: fileName,
-          file: fileSelected
-        });
-        
-        // Get public URL
-        imageUrl = getPublicUrl('noticias', filePath);
-      }
-      
       // Create new document in database
       const noticiaData: NoticiaFormData = {
         ...formData,
-        imagen_url: imageUrl || formData.imagen_url,
         fecha_publicacion: formData.fecha_publicacion || new Date().toISOString(),
         autor: formData.autor || currentUser,
         tags: tags,
@@ -315,45 +283,13 @@ const NewsCreate = () => {
             <CardContent className="pt-6 space-y-4">
               <h3 className="font-medium text-lg">Imagen Principal</h3>
               
-              {filePreview ? (
-                <div className="relative">
-                  <img 
-                    src={filePreview} 
-                    alt="Vista previa" 
-                    className="w-full h-40 object-cover rounded-md"
-                  />
-                  <Button 
-                    variant="destructive" 
-                    size="icon" 
-                    className="absolute top-2 right-2 h-8 w-8"
-                    onClick={() => {
-                      setFileSelected(null);
-                      setFilePreview(null);
-                    }}
-                  >
-                    <X className="h-4 w-4" />
-                  </Button>
-                </div>
-              ) : (
-                <div className="border-2 border-dashed border-muted-foreground/25 rounded-md p-8 text-center">
-                  <ImageIcon className="h-10 w-10 text-muted-foreground/50 mx-auto mb-2" />
-                  <p className="text-sm text-muted-foreground mb-2">
-                    Formatos soportados: JPG, PNG, GIF
-                  </p>
-                  <Input
-                    id="file"
-                    type="file"
-                    accept="image/*"
-                    onChange={handleFileChange}
-                    className="hidden"
-                  />
-                  <Label htmlFor="file">
-                    <Button variant="outline" type="button" className="w-full">
-                      Seleccionar Archivo
-                    </Button>
-                  </Label>
-                </div>
-              )}
+              <FileUploader
+                bucketName="noticias"
+                fileTypes={['image/jpeg', 'image/png', 'image/gif']}
+                maxSize={5}
+                onFileUploaded={handleFileUploaded}
+                currentFileUrl={formData.imagen_url}
+              />
             </CardContent>
           </Card>
           
