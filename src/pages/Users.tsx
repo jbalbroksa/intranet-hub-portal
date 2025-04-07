@@ -8,82 +8,55 @@ import UserTable from '@/components/users/UserTable';
 import UserForm from '@/components/users/UserForm';
 import UserDetail from '@/components/users/UserDetail';
 import EmptyNotifications from '@/components/notifications/EmptyNotifications';
-
-// Mock data for delegations
-const mockDelegations: Delegation[] = [
-  { id: 1, name: 'Madrid', address: 'Calle Principal 123, Madrid', phone: '911234567' },
-  { id: 2, name: 'Barcelona', address: 'Avenida Diagonal 456, Barcelona', phone: '931234567' },
-  { id: 3, name: 'Valencia', address: 'Calle del Mar 789, Valencia', phone: '961234567' },
-  { id: 4, name: 'Sevilla', address: 'Avenida de la Constitución 23, Sevilla', phone: '951234567' },
-];
-
-// Mock data for users with explicit type definitions
-const mockUsers: User[] = [
-  { id: 1, name: 'Admin Usuario', email: 'admin@example.com', role: 'admin', lastLogin: '2023-05-01', delegationId: 1, position: 'Director', bio: 'Profesional con más de 15 años de experiencia en el sector asegurador.' },
-  { id: 2, name: 'Usuario Normal', email: 'usuario@example.com', role: 'user', lastLogin: '2023-05-05', delegationId: 1, position: 'Agente', bio: 'Especialista en seguros de vida y salud.' },
-  { id: 3, name: 'María García', email: 'maria@example.com', role: 'user', lastLogin: '2023-05-10', delegationId: 2, position: 'Administrativa', bio: 'Responsable de atención al cliente y gestión administrativa.' },
-  { id: 4, name: 'Carlos Rodríguez', email: 'carlos@example.com', role: 'admin', lastLogin: '2023-05-12', delegationId: 2, position: 'Responsable', bio: 'Experto en productos de protección patrimonial y planificación financiera.' },
-  { id: 5, name: 'Laura Pérez', email: 'laura@example.com', role: 'user', lastLogin: '2023-05-15', delegationId: 3, position: 'Comercial', bio: 'Especializada en seguros de empresas y responsabilidad civil.' },
-  { id: 6, name: 'Javier Martínez', email: 'javier@example.com', role: 'user', lastLogin: '2023-05-18', delegationId: 3, position: 'Técnico', bio: 'Técnico especialista en valoración de riesgos industriales.' },
-  { id: 7, name: 'Ana López', email: 'ana@example.com', role: 'user', lastLogin: '2023-05-20', delegationId: 4, position: 'Agente', bio: 'Profesional con amplia experiencia en seguros del hogar y automóvil.' },
-  { id: 8, name: 'Miguel Sánchez', email: 'miguel@example.com', role: 'admin', lastLogin: '2023-05-22', delegationId: 4, position: 'Director', bio: 'Responsable de operaciones y desarrollo de negocio.' },
-];
-
-type Delegation = {
-  id: number;
-  name: string;
-  address: string;
-  phone: string;
-};
-
-type User = {
-  id: number;
-  name: string;
-  email: string;
-  role: 'admin' | 'user';
-  lastLogin: string;
-  delegationId: number;
-  position: string;
-  bio: string;
-};
+import { useUsers, User } from '@/hooks/useUsers';
+import { useSupabaseQuery } from '@/hooks/useSupabaseQuery';
+import { toast } from 'sonner';
+import { useAuth } from '@/contexts/AuthContext';
 
 type FormMode = 'create' | 'edit';
 type ViewMode = 'grid' | 'list';
 
+type Delegation = {
+  id: string;
+  nombre: string;
+  direccion?: string;
+  telefono?: string;
+};
+
 const Users = () => {
-  const [users, setUsers] = useState<User[]>(mockUsers);
-  const [delegations] = useState<Delegation[]>(mockDelegations);
-  const [searchTerm, setSearchTerm] = useState('');
+  const { users, filteredUsers, isLoading, error, searchTerm, setSearchTerm, updateUser, deleteUser, refetch } = useUsers();
+  const { isAdmin } = useAuth();
   const [dialogOpen, setDialogOpen] = useState(false);
   const [detailsDialogOpen, setDetailsDialogOpen] = useState(false);
   const [formMode, setFormMode] = useState<FormMode>('create');
   const [currentUser, setCurrentUser] = useState<User | null>(null);
-  const [selectedDelegationFilter, setSelectedDelegationFilter] = useState<number | null>(null);
+  const [selectedDelegationFilter, setSelectedDelegationFilter] = useState<string | null>(null);
   const [viewMode, setViewMode] = useState<ViewMode>('grid');
   
-  const [formData, setFormData] = useState<Omit<User, 'id' | 'lastLogin'>>({
+  const { data: delegations = [] } = useSupabaseQuery<Delegation>(
+    'delegaciones',
+    ['delegaciones'],
+    undefined,
+    {
+      select: 'id, nombre, direccion, telefono',
+      orderBy: { column: 'nombre', ascending: true }
+    }
+  );
+  
+  const [formData, setFormData] = useState<Omit<User, 'id' | 'created_at'>>({
     name: '',
     email: '',
     role: 'user',
-    delegationId: 0,
     position: '',
+    delegation_id: '',
     bio: '',
+    last_login: new Date().toISOString(),
   });
 
-  // Handle search input change
-  const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setSearchTerm(e.target.value);
-  };
-
   // Filter users based on search term and delegation
-  const filteredUsers = users.filter(user => {
-    const matchesSearch = user.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                        user.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                        user.position.toLowerCase().includes(searchTerm.toLowerCase());
-    
-    const matchesDelegation = selectedDelegationFilter === null || user.delegationId === selectedDelegationFilter;
-    
-    return matchesSearch && matchesDelegation;
+  const filteredUsersByDelegation = filteredUsers.filter(user => {
+    const matchesDelegation = selectedDelegationFilter === null || user.delegation_id === selectedDelegationFilter;
+    return matchesDelegation;
   });
 
   // Handle form input changes
@@ -99,7 +72,7 @@ const Users = () => {
   const handleDelegationChange = (value: string) => {
     setFormData({
       ...formData,
-      delegationId: parseInt(value),
+      delegation_id: value,
     });
   };
 
@@ -117,9 +90,10 @@ const Users = () => {
       name: '',
       email: '',
       role: 'user',
-      delegationId: 0,
       position: '',
+      delegation_id: '',
       bio: '',
+      last_login: new Date().toISOString(),
     });
   };
 
@@ -138,9 +112,10 @@ const Users = () => {
       name: user.name,
       email: user.email,
       role: user.role,
-      delegationId: user.delegationId,
-      position: user.position,
-      bio: user.bio,
+      position: user.position || '',
+      delegation_id: user.delegation_id || '',
+      bio: user.bio || '',
+      last_login: user.last_login || new Date().toISOString(),
     });
     setDialogOpen(true);
   };
@@ -152,39 +127,56 @@ const Users = () => {
   };
 
   // Handle form submission
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (formMode === 'create') {
-      // Create new user
-      const newUser: User = {
-        id: Math.max(0, ...users.map(u => u.id)) + 1,
-        ...formData,
-        lastLogin: 'Nunca',
-      };
-      setUsers([...users, newUser]);
-    } else if (formMode === 'edit' && currentUser) {
-      // Update existing user
-      const updatedUsers = users.map(user => 
-        user.id === currentUser.id ? { ...user, ...formData } : user
-      );
-      setUsers(updatedUsers);
+    if (!isAdmin) {
+      toast.error("Solo los administradores pueden realizar esta acción");
+      return;
     }
     
-    setDialogOpen(false);
-    resetForm();
+    if (formMode === 'edit' && currentUser) {
+      try {
+        await updateUser.mutateAsync({
+          id: currentUser.id,
+          data: formData as User
+        });
+        setDialogOpen(false);
+        resetForm();
+        toast.success('Usuario actualizado correctamente');
+        refetch();
+      } catch (error) {
+        console.error('Error updating user:', error);
+        toast.error('Error al actualizar usuario');
+      }
+    } else {
+      toast.error("La creación de usuarios debe realizarse a través del proceso de registro");
+      setDialogOpen(false);
+    }
   };
 
   // Handle user deletion
-  const handleDelete = (id: number) => {
+  const handleDelete = async (id: string) => {
+    if (!isAdmin) {
+      toast.error("Solo los administradores pueden realizar esta acción");
+      return;
+    }
+    
     if (window.confirm('¿Estás seguro de que quieres eliminar este usuario?')) {
-      setUsers(users.filter(user => user.id !== id));
+      try {
+        await deleteUser.mutateAsync(id);
+        toast.success('Usuario eliminado correctamente');
+        refetch();
+      } catch (error) {
+        console.error('Error deleting user:', error);
+        toast.error('Error al eliminar usuario');
+      }
     }
   };
 
   // Set delegation filter
   const handleDelegationFilter = (delegationId: string) => {
-    setSelectedDelegationFilter(delegationId === "all" ? null : parseInt(delegationId));
+    setSelectedDelegationFilter(delegationId === "all" ? null : delegationId);
   };
 
   // Toggle view mode between grid and list
@@ -193,9 +185,10 @@ const Users = () => {
   };
 
   // Get delegation name by id
-  const getDelegationName = (delegationId: number) => {
+  const getDelegationName = (delegationId?: string) => {
+    if (!delegationId) return 'Sin delegación';
     const delegation = delegations.find(d => d.id === delegationId);
-    return delegation ? delegation.name : 'Sin delegación';
+    return delegation ? delegation.nombre : 'Sin delegación';
   };
 
   // Get initials for avatar
@@ -208,6 +201,23 @@ const Users = () => {
       .substring(0, 2);
   };
 
+  if (!isAdmin) {
+    return (
+      <div className="text-center py-12">
+        <h2 className="text-xl font-medium mb-2">Acceso restringido</h2>
+        <p className="text-muted-foreground">Solo los administradores pueden acceder a la gestión de usuarios.</p>
+      </div>
+    );
+  }
+
+  if (isLoading) {
+    return <div className="flex justify-center p-8">Cargando usuarios...</div>;
+  }
+
+  if (error) {
+    return <div className="text-red-500 p-8">Error al cargar usuarios: {error.message}</div>;
+  }
+
   return (
     <div className="space-y-6 animate-slideInUp">
       {/* Search and filter bar */}
@@ -215,7 +225,7 @@ const Users = () => {
         searchTerm={searchTerm}
         selectedDelegationFilter={selectedDelegationFilter}
         viewMode={viewMode}
-        delegations={delegations}
+        delegations={delegations.map(d => ({ id: Number(d.id), name: d.nombre, address: d.direccion || '', phone: d.telefono || '' }))}
         onSearchChange={handleSearchChange}
         onDelegationFilterChange={handleDelegationFilter}
         onViewModeToggle={toggleViewMode}
@@ -225,12 +235,21 @@ const Users = () => {
       {/* Users display */}
       {viewMode === 'grid' ? (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-          {filteredUsers.length > 0 ? (
-            filteredUsers.map((user) => (
+          {filteredUsersByDelegation.length > 0 ? (
+            filteredUsersByDelegation.map((user) => (
               <UserCard
                 key={user.id}
-                user={user}
-                delegationName={getDelegationName(user.delegationId)}
+                user={{
+                  id: Number(user.id),
+                  name: user.name,
+                  email: user.email,
+                  role: user.role,
+                  lastLogin: user.last_login || 'Nunca',
+                  delegationId: Number(user.delegation_id || 0),
+                  position: user.position || '',
+                  bio: user.bio || '',
+                }}
+                delegationName={getDelegationName(user.delegation_id)}
                 getInitials={getInitials}
                 onDetailsClick={() => openDetailsDialog(user)}
                 onEditClick={() => openEditDialog(user)}
@@ -247,18 +266,45 @@ const Users = () => {
         <Card>
           <CardContent className="p-0">
             <UserTable
-              users={filteredUsers}
-              getDelegationName={getDelegationName}
+              users={filteredUsersByDelegation.map(user => ({
+                id: Number(user.id),
+                name: user.name,
+                email: user.email,
+                role: user.role,
+                lastLogin: user.last_login || 'Nunca',
+                delegationId: Number(user.delegation_id || 0),
+                position: user.position || '',
+                bio: user.bio || '',
+              }))}
+              getDelegationName={delegationId => getDelegationName(delegationId?.toString())}
               getInitials={getInitials}
-              onDetailsClick={openDetailsDialog}
-              onEditClick={openEditDialog}
-              onDeleteClick={handleDelete}
+              onDetailsClick={user => openDetailsDialog({ 
+                id: user.id.toString(),
+                name: user.name,
+                email: user.email,
+                role: user.role,
+                position: user.position,
+                delegation_id: user.delegationId?.toString(),
+                bio: user.bio,
+                last_login: user.lastLogin
+              })}
+              onEditClick={user => openEditDialog({ 
+                id: user.id.toString(),
+                name: user.name,
+                email: user.email,
+                role: user.role,
+                position: user.position,
+                delegation_id: user.delegationId?.toString(),
+                bio: user.bio,
+                last_login: user.lastLogin
+              })}
+              onDeleteClick={user => handleDelete(user.id.toString())}
             />
           </CardContent>
         </Card>
       )}
 
-      {/* Create/Edit dialog */}
+      {/* Edit dialog */}
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
         <DialogContent className="sm:max-w-[600px]">
           <DialogHeader>
@@ -271,8 +317,15 @@ const Users = () => {
           </DialogHeader>
           
           <UserForm
-            formData={formData}
-            delegations={delegations}
+            formData={{
+              name: formData.name,
+              email: formData.email,
+              role: formData.role,
+              position: formData.position || '',
+              delegationId: Number(formData.delegation_id) || 0,
+              bio: formData.bio || '',
+            }}
+            delegations={delegations.map(d => ({ id: Number(d.id), name: d.nombre, address: d.direccion || '', phone: d.telefono || '' }))}
             formMode={formMode}
             onSubmit={handleSubmit}
             onCancel={() => setDialogOpen(false)}
@@ -285,9 +338,18 @@ const Users = () => {
 
       {/* User details dialog */}
       <UserDetail
-        user={currentUser}
+        user={currentUser ? {
+          id: Number(currentUser.id),
+          name: currentUser.name,
+          email: currentUser.email,
+          role: currentUser.role,
+          lastLogin: currentUser.last_login || 'Nunca',
+          delegationId: Number(currentUser.delegation_id || 0),
+          position: currentUser.position || '',
+          bio: currentUser.bio || '',
+        } : null}
         isOpen={detailsDialogOpen}
-        getDelegationName={getDelegationName}
+        getDelegationName={delegationId => getDelegationName(delegationId?.toString())}
         getInitials={getInitials}
         onClose={() => setDetailsDialogOpen(false)}
         onEdit={() => {

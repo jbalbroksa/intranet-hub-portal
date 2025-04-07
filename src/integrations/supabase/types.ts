@@ -421,6 +421,50 @@ export type Database = {
           },
         ]
       }
+      users: {
+        Row: {
+          bio: string | null
+          created_at: string | null
+          delegation_id: string | null
+          email: string
+          id: string
+          last_login: string | null
+          name: string
+          position: string | null
+          role: string
+        }
+        Insert: {
+          bio?: string | null
+          created_at?: string | null
+          delegation_id?: string | null
+          email: string
+          id: string
+          last_login?: string | null
+          name: string
+          position?: string | null
+          role: string
+        }
+        Update: {
+          bio?: string | null
+          created_at?: string | null
+          delegation_id?: string | null
+          email?: string
+          id?: string
+          last_login?: string | null
+          name?: string
+          position?: string | null
+          role?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "users_delegation_id_fkey"
+            columns: ["delegation_id"]
+            isOneToOne: false
+            referencedRelation: "delegaciones"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never

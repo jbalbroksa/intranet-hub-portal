@@ -4,8 +4,11 @@ import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { AuthProvider } from "./contexts/AuthContext";
 import Layout from "./components/layout/Layout";
+import ProtectedRoute from "./components/auth/ProtectedRoute";
 import Index from "./pages/Index";
+import Auth from "./pages/Auth";
 import Delegations from "./pages/Delegations";
 import Companies from "./pages/Companies";
 import Products from "./pages/Products";
@@ -31,24 +34,38 @@ const App = () => (
         <Toaster />
         <Sonner />
         <BrowserRouter>
-          <Routes>
-            <Route path="/" element={<Layout><Index /></Layout>} />
-            <Route path="/delegaciones" element={<Layout><Delegations /></Layout>} />
-            <Route path="/companias" element={<Layout><Companies /></Layout>} />
-            <Route path="/productos" element={<Layout><Products /></Layout>} />
-            <Route path="/productos/crear" element={<Layout><ProductCreate /></Layout>} />
-            <Route path="/productos/:id" element={<Layout><ProductCreate /></Layout>} />
-            <Route path="/noticias" element={<Layout><News /></Layout>} />
-            <Route path="/noticias/crear" element={<Layout><NewsCreate /></Layout>} />
-            <Route path="/noticias/:id" element={<Layout><NewsDetail /></Layout>} />
-            <Route path="/documentos" element={<Layout><Documents /></Layout>} />
-            <Route path="/notificaciones" element={<Layout><Notifications /></Layout>} />
-            <Route path="/calendario" element={<Layout><CalendarPage /></Layout>} />
-            <Route path="/configuracion" element={<Layout><Settings /></Layout>} />
-            <Route path="/usuarios" element={<Layout><Users /></Layout>} />
-            <Route path="/perfil" element={<Layout><Profile /></Layout>} />
-            <Route path="*" element={<NotFound />} />
-          </Routes>
+          <AuthProvider>
+            <Routes>
+              {/* Public routes */}
+              <Route path="/auth" element={<Auth />} />
+              
+              {/* Protected routes */}
+              <Route element={<ProtectedRoute />}>
+                <Route path="/" element={<Layout><Index /></Layout>} />
+                <Route path="/delegaciones" element={<Layout><Delegations /></Layout>} />
+                <Route path="/companias" element={<Layout><Companies /></Layout>} />
+                <Route path="/productos" element={<Layout><Products /></Layout>} />
+                <Route path="/productos/crear" element={<Layout><ProductCreate /></Layout>} />
+                <Route path="/productos/:id" element={<Layout><ProductCreate /></Layout>} />
+                <Route path="/noticias" element={<Layout><News /></Layout>} />
+                <Route path="/noticias/crear" element={<Layout><NewsCreate /></Layout>} />
+                <Route path="/noticias/:id" element={<Layout><NewsDetail /></Layout>} />
+                <Route path="/documentos" element={<Layout><Documents /></Layout>} />
+                <Route path="/notificaciones" element={<Layout><Notifications /></Layout>} />
+                <Route path="/calendario" element={<Layout><CalendarPage /></Layout>} />
+                <Route path="/perfil" element={<Layout><Profile /></Layout>} />
+              </Route>
+              
+              {/* Admin-only routes */}
+              <Route element={<ProtectedRoute requireAdmin={true} />}>
+                <Route path="/configuracion" element={<Layout><Settings /></Layout>} />
+                <Route path="/usuarios" element={<Layout><Users /></Layout>} />
+              </Route>
+              
+              {/* 404 route */}
+              <Route path="*" element={<NotFound />} />
+            </Routes>
+          </AuthProvider>
         </BrowserRouter>
       </TooltipProvider>
     </QueryClientProvider>
