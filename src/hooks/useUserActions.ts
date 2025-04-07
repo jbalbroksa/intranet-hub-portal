@@ -16,13 +16,31 @@ export type FormMode = 'create' | 'edit';
 export type ViewMode = 'grid' | 'list';
 
 export const useUserActions = () => {
+  // Dialog state
   const [dialogOpen, setDialogOpen] = useState(false);
   const [detailsDialogOpen, setDetailsDialogOpen] = useState(false);
   const [formMode, setFormMode] = useState<FormMode>('create');
   const [currentUser, setCurrentUser] = useState<User | null>(null);
+  
+  // Filter state
   const [selectedDelegationFilter, setSelectedDelegationFilter] = useState<string | null>(null);
   const [viewMode, setViewMode] = useState<ViewMode>('grid');
+  const [advancedFiltersOpen, setAdvancedFiltersOpen] = useState(false);
+  const [advancedFilters, setAdvancedFilters] = useState<{
+    role: string | null;
+    delegation_id: string | null;
+    lastLoginDays: number | null;
+  }>({
+    role: null,
+    delegation_id: null,
+    lastLoginDays: null
+  });
   
+  // Pagination state
+  const [currentPage, setCurrentPage] = useState(1);
+  const [pageSize, setPageSize] = useState(12);
+  
+  // Fetch delegations
   const { data: delegations = [] } = useSupabaseQuery<Delegation>(
     'delegaciones',
     ['delegaciones'],
@@ -33,6 +51,7 @@ export const useUserActions = () => {
     }
   );
   
+  // Form data
   const [formData, setFormData] = useState<Omit<User, 'id' | 'created_at'>>({
     name: '',
     email: '',
@@ -42,6 +61,15 @@ export const useUserActions = () => {
     bio: '',
     last_login: new Date().toISOString(),
   });
+
+  // Count active filters
+  const countActiveFilters = () => {
+    let count = 0;
+    if (advancedFilters.role) count++;
+    if (advancedFilters.delegation_id) count++;
+    if (advancedFilters.lastLoginDays !== null) count++;
+    return count;
+  };
 
   // Reset form data
   const resetForm = () => {
@@ -98,7 +126,7 @@ export const useUserActions = () => {
   const handleDelegationChange = (value: string) => {
     setFormData({
       ...formData,
-      delegation_id: value,
+      delegation_id: value === "0" ? "" : value,
     });
   };
 
@@ -113,11 +141,43 @@ export const useUserActions = () => {
   // Set delegation filter
   const handleDelegationFilter = (delegationId: string) => {
     setSelectedDelegationFilter(delegationId === "all" ? null : delegationId);
+    setCurrentPage(1); // Reset to first page when changing filters
   };
 
   // Toggle view mode between grid and list
   const toggleViewMode = (mode: ViewMode) => {
     setViewMode(mode);
+  };
+
+  // Open advanced filters dialog
+  const openAdvancedFilters = () => {
+    setAdvancedFiltersOpen(true);
+  };
+
+  // Apply advanced filters
+  const applyAdvancedFilters = (filters: {
+    role: string | null;
+    delegation_id: string | null;
+    lastLoginDays: number | null;
+  }) => {
+    setAdvancedFilters(filters);
+    setCurrentPage(1); // Reset to first page when applying filters
+  };
+
+  // Reset all filters
+  const resetAllFilters = () => {
+    setAdvancedFilters({
+      role: null,
+      delegation_id: null,
+      lastLoginDays: null
+    });
+    setSelectedDelegationFilter(null);
+    setCurrentPage(1);
+  };
+
+  // Handle page change
+  const handlePageChange = (page: number) => {
+    setCurrentPage(page);
   };
 
   // Get delegation name by id
@@ -176,16 +236,31 @@ export const useUserActions = () => {
   };
 
   return {
+    // Dialog state
     dialogOpen,
     setDialogOpen,
     detailsDialogOpen,
     setDetailsDialogOpen,
     formMode,
     currentUser,
+    
+    // Filter state
     selectedDelegationFilter,
     viewMode,
+    advancedFiltersOpen,
+    setAdvancedFiltersOpen,
+    advancedFilters,
+    countActiveFilters,
+    
+    // Pagination state
+    currentPage,
+    pageSize,
+    
+    // Form data
     formData,
     delegations,
+    
+    // Actions
     openCreateDialog,
     openEditDialog,
     openDetailsDialog,
@@ -195,6 +270,10 @@ export const useUserActions = () => {
     handleRoleChange,
     handleDelegationFilter,
     toggleViewMode,
+    openAdvancedFilters,
+    applyAdvancedFilters,
+    resetAllFilters,
+    handlePageChange,
     getDelegationName,
     getInitials,
     createUser,

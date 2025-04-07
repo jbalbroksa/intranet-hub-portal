@@ -3,7 +3,7 @@ import React from 'react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Search, Filter, LayoutGrid, List, Plus } from 'lucide-react';
+import { Search, Filter, LayoutGrid, List, Plus, SlidersHorizontal } from 'lucide-react';
 
 type Delegation = {
   id: string;
@@ -21,6 +21,8 @@ type UserFiltersProps = {
   onDelegationFilterChange: (delegationId: string) => void;
   onViewModeToggle: (mode: 'grid' | 'list') => void;
   onCreateUserClick: () => void;
+  onAdvancedFiltersClick: () => void;
+  activeFiltersCount: number;
 };
 
 const UserFilters: React.FC<UserFiltersProps> = ({
@@ -31,7 +33,9 @@ const UserFilters: React.FC<UserFiltersProps> = ({
   onSearchChange,
   onDelegationFilterChange,
   onViewModeToggle,
-  onCreateUserClick
+  onCreateUserClick,
+  onAdvancedFiltersClick,
+  activeFiltersCount
 }) => {
   return (
     <div className="flex flex-col md:flex-row gap-4 items-start md:items-center justify-between">
@@ -59,12 +63,26 @@ const UserFilters: React.FC<UserFiltersProps> = ({
           <SelectContent>
             <SelectItem value="all">Todas las delegaciones</SelectItem>
             {delegations.map(delegation => (
-              <SelectItem key={delegation.id} value={delegation.id.toString()}>
+              <SelectItem key={delegation.id} value={delegation.id}>
                 {delegation.name}
               </SelectItem>
             ))}
           </SelectContent>
         </Select>
+        
+        <Button 
+          variant="outline" 
+          onClick={onAdvancedFiltersClick}
+          className="relative"
+        >
+          <SlidersHorizontal className="h-4 w-4 mr-2" />
+          Filtros avanzados
+          {activeFiltersCount > 0 && (
+            <span className="absolute -top-2 -right-2 bg-primary text-primary-foreground text-xs rounded-full h-5 w-5 flex items-center justify-center">
+              {activeFiltersCount}
+            </span>
+          )}
+        </Button>
         
         <div className="flex border rounded-md overflow-hidden">
           <Button 
