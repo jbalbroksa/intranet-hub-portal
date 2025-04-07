@@ -15,7 +15,6 @@ type FormMode = 'create' | 'edit';
 type ViewMode = 'grid' | 'list';
 type CategoryFilter = 'all' | 'specific' | 'preferred';
 
-// Mock data for specifications with correct types
 const mockSpecifications: Specification[] = [
   { id: 1, companyId: "1", title: 'Requisitos de Contratación', content: 'Documentación necesaria para la contratación de pólizas.', category: 'requirements' },
   { id: 2, companyId: "1", title: 'Proceso de Siniestros', content: 'Pasos a seguir para la gestión de siniestros con esta compañía.', category: 'procedures' },
@@ -24,7 +23,6 @@ const mockSpecifications: Specification[] = [
   { id: 5, companyId: "3", title: 'Procedimiento de Renovación', content: 'Información sobre el proceso de renovación de pólizas.', category: 'procedures' },
 ];
 
-// Mock data for specification categories
 const mockSpecCategories: SpecCategory[] = [
   { id: 1, name: 'Requisitos', slug: 'requirements' },
   { id: 2, name: 'Procedimientos', slug: 'procedures' },
@@ -71,8 +69,6 @@ const Companies = () => {
     mediatorAccess: '',
     responsibleEmail: '',
     category: 'all',
-    descripcion: '',
-    direccion: '',
     telefono: '',
   });
 
@@ -135,8 +131,6 @@ const Companies = () => {
       mediatorAccess: '',
       responsibleEmail: '',
       category: 'all',
-      descripcion: '',
-      direccion: '',
       telefono: '',
     });
     setLogoUrl('/placeholder.svg');
@@ -167,8 +161,6 @@ const Companies = () => {
       mediatorAccess: company.sitio_web || '', // Using sitio_web as default for mediatorAccess
       responsibleEmail: company.email || '',
       category: (company.categoria as 'specific' | 'preferred' | 'all') || 'all',
-      descripcion: company.descripcion || '',
-      direccion: company.direccion || '',
       telefono: company.telefono || '',
     });
     
@@ -212,8 +204,6 @@ const Companies = () => {
       sitio_web: formData.website,
       email: formData.responsibleEmail,
       categoria: formData.category,
-      descripcion: formData.descripcion,
-      direccion: formData.direccion,
       telefono: formData.telefono,
     };
     
