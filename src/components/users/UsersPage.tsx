@@ -30,11 +30,19 @@ const UsersPage = () => {
       return;
     }
     
+    // Ensure all required fields have values before submitting
+    const formDataForSubmit = {
+      ...userActions.formData,
+      position: userActions.formData.position || '', // Ensure position has a value, even if empty string
+      delegation_id: userActions.formData.delegation_id || '',
+      bio: userActions.formData.bio || ''
+    };
+    
     if (userActions.formMode === 'edit' && userActions.currentUser) {
       try {
         await updateUser.mutateAsync({
           id: userActions.currentUser.id,
-          data: userActions.formData as User
+          data: formDataForSubmit as User
         });
         userActions.setDialogOpen(false);
         userActions.resetForm();
@@ -46,7 +54,7 @@ const UsersPage = () => {
       }
     } else if (userActions.formMode === 'create') {
       try {
-        const success = await userActions.createUser(userActions.formData);
+        const success = await userActions.createUser(formDataForSubmit);
         if (success) {
           userActions.setDialogOpen(false);
           userActions.resetForm();
@@ -193,7 +201,14 @@ const UsersPage = () => {
         detailsDialogOpen={userActions.detailsDialogOpen}
         formMode={userActions.formMode}
         currentUser={userActions.currentUser}
-        formData={userActions.formData}
+        formData={{
+          name: userActions.formData.name,
+          email: userActions.formData.email,
+          role: userActions.formData.role,
+          position: userActions.formData.position || '',
+          delegation_id: userActions.formData.delegation_id || '',
+          bio: userActions.formData.bio || '',
+        }}
         delegations={userActions.delegations.map(d => ({ id: d.id, name: d.nombre, address: d.direccion || '', phone: d.telefono || '' }))}
         getDelegationName={userActions.getDelegationName}
         getInitials={userActions.getInitials}

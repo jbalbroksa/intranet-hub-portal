@@ -74,9 +74,9 @@ const UserDialogs: React.FC<UserDialogsProps> = ({
               name: formData.name,
               email: formData.email,
               role: formData.role,
-              position: formData.position || '',
-              delegationId: formData.delegation_id || '',
-              bio: formData.bio || '',
+              position: formData.position,
+              delegationId: formData.delegation_id,
+              bio: formData.bio,
             }}
             delegations={delegations}
             formMode={formMode}

@@ -78,22 +78,23 @@ const UserForm: React.FC<UserFormProps> = ({
               name="position" 
               value={formData.position} 
               onChange={onInputChange} 
-              required 
+              placeholder="Ingrese el cargo"
             />
           </div>
           
           <div className="space-y-2">
             <Label htmlFor="delegation">Delegación</Label>
             <Select 
-              value={formData.delegationId ? formData.delegationId.toString() : "0"} 
+              value={formData.delegationId || "0"} 
               onValueChange={onDelegationChange}
             >
               <SelectTrigger>
                 <SelectValue placeholder="Seleccionar delegación" />
               </SelectTrigger>
               <SelectContent>
+                <SelectItem value="0">Sin delegación</SelectItem>
                 {delegations.map(delegation => (
-                  <SelectItem key={delegation.id} value={delegation.id.toString()}>
+                  <SelectItem key={delegation.id} value={delegation.id}>
                     {delegation.name}
                   </SelectItem>
                 ))}
@@ -110,6 +111,7 @@ const UserForm: React.FC<UserFormProps> = ({
             value={formData.bio} 
             onChange={onInputChange} 
             rows={3}
+            placeholder="Información adicional sobre el usuario"
           />
         </div>
         
