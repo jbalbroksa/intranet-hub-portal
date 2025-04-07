@@ -49,6 +49,15 @@ const ProductBasicInfo: React.FC<ProductBasicInfoProps> = ({
     return subcategory ? subcategory.level3 : [];
   };
 
+  // Debug
+  console.log("ProductBasicInfo props:", {
+    name,
+    categoryId,
+    subcategoryId,
+    level3CategoryId,
+    categoriesCount: categories.length
+  });
+
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
       <div className="space-y-2">
@@ -58,6 +67,7 @@ const ProductBasicInfo: React.FC<ProductBasicInfoProps> = ({
           name="name"
           value={name}
           onChange={onInputChange}
+          placeholder="Ingrese el nombre del producto"
           required
         />
       </div>
@@ -68,7 +78,7 @@ const ProductBasicInfo: React.FC<ProductBasicInfoProps> = ({
           value={categoryId ? categoryId.toString() : "0"}
           onValueChange={onCategoryChange}
         >
-          <SelectTrigger>
+          <SelectTrigger id="category">
             <SelectValue placeholder="Seleccionar categoría" />
           </SelectTrigger>
           <SelectContent>
@@ -87,9 +97,9 @@ const ProductBasicInfo: React.FC<ProductBasicInfoProps> = ({
         <Select
           value={subcategoryId ? subcategoryId.toString() : "0"}
           onValueChange={onSubcategoryChange}
-          disabled={!categoryId}
+          disabled={!categoryId || categoryId === "0"}
         >
-          <SelectTrigger>
+          <SelectTrigger id="subcategory">
             <SelectValue placeholder="Seleccionar subcategoría" />
           </SelectTrigger>
           <SelectContent>
@@ -108,9 +118,9 @@ const ProductBasicInfo: React.FC<ProductBasicInfoProps> = ({
         <Select
           value={level3CategoryId ? level3CategoryId.toString() : "0"}
           onValueChange={onLevel3Change}
-          disabled={!subcategoryId || getAvailableLevel3Categories().length === 0}
+          disabled={!subcategoryId || subcategoryId === "0" || getAvailableLevel3Categories().length === 0}
         >
-          <SelectTrigger>
+          <SelectTrigger id="level3">
             <SelectValue placeholder="Seleccionar nivel 3" />
           </SelectTrigger>
           <SelectContent>

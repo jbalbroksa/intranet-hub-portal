@@ -30,7 +30,7 @@ export type ProductFormData = {
   subcategoryId: string | number;
   level3CategoryId?: string | number;
   companies: string[];
-  features: string[];
+  features?: string[];
   strengths?: string;
   weaknesses?: string;
   observations?: string;
@@ -43,15 +43,15 @@ export type ProductFormProps = {
   onSubmit: (e: React.FormEvent) => void;
   onCancel: () => void;
   onInputChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
-  onTextAreaChange: (e: React.ChangeEvent<HTMLTextAreaElement>) => void;
+  onTextAreaChange?: (e: React.ChangeEvent<HTMLTextAreaElement>) => void;
   onWysiwygChange: (name: string, content: string) => void;
   onCategoryChange: (value: string) => void;
   onSubcategoryChange: (value: string) => void;
   onLevel3Change: (value: string) => void;
   onCompanyChange: (value: string) => void;
-  onFeatureChange: (index: number, value: string) => void;
-  addFeature: () => void;
-  removeFeature: (index: number) => void;
+  onFeatureChange?: (index: number, value: string) => void;
+  addFeature?: () => void;
+  removeFeature?: (index: number) => void;
   isLoading?: boolean;
 };
 

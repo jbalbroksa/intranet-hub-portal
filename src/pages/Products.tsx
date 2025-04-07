@@ -1,16 +1,16 @@
 
 import React from 'react';
+import { useNavigate } from 'react-router-dom';
 import ProductsList from '@/components/products/ProductsList';
 import ProductFilters from '@/components/products/ProductFilters';
 import { useProductos } from '@/hooks/useProductos';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import CategoriesManager from '@/components/products/CategoriesManager';
-import ProductDialog from '@/components/products/ProductDialog';
-import { Plus } from 'lucide-react';
 import { Product } from '@/types/product';
 
 const Products = () => {
   const [activeTab, setActiveTab] = React.useState<string>('products');
+  const navigate = useNavigate();
   
   const {
     filteredProductos,
@@ -22,12 +22,6 @@ const Products = () => {
     setSearchTerm,
     categoria,
     setCategoria,
-    productFormOpen,
-    setProductFormOpen,
-    currentProduct,
-    saveProducto,
-    editProducto,
-    newProducto,
     deleteProducto
   } = useProductos();
 
@@ -57,6 +51,14 @@ const Products = () => {
 
   const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setSearchTerm(e.target.value);
+  };
+
+  const handleCreateProduct = () => {
+    navigate('/productos/crear');
+  };
+
+  const handleEditProduct = (product: Product) => {
+    navigate(`/productos/${product.id}`);
   };
 
   const handleDeleteProduct = async (id: string | number) => {
@@ -95,7 +97,7 @@ const Products = () => {
               setSearchTerm('');
               setCategoria(null);
             }}
-            onCreateClick={newProducto}
+            onCreateClick={handleCreateProduct}
           />
           
           <ProductsList 
@@ -117,12 +119,7 @@ const Products = () => {
                 .filter(Boolean)
                 .join(', ');
             }}
-            onEditProduct={(product) => {
-              const productoToEdit = filteredProductos.find(p => p.id === product.id.toString());
-              if (productoToEdit) {
-                editProducto(productoToEdit);
-              }
-            }}
+            onEditProduct={handleEditProduct}
             onDeleteProduct={handleDeleteProduct}
           />
         </TabsContent>
@@ -131,13 +128,6 @@ const Products = () => {
           <CategoriesManager />
         </TabsContent>
       </Tabs>
-
-      <ProductDialog
-        open={productFormOpen}
-        onOpenChange={setProductFormOpen}
-        onSave={saveProducto}
-        currentProduct={currentProduct}
-      />
     </div>
   );
 };
