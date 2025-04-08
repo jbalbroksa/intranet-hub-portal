@@ -72,7 +72,7 @@ const secondaryNavItems = [
   },
   {
     title: "Usuarios",
-    href: "/usuarios", // Fixed: This was pointing to "/usuarios" but our route is defined as "/usuarios"
+    href: "/usuarios",
     icon: <Users className="h-5 w-5" />,
   },
 ];

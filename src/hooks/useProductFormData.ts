@@ -29,6 +29,7 @@ export const useProductFormData = (initialProduct: ProductoDetallado | null) => 
   };
 
   const handleCategoryChange = (value: string) => {
+    console.log("Category change:", value);
     setFormData(prev => ({ 
       ...prev, 
       categoria: value === "0" ? "" : value,
@@ -38,6 +39,7 @@ export const useProductFormData = (initialProduct: ProductoDetallado | null) => 
   };
 
   const handleSubcategoryChange = (value: string) => {
+    console.log("Subcategory change:", value);
     setFormData(prev => ({ 
       ...prev, 
       subcategoria_id: value === "0" ? undefined : value,
@@ -46,6 +48,7 @@ export const useProductFormData = (initialProduct: ProductoDetallado | null) => 
   };
 
   const handleLevel3Change = (value: string) => {
+    console.log("Level3 change:", value);
     setFormData(prev => ({ 
       ...prev, 
       nivel3_id: value === "0" ? undefined : value 
@@ -53,6 +56,7 @@ export const useProductFormData = (initialProduct: ProductoDetallado | null) => 
   };
 
   const handleCompanyChange = (companiaId: string) => {
+    console.log("Company change:", companiaId);
     setFormData(prev => {
       const currentCompanias = prev.companias || [];
       

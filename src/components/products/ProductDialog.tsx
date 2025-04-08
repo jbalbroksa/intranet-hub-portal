@@ -38,7 +38,10 @@ const ProductDialog: React.FC<ProductDialogProps> = ({
     handleCategoryChange,
     handleSubcategoryChange,
     handleLevel3Change,
-    handleCompanyChange
+    handleCompanyChange,
+    handleFeatureChange,
+    addFeature,
+    removeFeature
   } = useProductFormData(currentProduct);
   
   const [isLoading, setIsLoading] = useState(false);
@@ -46,6 +49,19 @@ const ProductDialog: React.FC<ProductDialogProps> = ({
   // Map categories and companies to the expected format
   const mappedCategories: Category[] = mapCategoriesToFormFormat(categorias);
   const mappedCompanies: Company[] = mapCompaniesToFormFormat(companias);
+
+  // Log mapped categories for debugging
+  useEffect(() => {
+    console.log("ProductDialog - Mapped categories:", {
+      categoriesCount: mappedCategories.length,
+      categorias: categorias.length,
+      mappedCategories: mappedCategories.map(c => ({ 
+        id: c.id, 
+        name: c.name, 
+        subcategoriesCount: c.subcategories.length 
+      }))
+    });
+  }, [categorias, mappedCategories]);
 
   // Initialize form when dialog opens or product changes
   useEffect(() => {
@@ -59,6 +75,7 @@ const ProductDialog: React.FC<ProductDialogProps> = ({
     setIsLoading(true);
     
     try {
+      console.log("Submitting form data:", formData);
       const success = await onSave(formData);
       if (success) {
         toast.success(currentProduct ? 'Producto actualizado correctamente' : 'Producto creado correctamente');
@@ -87,14 +104,14 @@ const ProductDialog: React.FC<ProductDialogProps> = ({
           formData={{
             name: formData.nombre,
             description: formData.descripcion || '',
-            categoryId: formData.categoria ? Number(formData.categoria) : 0,
-            subcategoryId: formData.subcategoria_id ? Number(formData.subcategoria_id) : 0,
-            level3CategoryId: formData.nivel3_id ? Number(formData.nivel3_id) : undefined,
+            categoryId: formData.categoria || 0,
+            subcategoryId: formData.subcategoria_id || 0,
+            level3CategoryId: formData.nivel3_id || undefined,
             companies: formData.companias?.map(id => id.toString()) || [],
-            features: [],
-            strengths: formData.fortalezas,
-            weaknesses: formData.debilidades,
-            observations: formData.observaciones
+            features: formData.caracteristicas || [],
+            strengths: formData.fortalezas || '',
+            weaknesses: formData.debilidades || '',
+            observations: formData.observaciones || ''
           }}
           categories={mappedCategories}
           companies={mappedCompanies}
@@ -107,6 +124,9 @@ const ProductDialog: React.FC<ProductDialogProps> = ({
           onSubcategoryChange={handleSubcategoryChange}
           onLevel3Change={handleLevel3Change}
           onCompanyChange={handleCompanyChange}
+          onFeatureChange={handleFeatureChange}
+          addFeature={addFeature}
+          removeFeature={removeFeature}
           isLoading={isLoading}
         />
       </DialogContent>
@@ -116,26 +136,39 @@ const ProductDialog: React.FC<ProductDialogProps> = ({
 
 // Helper functions
 function mapCategoriesToFormFormat(categorias: any[]): Category[] {
-  return categorias
-    .filter(cat => !cat.es_subcategoria)
-    .map(cat => ({
-      id: Number(cat.id),
+  console.log("Raw categorias data:", categorias);
+  
+  const mainCategories = categorias.filter(cat => !cat.es_subcategoria);
+  console.log("Main categories:", mainCategories);
+  
+  return mainCategories.map(cat => {
+    const subcategories = categorias
+      .filter(subcat => subcat.es_subcategoria && subcat.parent_id === cat.id && subcat.nivel === 2);
+    
+    console.log(`Subcategories for ${cat.nombre}:`, subcategories);
+    
+    return {
+      id: cat.id,
       name: cat.nombre,
-      subcategories: categorias
-        .filter(subcat => subcat.es_subcategoria && subcat.parent_id === cat.id && subcat.nivel === 2)
-        .map(subcat => ({
-          id: Number(subcat.id),
+      subcategories: subcategories.map(subcat => {
+        const level3Categories = categorias
+          .filter(level3 => level3.es_subcategoria && level3.parent_id === subcat.id && level3.nivel === 3);
+        
+        console.log(`Level3 categories for ${subcat.nombre}:`, level3Categories);
+        
+        return {
+          id: subcat.id,
           name: subcat.nombre,
-          parent_id: Number(cat.id),
-          level3: categorias
-            .filter(level3 => level3.es_subcategoria && level3.parent_id === subcat.id && level3.nivel === 3)
-            .map(level3 => ({
-              id: Number(level3.id),
-              name: level3.nombre,
-              parent_id: Number(subcat.id)
-            }))
-        }))
-    }));
+          parent_id: cat.id,
+          level3: level3Categories.map(level3 => ({
+            id: level3.id,
+            name: level3.nombre,
+            parent_id: subcat.id
+          }))
+        };
+      })
+    };
+  });
 }
 
 function mapCompaniesToFormFormat(companias: any[]): Company[] {
@@ -155,6 +188,7 @@ function initializeFormData(currentProduct: ProductoDetallado | null, setFormDat
       subcategoria_id: currentProduct.subcategoria_id,
       nivel3_id: currentProduct.nivel3_id,
       companias: currentProduct.companias || [],
+      caracteristicas: currentProduct.caracteristicas || [],
       fortalezas: currentProduct.fortalezas || '',
       debilidades: currentProduct.debilidades || '',
       observaciones: currentProduct.observaciones || ''
@@ -165,6 +199,7 @@ function initializeFormData(currentProduct: ProductoDetallado | null, setFormDat
       descripcion: '',
       categoria: '',
       companias: [],
+      caracteristicas: [],
       fortalezas: '',
       debilidades: '',
       observaciones: ''

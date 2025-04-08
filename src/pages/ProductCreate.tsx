@@ -11,6 +11,7 @@ import { useProductFormData } from '@/hooks/useProductFormData';
 import ProductBasicInfo from '@/components/products/form/ProductBasicInfo';
 import ProductDescriptionEditor from '@/components/products/form/ProductDescriptionEditor';
 import ProductCompanies from '@/components/products/form/ProductCompanies';
+import ProductFeatures from '@/components/products/form/ProductFeatures';
 import { Category, Company } from '@/types/product';
 import { ArrowLeft } from 'lucide-react';
 
@@ -35,27 +36,30 @@ const ProductCreate = () => {
     handleCategoryChange,
     handleSubcategoryChange,
     handleLevel3Change,
-    handleCompanyChange
+    handleCompanyChange,
+    handleFeatureChange,
+    addFeature,
+    removeFeature
   } = useProductFormData(currentProduct);
 
   // Map categories and companies to the expected format
   const mappedCategories: Category[] = categorias
     .filter(cat => !cat.es_subcategoria)
     .map(cat => ({
-      id: Number(cat.id),
+      id: cat.id,
       name: cat.nombre,
       subcategories: categorias
         .filter(subcat => subcat.es_subcategoria && subcat.parent_id === cat.id && subcat.nivel === 2)
         .map(subcat => ({
-          id: Number(subcat.id),
+          id: subcat.id,
           name: subcat.nombre,
-          parent_id: Number(cat.id),
+          parent_id: cat.id,
           level3: categorias
             .filter(level3 => level3.es_subcategoria && level3.parent_id === subcat.id && level3.nivel === 3)
             .map(level3 => ({
-              id: Number(level3.id),
+              id: level3.id,
               name: level3.nombre,
-              parent_id: Number(subcat.id)
+              parent_id: subcat.id
             }))
         }))
     }));
@@ -64,6 +68,19 @@ const ProductCreate = () => {
     id: comp.id,
     name: comp.nombre
   }));
+
+  // Log mapping information for debugging
+  useEffect(() => {
+    console.log("ProductCreate - Categories mapping:", {
+      rawCategoriesCount: categorias.length,
+      mappedCategoriesCount: mappedCategories.length,
+      mappedCategories: mappedCategories.map(c => ({ 
+        id: c.id, 
+        name: c.name,
+        subcategories: c.subcategories.map(s => ({ id: s.id, name: s.name }))
+      }))
+    });
+  }, [categorias, mappedCategories]);
 
   // Initialize form when product changes
   useEffect(() => {
@@ -76,6 +93,7 @@ const ProductCreate = () => {
         subcategoria_id: currentProduct.subcategoria_id,
         nivel3_id: currentProduct.nivel3_id,
         companias: currentProduct.companias || [],
+        caracteristicas: currentProduct.caracteristicas || [],
         fortalezas: currentProduct.fortalezas || '',
         debilidades: currentProduct.debilidades || '',
         observaciones: currentProduct.observaciones || ''
@@ -86,6 +104,7 @@ const ProductCreate = () => {
         descripcion: '',
         categoria: '',
         companias: [],
+        caracteristicas: [],
         fortalezas: '',
         debilidades: '',
         observaciones: ''
@@ -98,6 +117,7 @@ const ProductCreate = () => {
     setIsLoading(true);
     
     try {
+      console.log("Submitting product form with data:", formData);
       const success = await saveProducto(formData);
       if (success) {
         toast.success(currentProduct ? 'Producto actualizado correctamente' : 'Producto creado correctamente');
@@ -134,9 +154,9 @@ const ProductCreate = () => {
           <form onSubmit={handleSubmit} className="space-y-6">
             <ProductBasicInfo
               name={formData.nombre}
-              categoryId={formData.categoria ? Number(formData.categoria) : 0}
-              subcategoryId={formData.subcategoria_id ? Number(formData.subcategoria_id) : 0}
-              level3CategoryId={formData.nivel3_id ? Number(formData.nivel3_id) : undefined}
+              categoryId={formData.categoria || 0}
+              subcategoryId={formData.subcategoria_id || 0}
+              level3CategoryId={formData.nivel3_id}
               categories={mappedCategories}
               onInputChange={(e) => handleInputChange({
                 target: { name: 'nombre', value: e.target.value }
@@ -158,6 +178,13 @@ const ProductCreate = () => {
               companies={mappedCompanies}
               selectedCompanies={formData.companias || []}
               onCompanyChange={handleCompanyChange}
+            />
+            
+            <ProductFeatures
+              features={formData.caracteristicas || []}
+              onFeatureChange={handleFeatureChange}
+              addFeature={addFeature}
+              removeFeature={removeFeature}
             />
             
             <div className="flex justify-end gap-4">

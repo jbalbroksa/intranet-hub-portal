@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useEffect } from 'react';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { 
@@ -49,14 +49,25 @@ const ProductBasicInfo: React.FC<ProductBasicInfoProps> = ({
     return subcategory ? subcategory.level3 : [];
   };
 
-  // Debug
-  console.log("ProductBasicInfo props:", {
-    name,
-    categoryId,
-    subcategoryId,
-    level3CategoryId,
-    categoriesCount: categories.length
-  });
+  // Convert category and subcategory ids to strings for select component
+  const categoryIdStr = categoryId ? categoryId.toString() : "0";
+  const subcategoryIdStr = subcategoryId ? subcategoryId.toString() : "0";
+  const level3CategoryIdStr = level3CategoryId ? level3CategoryId.toString() : "0";
+
+  // Debug logging to help identify issues
+  useEffect(() => {
+    console.log("ProductBasicInfo - Current state:", {
+      categoryId, 
+      categoryIdStr,
+      subcategoryId, 
+      subcategoryIdStr,
+      level3CategoryId,
+      level3CategoryIdStr,
+      categoriesCount: categories.length,
+      availableSubcategories: getAvailableSubcategories().length,
+      availableLevel3: getAvailableLevel3Categories().length
+    });
+  }, [categoryId, subcategoryId, level3CategoryId, categories]);
 
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -75,7 +86,7 @@ const ProductBasicInfo: React.FC<ProductBasicInfoProps> = ({
       <div className="space-y-2">
         <Label htmlFor="category">Categoría</Label>
         <Select
-          value={categoryId ? categoryId.toString() : "0"}
+          value={categoryIdStr}
           onValueChange={onCategoryChange}
         >
           <SelectTrigger id="category">
@@ -95,9 +106,9 @@ const ProductBasicInfo: React.FC<ProductBasicInfoProps> = ({
       <div className="space-y-2">
         <Label htmlFor="subcategory">Subcategoría</Label>
         <Select
-          value={subcategoryId ? subcategoryId.toString() : "0"}
+          value={subcategoryIdStr}
           onValueChange={onSubcategoryChange}
-          disabled={!categoryId || categoryId === "0"}
+          disabled={!categoryId || categoryId === "0" || categoryId === 0}
         >
           <SelectTrigger id="subcategory">
             <SelectValue placeholder="Seleccionar subcategoría" />
@@ -116,9 +127,9 @@ const ProductBasicInfo: React.FC<ProductBasicInfoProps> = ({
       <div className="space-y-2">
         <Label htmlFor="level3">Nivel 3 (Opcional)</Label>
         <Select
-          value={level3CategoryId ? level3CategoryId.toString() : "0"}
+          value={level3CategoryIdStr}
           onValueChange={onLevel3Change}
-          disabled={!subcategoryId || subcategoryId === "0" || getAvailableLevel3Categories().length === 0}
+          disabled={!subcategoryId || subcategoryId === "0" || subcategoryId === 0 || getAvailableLevel3Categories().length === 0}
         >
           <SelectTrigger id="level3">
             <SelectValue placeholder="Seleccionar nivel 3" />
