@@ -1,5 +1,5 @@
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { ProductoDetallado } from './useProductos';
 
 export const useProductFormData = (initialProduct: ProductoDetallado | null) => {
@@ -13,6 +13,14 @@ export const useProductFormData = (initialProduct: ProductoDetallado | null) => 
     debilidades: '',
     observaciones: ''
   });
+  
+  // Initialize form data from initial product, if provided
+  useEffect(() => {
+    if (initialProduct) {
+      console.log("Initializing form data with product:", initialProduct);
+      setFormData(initialProduct);
+    }
+  }, [initialProduct]);
   
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
