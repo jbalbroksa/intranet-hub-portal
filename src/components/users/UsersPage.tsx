@@ -113,7 +113,7 @@ const UsersPage = () => {
       <UserFilters
         searchTerm={searchTerm}
         selectedDelegationFilter={userActions.selectedDelegationFilter}
-        viewMode={userActions.viewMode as ViewMode}
+        viewMode={userActions.viewMode}
         delegations={userActions.delegations.map(d => ({ id: d.id, name: d.nombre, address: d.direccion || '', phone: d.telefono || '' }))}
         onSearchChange={handleSearchChange}
         onDelegationFilterChange={userActions.handleDelegationFilter}
@@ -140,7 +140,7 @@ const UsersPage = () => {
               <UserList
                 users={paginatedUsers}
                 viewMode={userActions.viewMode}
-                delegationName={userActions.getDelegationName}
+                getDelegationName={userActions.getDelegationName}
                 getInitials={userActions.getInitials}
                 onDetailsClick={userActions.openDetailsDialog}
                 onEditClick={userActions.openEditDialog}
