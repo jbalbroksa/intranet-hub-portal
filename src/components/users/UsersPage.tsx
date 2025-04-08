@@ -10,6 +10,7 @@ import { useUsers, User } from '@/hooks/useUsers';
 import { useUserActions } from '@/hooks/useUserActions';
 import { toast } from 'sonner';
 import { useAuth } from '@/contexts/AuthContext';
+import { ViewMode } from '@/hooks/users/useUserTypes';
 
 const UsersPage = () => {
   const { users, isLoading, error, searchTerm, setSearchTerm, updateUser, deleteUser, refetch } = useUsers();
@@ -112,11 +113,11 @@ const UsersPage = () => {
       <UserFilters
         searchTerm={searchTerm}
         selectedDelegationFilter={userActions.selectedDelegationFilter}
-        viewMode={userActions.viewMode}
+        viewMode={userActions.viewMode as "grid" | "list"}
         delegations={userActions.delegations.map(d => ({ id: d.id, name: d.nombre, address: d.direccion || '', phone: d.telefono || '' }))}
         onSearchChange={handleSearchChange}
         onDelegationFilterChange={userActions.handleDelegationFilter}
-        onViewModeToggle={userActions.toggleViewMode}
+        onViewModeToggle={(mode: "grid" | "list") => userActions.toggleViewMode(mode as ViewMode)}
         onCreateUserClick={userActions.openCreateDialog}
         onAdvancedFiltersClick={userActions.openAdvancedFilters}
         activeFiltersCount={userActions.countActiveFilters()}

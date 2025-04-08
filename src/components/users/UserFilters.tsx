@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
@@ -37,6 +36,7 @@ const UserFilters: React.FC<UserFiltersProps> = ({
   onAdvancedFiltersClick,
   activeFiltersCount
 }) => {
+  
   return (
     <div className="flex flex-col md:flex-row gap-4 items-start md:items-center justify-between">
       <div className="relative w-full md:w-96">

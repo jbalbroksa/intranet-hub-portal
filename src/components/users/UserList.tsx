@@ -15,6 +15,18 @@ type UserListProps = {
   onDeleteClick: (id: string) => void;
 };
 
+// Type mapping to convert between User types
+type UserCardType = {
+  id: string;
+  name: string;
+  email: string;
+  role: 'admin' | 'user';
+  lastLogin: string;
+  delegationId: string;
+  position: string;
+  bio: string;
+};
+
 const UserList: React.FC<UserListProps> = ({
   users,
   viewMode,
@@ -32,29 +44,45 @@ const UserList: React.FC<UserListProps> = ({
     );
   }
 
+  // Convert User to UserCardType
+  const mapUserToCardType = (user: User): UserCardType => ({
+    id: user.id,
+    name: user.name,
+    email: user.email,
+    role: user.role,
+    lastLogin: user.last_login || 'Nunca',
+    delegationId: user.delegation_id || '',
+    position: user.position || '',
+    bio: user.bio || '',
+  });
+
   return (
     <div>
       {viewMode === 'grid' ? (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {users.map(user => (
-            <UserCard
-              key={user.id}
-              user={user}
-              delegationName={delegationName(user.delegation_id || '')}
-              getInitials={getInitials}
-              onDetailsClick={() => onDetailsClick(user)}
-              onEditClick={() => onEditClick(user)}
-              onDeleteClick={() => onDeleteClick(user.id)}
-            />
-          ))}
+          {users.map(user => {
+            const cardUser = mapUserToCardType(user);
+            return (
+              <UserCard
+                key={user.id}
+                user={cardUser}
+                delegationName={delegationName(user.delegation_id || '')}
+                getInitials={getInitials}
+                onDetailsClick={() => onDetailsClick(user)}
+                onEditClick={() => onEditClick(user)}
+                onDeleteClick={() => onDeleteClick(user.id)}
+              />
+            );
+          })}
         </div>
       ) : (
         <UserTable
-          users={users}
+          users={users.map(mapUserToCardType)}
           delegationName={delegationName}
+          getInitials={getInitials}
           onDetailsClick={onDetailsClick}
           onEditClick={onEditClick}
-          onDeleteClick={onDeleteClick}
+          onDeleteClick={(user) => onDeleteClick(user.id)}
         />
       )}
     </div>
