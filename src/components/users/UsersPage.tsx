@@ -140,7 +140,7 @@ const UsersPage = () => {
               <UserList
                 users={paginatedUsers}
                 viewMode={userActions.viewMode}
-                getDelegationName={userActions.getDelegationName}
+                delegationName={userActions.getDelegationName}
                 getInitials={userActions.getInitials}
                 onDetailsClick={userActions.openDetailsDialog}
                 onEditClick={userActions.openEditDialog}

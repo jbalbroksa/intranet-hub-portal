@@ -1,6 +1,6 @@
 
 export type FormMode = 'create' | 'edit' | 'view';
-export type ViewMode = 'grid' | 'table';
+export type ViewMode = 'grid' | 'list';
 
 export type AdvancedFilters = {
   role?: string;

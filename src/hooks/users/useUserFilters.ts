@@ -31,7 +31,7 @@ export const useUserFilters = () => {
     setSelectedDelegationFilter(delegationId === "all" ? null : delegationId);
   };
 
-  // Toggle view mode between grid and table
+  // Toggle view mode between grid and list
   const toggleViewMode = (mode: ViewMode) => {
     setViewMode(mode);
   };
