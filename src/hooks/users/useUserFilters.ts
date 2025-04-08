@@ -1,6 +1,6 @@
 
 import { useState } from 'react';
-import { ViewMode } from '@/hooks/users/useUserTypes';
+import { ViewMode, AdvancedFilters } from '@/hooks/users/useUserTypes';
 
 export const useUserFilters = () => {
   // Filter state
@@ -31,7 +31,7 @@ export const useUserFilters = () => {
     setSelectedDelegationFilter(delegationId === "all" ? null : delegationId);
   };
 
-  // Toggle view mode between grid and list
+  // Toggle view mode between grid and table
   const toggleViewMode = (mode: ViewMode) => {
     setViewMode(mode);
   };

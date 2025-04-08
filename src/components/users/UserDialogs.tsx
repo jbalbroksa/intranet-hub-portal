@@ -4,7 +4,7 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } f
 import UserForm from '@/components/users/UserForm';
 import UserDetail from '@/components/users/UserDetail';
 import { User } from '@/hooks/useUsers';
-import { FormMode } from '@/hooks/useUserActions';
+import { FormMode } from '@/hooks/users/useUserTypes';
 
 type Delegation = {
   id: string;
@@ -79,7 +79,7 @@ const UserDialogs: React.FC<UserDialogsProps> = ({
               bio: formData.bio,
             }}
             delegations={delegations}
-            formMode={formMode}
+            formMode={formMode === 'view' ? 'edit' : formMode}
             onSubmit={onSubmit}
             onCancel={() => onSetDialogOpen(false)}
             onInputChange={onInputChange}

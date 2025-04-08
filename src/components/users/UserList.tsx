@@ -1,15 +1,14 @@
 
 import React from 'react';
-import { Card, CardContent } from '@/components/ui/card';
-import UserCard from '@/components/users/UserCard';
-import UserTable from '@/components/users/UserTable';
-import EmptyNotifications from '@/components/notifications/EmptyNotifications';
+import UserCard from './UserCard';
+import UserTable from './UserTable';
 import { User } from '@/hooks/useUsers';
+import { ViewMode } from '@/hooks/users/useUserTypes';
 
 type UserListProps = {
   users: User[];
-  viewMode: 'grid' | 'list';
-  delegationName: (id: string) => string;
+  viewMode: ViewMode;
+  delegationName: (delegationId: string) => string;
   getInitials: (name: string) => string;
   onDetailsClick: (user: User) => void;
   onEditClick: (user: User) => void;
@@ -23,83 +22,42 @@ const UserList: React.FC<UserListProps> = ({
   getInitials,
   onDetailsClick,
   onEditClick,
-  onDeleteClick
+  onDeleteClick,
 }) => {
   if (users.length === 0) {
     return (
-      <div className="col-span-full">
-        <EmptyNotifications />
-      </div>
-    );
-  }
-
-  if (viewMode === 'grid') {
-    return (
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-        {users.map((user) => (
-          <UserCard
-            key={user.id}
-            user={{
-              id: user.id,
-              name: user.name,
-              email: user.email,
-              role: user.role,
-              lastLogin: user.last_login || 'Nunca',
-              delegationId: user.delegation_id || '',
-              position: user.position || '',
-              bio: user.bio || '',
-            }}
-            delegationName={delegationName(user.delegation_id || '')}
-            getInitials={getInitials}
-            onDetailsClick={() => onDetailsClick(user)}
-            onEditClick={() => onEditClick(user)}
-            onDeleteClick={() => onDeleteClick(user.id)}
-          />
-        ))}
+      <div className="text-center py-8">
+        <p className="text-muted-foreground">No se encontraron usuarios que coincidan con tu búsqueda.</p>
       </div>
     );
   }
 
   return (
-    <Card>
-      <CardContent className="p-0">
+    <div>
+      {viewMode === 'grid' ? (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          {users.map(user => (
+            <UserCard
+              key={user.id}
+              user={user}
+              delegationName={delegationName(user.delegation_id || '')}
+              getInitials={getInitials}
+              onDetailsClick={() => onDetailsClick(user)}
+              onEditClick={() => onEditClick(user)}
+              onDeleteClick={() => onDeleteClick(user.id)}
+            />
+          ))}
+        </div>
+      ) : (
         <UserTable
-          users={users.map(user => ({
-            id: user.id,
-            name: user.name,
-            email: user.email,
-            role: user.role,
-            lastLogin: user.last_login || 'Nunca',
-            delegationId: user.delegation_id || '',
-            position: user.position || '',
-            bio: user.bio || '',
-          }))}
-          getDelegationName={delegationName}
-          getInitials={getInitials}
-          onDetailsClick={user => onDetailsClick({ 
-            id: user.id,
-            name: user.name,
-            email: user.email,
-            role: user.role,
-            position: user.position,
-            delegation_id: user.delegationId,
-            bio: user.bio,
-            last_login: user.lastLogin
-          })}
-          onEditClick={user => onEditClick({ 
-            id: user.id,
-            name: user.name,
-            email: user.email,
-            role: user.role,
-            position: user.position,
-            delegation_id: user.delegationId,
-            bio: user.bio,
-            last_login: user.lastLogin
-          })}
-          onDeleteClick={user => onDeleteClick(user.id)}
+          users={users}
+          delegationName={delegationName}
+          onDetailsClick={onDetailsClick}
+          onEditClick={onEditClick}
+          onDeleteClick={onDeleteClick}
         />
-      </CardContent>
-    </Card>
+      )}
+    </div>
   );
 };
 
