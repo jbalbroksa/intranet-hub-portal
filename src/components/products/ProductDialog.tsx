@@ -50,18 +50,17 @@ const ProductDialog: React.FC<ProductDialogProps> = ({
   const mappedCategories: Category[] = mapCategoriesToFormFormat(categorias);
   const mappedCompanies: Company[] = mapCompaniesToFormFormat(companias);
 
-  // Log mapped categories for debugging
+  // Debug logging for development
   useEffect(() => {
-    console.log("ProductDialog - Mapped categories:", {
-      categoriesCount: mappedCategories.length,
-      categorias: categorias.length,
-      mappedCategories: mappedCategories.map(c => ({ 
-        id: c.id, 
-        name: c.name, 
-        subcategoriesCount: c.subcategories.length 
-      }))
-    });
-  }, [categorias, mappedCategories]);
+    if (open) {
+      console.log("ProductDialog - Opening with data:", {
+        currentProduct,
+        formData,
+        categoriesCount: mappedCategories.length,
+        categorias: categorias.length
+      });
+    }
+  }, [open, currentProduct, formData, mappedCategories, categorias]);
 
   // Initialize form when dialog opens or product changes
   useEffect(() => {
@@ -136,25 +135,23 @@ const ProductDialog: React.FC<ProductDialogProps> = ({
 
 // Helper functions
 function mapCategoriesToFormFormat(categorias: any[]): Category[] {
-  console.log("Raw categorias data:", categorias);
+  console.log("Raw categorias data for mapping:", categorias);
   
-  const mainCategories = categorias.filter(cat => !cat.es_subcategoria);
-  console.log("Main categories:", mainCategories);
+  // Filter main categories (nivel = 1, not subcategories)
+  const mainCategories = categorias.filter(cat => cat.nivel === 1 || !cat.es_subcategoria);
   
   return mainCategories.map(cat => {
+    // Filter subcategories for this category
     const subcategories = categorias
       .filter(subcat => subcat.es_subcategoria && subcat.parent_id === cat.id && subcat.nivel === 2);
-    
-    console.log(`Subcategories for ${cat.nombre}:`, subcategories);
     
     return {
       id: cat.id,
       name: cat.nombre,
       subcategories: subcategories.map(subcat => {
+        // Filter level3 categories for this subcategory
         const level3Categories = categorias
           .filter(level3 => level3.es_subcategoria && level3.parent_id === subcat.id && level3.nivel === 3);
-        
-        console.log(`Level3 categories for ${subcat.nombre}:`, level3Categories);
         
         return {
           id: subcat.id,
@@ -180,6 +177,7 @@ function mapCompaniesToFormFormat(companias: any[]): Company[] {
 
 function initializeFormData(currentProduct: ProductoDetallado | null, setFormData: React.Dispatch<React.SetStateAction<ProductoDetallado>>) {
   if (currentProduct) {
+    console.log("Initializing form with product:", currentProduct);
     setFormData({
       id: currentProduct.id,
       nombre: currentProduct.nombre,

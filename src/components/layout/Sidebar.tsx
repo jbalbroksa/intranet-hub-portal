@@ -21,9 +21,9 @@ const Sidebar = () => {
   return (
     <>
       {/* Desktop Sidebar */}
-      <aside className="hidden lg:flex flex-col w-64 border-r bg-background h-screen sticky top-0">
-        <div className="flex items-center justify-center h-16 border-b">
-          <Link to="/" className="text-lg font-semibold text-primary">Intranet</Link>
+      <aside className="hidden lg:flex flex-col w-64 border-r bg-slate-900 h-screen sticky top-0">
+        <div className="flex items-center justify-center h-16 border-b border-slate-800">
+          <Link to="/" className="text-lg font-semibold text-white">Intranet</Link>
         </div>
 
         <nav className="flex-1 py-4 overflow-y-auto">
@@ -31,7 +31,7 @@ const Sidebar = () => {
           <SecondaryNav currentPath={location.pathname} />
         </nav>
 
-        <div className="border-t p-4">
+        <div className="border-t border-slate-800 p-4">
           <UserDropdown />
         </div>
       </aside>

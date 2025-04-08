@@ -14,7 +14,7 @@ import { ViewMode } from '@/hooks/users/useUserTypes';
 
 const UsersPage = () => {
   const { users, isLoading, error, searchTerm, setSearchTerm, updateUser, deleteUser, refetch } = useUsers();
-  const { isAdmin } = useAuth();
+  const { user, isAdmin } = useAuth();
   const userActions = useUserActions();
   
   // Handle search change
@@ -88,6 +88,15 @@ const UsersPage = () => {
     }
   };
 
+  // If loading or error, show appropriate message
+  if (isLoading) {
+    return <div className="flex justify-center p-8">Cargando usuarios...</div>;
+  }
+
+  if (error) {
+    return <div className="text-red-500 p-8">Error al cargar usuarios: {error.message}</div>;
+  }
+
   // If user is not admin, show access denied message
   if (!isAdmin) {
     return (
@@ -98,26 +107,17 @@ const UsersPage = () => {
     );
   }
 
-  // Loading and error states
-  if (isLoading) {
-    return <div className="flex justify-center p-8">Cargando usuarios...</div>;
-  }
-
-  if (error) {
-    return <div className="text-red-500 p-8">Error al cargar usuarios: {error.message}</div>;
-  }
-
   return (
     <div className="space-y-6 animate-slideInUp">
       {/* Search and filter bar */}
       <UserFilters
         searchTerm={searchTerm}
         selectedDelegationFilter={userActions.selectedDelegationFilter}
-        viewMode={userActions.viewMode as "grid" | "list"}
+        viewMode={userActions.viewMode as ViewMode}
         delegations={userActions.delegations.map(d => ({ id: d.id, name: d.nombre, address: d.direccion || '', phone: d.telefono || '' }))}
         onSearchChange={handleSearchChange}
         onDelegationFilterChange={userActions.handleDelegationFilter}
-        onViewModeToggle={(mode: "grid" | "list") => userActions.toggleViewMode(mode as ViewMode)}
+        onViewModeToggle={userActions.toggleViewMode}
         onCreateUserClick={userActions.openCreateDialog}
         onAdvancedFiltersClick={userActions.openAdvancedFilters}
         activeFiltersCount={userActions.countActiveFilters()}
