@@ -78,7 +78,7 @@ const UserList: React.FC<UserListProps> = ({
       ) : (
         <UserTable
           users={users.map(mapUserToCardType)}
-          delegationName={delegationName}
+          getDelegationName={delegationName}
           getInitials={getInitials}
           onDetailsClick={onDetailsClick}
           onEditClick={onEditClick}
