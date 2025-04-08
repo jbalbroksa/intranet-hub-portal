@@ -22,14 +22,24 @@ export const useUserMutations = () => {
 
       if (authError) {
         console.error("Auth error creating user:", authError);
-        throw authError;
+        
+        // Check if it's a permissions error
+        if (authError.message.includes('permission')) {
+          toast.error('No tienes permiso para crear usuarios. Asegúrate de que tu cuenta tenga permisos de administrador en Supabase.');
+          return false;
+        }
+        
+        // General auth error
+        toast.error(`Error al crear usuario: ${authError.message}`);
+        return false;
       }
 
       if (!authData || !authData.user) {
-        throw new Error("No se pudo crear el usuario en el sistema de autenticación");
+        toast.error("No se pudo crear el usuario en el sistema de autenticación");
+        return false;
       }
 
-      console.log("Auth user created:", authData.user.id);
+      console.log("Auth user created with ID:", authData.user.id);
 
       // Update the user record with additional information
       const { error: updateError } = await supabase
@@ -44,7 +54,8 @@ export const useUserMutations = () => {
 
       if (updateError) {
         console.error("Error updating user data:", updateError);
-        throw updateError;
+        toast.error(`Error al actualizar la información del usuario: ${updateError.message}`);
+        return false;
       }
 
       toast.success('Usuario creado correctamente. Se ha enviado un correo para establecer la contraseña.');

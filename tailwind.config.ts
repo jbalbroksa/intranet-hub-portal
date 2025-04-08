@@ -30,11 +30,11 @@ export default {
 				background: 'hsl(var(--background))',
 				foreground: 'hsl(var(--foreground))',
 				primary: {
-					DEFAULT: 'hsl(var(--primary))',
+					DEFAULT: '#FF0000', // Updated to requested red color
 					foreground: 'hsl(var(--primary-foreground))'
 				},
 				secondary: {
-					DEFAULT: 'hsl(var(--secondary))',
+					DEFAULT: '#1E2836', // Updated to requested dark blue color
 					foreground: 'hsl(var(--secondary-foreground))'
 				},
 				destructive: {
@@ -58,11 +58,11 @@ export default {
 					foreground: 'hsl(var(--card-foreground))'
 				},
 				sidebar: {
-					DEFAULT: 'hsl(var(--sidebar))',
+					DEFAULT: '#1E2836', // Updated to match secondary color
 					foreground: 'hsl(var(--sidebar-foreground))',
 					muted: 'hsl(var(--sidebar-muted))',
 					'muted-foreground': 'hsl(var(--sidebar-muted-foreground))',
-					accent: 'hsl(var(--sidebar-accent))',
+					accent: '#FF0000', // Updated to primary color
 					'accent-foreground': 'hsl(var(--sidebar-accent-foreground))',
 					border: 'hsl(var(--sidebar-border))',
 					ring: 'hsl(var(--sidebar-ring))'

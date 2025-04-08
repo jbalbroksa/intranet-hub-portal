@@ -56,6 +56,7 @@ const UsersPage = () => {
       }
     } else if (userActions.formMode === 'create') {
       try {
+        console.log("Creating user with form data:", formDataForSubmit);
         const success = await userActions.createUser(formDataForSubmit);
         if (success) {
           userActions.setDialogOpen(false);
