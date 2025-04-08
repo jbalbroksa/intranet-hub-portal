@@ -4,9 +4,9 @@ import { useUserPagination } from './users/useUserPagination';
 import { useUserDialogs } from './users/useUserDialogs';
 import { useUserHelpers } from './users/useUserHelpers';
 import { useUserMutations } from './users/useUserMutations';
-import { FormMode, ViewMode } from './users/useUserTypes';
+import type { FormMode, ViewMode } from './users/useUserTypes';
 
-export { FormMode, ViewMode };
+export type { FormMode, ViewMode };
 
 export const useUserActions = () => {
   const filters = useUserFilters();
