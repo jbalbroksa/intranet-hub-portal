@@ -1,67 +1,20 @@
 
-import React, { useEffect, useState } from 'react';
-import { Card, CardContent } from '@/components/ui/card';
+import React from 'react';
 import UserFilters from '@/components/users/UserFilters';
-import UserCard from '@/components/users/UserCard';
-import UserTable from '@/components/users/UserTable';
 import UserDialogs from '@/components/users/UserDialogs';
 import UserPagination from '@/components/users/UserPagination';
 import UserAdvancedFilters from '@/components/users/UserAdvancedFilters';
-import EmptyNotifications from '@/components/notifications/EmptyNotifications';
+import UserList from '@/components/users/UserList';
+import UserFilterManager from '@/components/users/UserFilterManager';
 import { useUsers, User } from '@/hooks/useUsers';
 import { useUserActions } from '@/hooks/useUserActions';
 import { toast } from 'sonner';
 import { useAuth } from '@/contexts/AuthContext';
 
 const UsersPage = () => {
-  const { users, filteredUsers, isLoading, error, searchTerm, setSearchTerm, updateUser, deleteUser, refetch } = useUsers();
+  const { users, isLoading, error, searchTerm, setSearchTerm, updateUser, deleteUser, refetch } = useUsers();
   const { isAdmin } = useAuth();
   const userActions = useUserActions();
-  
-  // Calculate users for current page
-  const applyFilters = () => {
-    // First apply quick filters (search and delegation)
-    let filtered = filteredUsers.filter(user => {
-      // Apply main delegation filter
-      const matchesDelegation = userActions.selectedDelegationFilter === null || 
-        user.delegation_id === userActions.selectedDelegationFilter;
-      
-      return matchesDelegation;
-    });
-    
-    // Then apply advanced filters
-    if (userActions.advancedFilters.role) {
-      filtered = filtered.filter(user => user.role === userActions.advancedFilters.role);
-    }
-    
-    if (userActions.advancedFilters.delegation_id) {
-      filtered = filtered.filter(user => user.delegation_id === userActions.advancedFilters.delegation_id);
-    }
-    
-    if (userActions.advancedFilters.lastLoginDays !== null) {
-      const now = new Date();
-      if (userActions.advancedFilters.lastLoginDays === -1) {
-        // Filter users who never logged in
-        filtered = filtered.filter(user => !user.last_login || user.last_login === "Nunca");
-      } else {
-        // Filter users by last login date
-        const cutoffDate = new Date(now.setDate(now.getDate() - userActions.advancedFilters.lastLoginDays!));
-        filtered = filtered.filter(user => {
-          if (!user.last_login || user.last_login === "Nunca") return false;
-          const lastLogin = new Date(user.last_login);
-          return lastLogin >= cutoffDate;
-        });
-      }
-    }
-    
-    return filtered;
-  };
-  
-  const filteredAndPaginatedUsers = () => {
-    const filteredUsers = applyFilters();
-    const startIndex = (userActions.currentPage - 1) * userActions.pageSize;
-    return filteredUsers.slice(startIndex, startIndex + userActions.pageSize);
-  };
   
   // Handle search change
   const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -134,6 +87,7 @@ const UsersPage = () => {
     }
   };
 
+  // If user is not admin, show access denied message
   if (!isAdmin) {
     return (
       <div className="text-center py-12">
@@ -143,6 +97,7 @@ const UsersPage = () => {
     );
   }
 
+  // Loading and error states
   if (isLoading) {
     return <div className="flex justify-center p-8">Cargando usuarios...</div>;
   }
@@ -150,9 +105,6 @@ const UsersPage = () => {
   if (error) {
     return <div className="text-red-500 p-8">Error al cargar usuarios: {error.message}</div>;
   }
-
-  const filteredUsersList = applyFilters();
-  const paginatedUsers = filteredAndPaginatedUsers();
 
   return (
     <div className="space-y-6 animate-slideInUp">
@@ -170,97 +122,42 @@ const UsersPage = () => {
         activeFiltersCount={userActions.countActiveFilters()}
       />
 
-      {/* Users display */}
-      {userActions.viewMode === 'grid' ? (
-        <>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-            {paginatedUsers.length > 0 ? (
-              paginatedUsers.map((user) => (
-                <UserCard
-                  key={user.id}
-                  user={{
-                    id: user.id,
-                    name: user.name,
-                    email: user.email,
-                    role: user.role,
-                    lastLogin: user.last_login || 'Nunca',
-                    delegationId: user.delegation_id || '',
-                    position: user.position || '',
-                    bio: user.bio || '',
-                  }}
-                  delegationName={userActions.getDelegationName(user.delegation_id || '')}
-                  getInitials={userActions.getInitials}
-                  onDetailsClick={() => userActions.openDetailsDialog(user)}
-                  onEditClick={() => userActions.openEditDialog(user)}
-                  onDeleteClick={() => handleDelete(user.id)}
-                />
-              ))
-            ) : (
-              <div className="col-span-full">
-                <EmptyNotifications />
-              </div>
-            )}
-          </div>
-          {filteredUsersList.length > userActions.pageSize && (
-            <UserPagination
-              totalUsers={filteredUsersList.length}
-              currentPage={userActions.currentPage}
-              pageSize={userActions.pageSize}
-              onPageChange={userActions.handlePageChange}
-            />
-          )}
-        </>
-      ) : (
-        <>
-          <Card>
-            <CardContent className="p-0">
-              <UserTable
-                users={paginatedUsers.map(user => ({
-                  id: user.id,
-                  name: user.name,
-                  email: user.email,
-                  role: user.role,
-                  lastLogin: user.last_login || 'Nunca',
-                  delegationId: user.delegation_id || '',
-                  position: user.position || '',
-                  bio: user.bio || '',
-                }))}
-                getDelegationName={userActions.getDelegationName}
+      {/* Users display with filtering and pagination */}
+      <UserFilterManager
+        users={users}
+        searchTerm={searchTerm}
+        selectedDelegationFilter={userActions.selectedDelegationFilter}
+        advancedFilters={userActions.advancedFilters}
+      >
+        {(filteredUsers) => {
+          // Pagination
+          const startIndex = (userActions.currentPage - 1) * userActions.pageSize;
+          const paginatedUsers = filteredUsers.slice(startIndex, startIndex + userActions.pageSize);
+          
+          return (
+            <>
+              <UserList
+                users={paginatedUsers}
+                viewMode={userActions.viewMode}
+                delegationName={userActions.getDelegationName}
                 getInitials={userActions.getInitials}
-                onDetailsClick={user => userActions.openDetailsDialog({ 
-                  id: user.id,
-                  name: user.name,
-                  email: user.email,
-                  role: user.role,
-                  position: user.position,
-                  delegation_id: user.delegationId,
-                  bio: user.bio,
-                  last_login: user.lastLogin
-                })}
-                onEditClick={user => userActions.openEditDialog({ 
-                  id: user.id,
-                  name: user.name,
-                  email: user.email,
-                  role: user.role,
-                  position: user.position,
-                  delegation_id: user.delegationId,
-                  bio: user.bio,
-                  last_login: user.lastLogin
-                })}
-                onDeleteClick={user => handleDelete(user.id)}
+                onDetailsClick={userActions.openDetailsDialog}
+                onEditClick={userActions.openEditDialog}
+                onDeleteClick={handleDelete}
               />
-            </CardContent>
-          </Card>
-          {filteredUsersList.length > userActions.pageSize && (
-            <UserPagination
-              totalUsers={filteredUsersList.length}
-              currentPage={userActions.currentPage}
-              pageSize={userActions.pageSize}
-              onPageChange={userActions.handlePageChange}
-            />
-          )}
-        </>
-      )}
+              
+              {filteredUsers.length > userActions.pageSize && (
+                <UserPagination
+                  totalUsers={filteredUsers.length}
+                  currentPage={userActions.currentPage}
+                  pageSize={userActions.pageSize}
+                  onPageChange={userActions.handlePageChange}
+                />
+              )}
+            </>
+          );
+        }}
+      </UserFilterManager>
 
       {/* User Dialogs */}
       <UserDialogs

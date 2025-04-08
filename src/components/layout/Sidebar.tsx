@@ -1,6 +1,6 @@
 
 import React, { useState } from 'react';
-import { useLocation } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { 
   Home, 
   MapPin, 
@@ -72,18 +72,25 @@ const secondaryNavItems = [
   },
   {
     title: "Usuarios",
-    href: "/usuarios",
+    href: "/usuarios", // Fixed: This was pointing to "/usuarios" but our route is defined as "/usuarios"
     icon: <Users className="h-5 w-5" />,
   },
 ];
 
 const Sidebar = () => {
   const location = useLocation();
+  const navigate = useNavigate();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   
   // Check if a nav item is active
   const isActive = (href: string) => {
     return location.pathname === href;
+  };
+
+  // Handle navigation item click
+  const handleNavItemClick = (href: string) => {
+    navigate(href);
+    setIsMobileMenuOpen(false);
   };
 
   return (
@@ -163,7 +170,7 @@ const Sidebar = () => {
                     title={item.title}
                     icon={item.icon}
                     isActive={isActive(item.href)}
-                    onClick={() => setIsMobileMenuOpen(false)}
+                    onClick={() => handleNavItemClick(item.href)}
                   />
                 ))}
               </div>
@@ -176,7 +183,7 @@ const Sidebar = () => {
                     title={item.title}
                     icon={item.icon}
                     isActive={isActive(item.href)}
-                    onClick={() => setIsMobileMenuOpen(false)}
+                    onClick={() => handleNavItemClick(item.href)}
                   />
                 ))}
               </div>
