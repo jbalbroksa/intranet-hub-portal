@@ -1,33 +1,50 @@
-
-import React from 'react';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { Edit, Trash } from 'lucide-react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Skeleton } from '@/components/ui/skeleton';
-import { Product } from '@/types/product';
+import React from "react";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { Edit, Trash } from "lucide-react";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Skeleton } from "@/components/ui/skeleton";
+import { Product } from "@/types/product";
 
 type ProductsListProps = {
   products: Product[];
-  getCategoryName: (categoryId: string | number) => string;
-  getSubcategoryName: (categoryId: string | number, subcategoryId: string | number) => string;
-  getCompanyNames: (companyIds: string[]) => string;
-  onEditProduct: (product: Product) => void;
-  onDeleteProduct: (id: string | number) => void;
+  getCategoryName?: (categoryId: string | number) => string;
+  getSubcategoryName?: (
+    categoryId: string | number,
+    subcategoryId: string | number,
+  ) => string;
+  getCompanyNames?: (companyIds: string[]) => string;
+  onEditProduct?: (product: Product) => void;
+  onDeleteProduct?: (id: string | number) => void;
+  onDelete?: (id: string | number) => void;
   isLoading?: boolean;
   error?: Error | null;
 };
 
 const ProductsList: React.FC<ProductsListProps> = ({
   products,
-  getCategoryName,
-  getSubcategoryName,
-  getCompanyNames,
+  getCategoryName = () => "Categoría desconocida",
+  getSubcategoryName = () => "Subcategoría desconocida",
+  getCompanyNames = () => "Sin compañías",
   onEditProduct,
   onDeleteProduct,
+  onDelete,
   isLoading = false,
-  error = null
+  error = null,
 }) => {
   if (isLoading) {
     return (
@@ -64,6 +81,9 @@ const ProductsList: React.FC<ProductsListProps> = ({
     );
   }
 
+  // Handle both onDelete and onDeleteProduct for backward compatibility
+  const handleDelete = onDelete || onDeleteProduct;
+
   return (
     <Card>
       <CardContent className="p-0">
@@ -72,7 +92,9 @@ const ProductsList: React.FC<ProductsListProps> = ({
             <TableRow>
               <TableHead>Nombre</TableHead>
               <TableHead className="hidden md:table-cell">Categoría</TableHead>
-              <TableHead className="hidden md:table-cell">Subcategoría</TableHead>
+              <TableHead className="hidden md:table-cell">
+                Subcategoría
+              </TableHead>
               <TableHead className="hidden md:table-cell">Compañías</TableHead>
               <TableHead className="text-right">Acciones</TableHead>
             </TableRow>
@@ -84,30 +106,60 @@ const ProductsList: React.FC<ProductsListProps> = ({
                   <div>
                     <div className="font-medium">{product.name}</div>
                     <div className="text-sm text-muted-foreground md:hidden">
-                      {getCategoryName(product.categoryId)} &gt; {getSubcategoryName(product.categoryId, product.subcategoryId)}
+                      {getCategoryName(product.categoryId)} &gt;{" "}
+                      {getSubcategoryName(
+                        product.categoryId,
+                        product.subcategoryId || "",
+                      )}
                     </div>
-                    <div className="text-sm text-muted-foreground line-clamp-1">{product.description}</div>
+                    <div
+                      className="text-sm text-muted-foreground line-clamp-1"
+                      dangerouslySetInnerHTML={{
+                        __html: product.description || "",
+                      }}
+                    />
                   </div>
                 </TableCell>
-                <TableCell className="hidden md:table-cell">{getCategoryName(product.categoryId)}</TableCell>
-                <TableCell className="hidden md:table-cell">{getSubcategoryName(product.categoryId, product.subcategoryId)}</TableCell>
+                <TableCell className="hidden md:table-cell">
+                  {getCategoryName(product.categoryId)}
+                </TableCell>
+                <TableCell className="hidden md:table-cell">
+                  {getSubcategoryName(
+                    product.categoryId,
+                    product.subcategoryId || "",
+                  )}
+                </TableCell>
                 <TableCell className="hidden md:table-cell">
                   <div className="flex flex-wrap gap-1">
-                    {product.companies.length > 0 ? (
+                    {product.companies && product.companies.length > 0 ? (
                       getCompanyNames(product.companies)
                     ) : (
-                      <span className="text-muted-foreground text-sm">Ninguna</span>
+                      <span className="text-muted-foreground text-sm">
+                        Ninguna
+                      </span>
                     )}
                   </div>
                 </TableCell>
                 <TableCell className="text-right">
                   <div className="flex justify-end gap-2">
-                    <Button variant="ghost" size="sm" onClick={() => onEditProduct(product)}>
-                      <Edit className="h-4 w-4" />
-                    </Button>
-                    <Button variant="ghost" size="sm" onClick={() => onDeleteProduct(product.id)}>
-                      <Trash className="h-4 w-4" />
-                    </Button>
+                    {onEditProduct && (
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => onEditProduct(product)}
+                      >
+                        <Edit className="h-4 w-4" />
+                      </Button>
+                    )}
+                    {handleDelete && (
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => handleDelete(product.id)}
+                      >
+                        <Trash className="h-4 w-4" />
+                      </Button>
+                    )}
                   </div>
                 </TableCell>
               </TableRow>

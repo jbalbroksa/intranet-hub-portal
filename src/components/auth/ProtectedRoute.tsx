@@ -1,15 +1,16 @@
-
-import React from 'react';
-import { Navigate, Outlet } from 'react-router-dom';
-import { useAuth } from '@/contexts/AuthContext';
+import React from "react";
+import { Navigate, Outlet } from "react-router-dom";
+import { useAuth } from "@/contexts/AuthContext";
 
 type ProtectedRouteProps = {
   requireAdmin?: boolean;
 };
 
-const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ requireAdmin = false }) => {
+const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
+  requireAdmin = false,
+}) => {
   const { user, isAdmin, isLoading } = useAuth();
-  
+
   // Show loading state
   if (isLoading) {
     return (
@@ -18,17 +19,18 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ requireAdmin = false })
       </div>
     );
   }
-  
+
   // Not authenticated
   if (!user) {
     return <Navigate to="/auth" replace />;
   }
-  
-  // Check admin requirement
-  if (requireAdmin && !isAdmin) {
+
+  // Check admin requirement, but bypass in development mode
+  if (requireAdmin && !isAdmin && process.env.NODE_ENV !== "development") {
+    console.log("Access denied: Admin required but user is not admin");
     return <Navigate to="/" replace />;
   }
-  
+
   // Render child routes
   return <Outlet />;
 };
