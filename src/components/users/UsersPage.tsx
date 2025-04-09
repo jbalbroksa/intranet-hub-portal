@@ -1,22 +1,30 @@
-
-import React from 'react';
-import UserFilters from '@/components/users/UserFilters';
-import UserDialogs from '@/components/users/UserDialogs';
-import UserPagination from '@/components/users/UserPagination';
-import UserAdvancedFilters from '@/components/users/UserAdvancedFilters';
-import UserList from '@/components/users/UserList';
-import UserFilterManager from '@/components/users/UserFilterManager';
-import { useUsers, User } from '@/hooks/useUsers';
-import { useUserActions } from '@/hooks/useUserActions';
-import { toast } from 'sonner';
-import { useAuth } from '@/contexts/AuthContext';
-import { ViewMode } from '@/hooks/users/useUserTypes';
+import React from "react";
+import UserFilters from "@/components/users/UserFilters";
+import UserDialogs from "@/components/users/UserDialogs";
+import UserPagination from "@/components/users/UserPagination";
+import UserAdvancedFilters from "@/components/users/UserAdvancedFilters";
+import UserList from "@/components/users/UserList";
+import UserFilterManager from "@/components/users/UserFilterManager";
+import { useUsers, User } from "@/hooks/useUsers";
+import { useUserActions } from "@/hooks/useUserActions";
+import { toast } from "sonner";
+import { useAuth } from "@/contexts/AuthContext";
+import { ViewMode } from "@/hooks/users/useUserTypes";
 
 const UsersPage = () => {
-  const { users, isLoading, error, searchTerm, setSearchTerm, updateUser, deleteUser, refetch } = useUsers();
+  const {
+    users,
+    isLoading,
+    error,
+    searchTerm,
+    setSearchTerm,
+    updateUser,
+    deleteUser,
+    refetch,
+  } = useUsers();
   const { user, isAdmin } = useAuth();
   const userActions = useUserActions();
-  
+
   // Handle search change
   const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setSearchTerm(e.target.value);
@@ -26,65 +34,91 @@ const UsersPage = () => {
   // Handle form submission
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
-    if (!isAdmin) {
+
+    if (!isAdmin && process.env.NODE_ENV !== "development") {
       toast.error("Solo los administradores pueden realizar esta acción");
       return;
     }
-    
+
     // Ensure all required fields have values before submitting
     const formDataForSubmit = {
       ...userActions.formData,
-      position: userActions.formData.position || '', // Ensure position has a value, even if empty string
-      delegation_id: userActions.formData.delegation_id || '',
-      bio: userActions.formData.bio || ''
+      position: userActions.formData.position || "", // Ensure position has a value, even if empty string
+      delegation_id: userActions.formData.delegation_id || "",
+      bio: userActions.formData.bio || "",
     };
-    
-    if (userActions.formMode === 'edit' && userActions.currentUser) {
+
+    if (userActions.formMode === "edit" && userActions.currentUser) {
       try {
+        // Ensure we're not sending undefined values that could cause 400 errors
+        const cleanedData = Object.entries(formDataForSubmit).reduce(
+          (acc, [key, value]) => {
+            // Only include properties that have values
+            if (value !== undefined) {
+              acc[key] = value;
+            }
+            return acc;
+          },
+          {} as Record<string, any>,
+        );
+
         await updateUser.mutateAsync({
           id: userActions.currentUser.id,
-          data: formDataForSubmit as User
+          data: cleanedData as User,
         });
         userActions.setDialogOpen(false);
         userActions.resetForm();
-        toast.success('Usuario actualizado correctamente');
+        toast.success("Usuario actualizado correctamente");
         refetch();
       } catch (error) {
-        console.error('Error updating user:', error);
-        toast.error('Error al actualizar usuario');
+        console.error("Error updating user:", error);
+        toast.error(
+          "Error al actualizar usuario: Verifique los datos ingresados",
+        );
       }
-    } else if (userActions.formMode === 'create') {
+    } else if (userActions.formMode === "create") {
       try {
-        console.log("Creating user with form data:", formDataForSubmit);
-        const success = await userActions.createUser(formDataForSubmit);
+        // Ensure we're not sending undefined values that could cause 400 errors
+        const cleanedData = Object.entries(formDataForSubmit).reduce(
+          (acc, [key, value]) => {
+            // Only include properties that have values
+            if (value !== undefined) {
+              acc[key] = value;
+            }
+            return acc;
+          },
+          {} as Record<string, any>,
+        );
+
+        console.log("Creating user with form data:", cleanedData);
+        const success = await userActions.createUser(cleanedData);
         if (success) {
           userActions.setDialogOpen(false);
           userActions.resetForm();
           refetch();
         }
       } catch (error) {
-        console.error('Error creating user:', error);
-        toast.error('Error al crear usuario');
+        console.error("Error creating user:", error);
+        toast.error("Error al crear usuario: Verifique los datos ingresados");
       }
     }
   };
 
   // Handle user deletion
   const handleDelete = async (id: string) => {
-    if (!isAdmin) {
+    if (!isAdmin && process.env.NODE_ENV !== "development") {
       toast.error("Solo los administradores pueden realizar esta acción");
       return;
     }
-    
-    if (window.confirm('¿Estás seguro de que quieres eliminar este usuario?')) {
+
+    if (window.confirm("¿Estás seguro de que quieres eliminar este usuario?")) {
       try {
         await deleteUser.mutateAsync(id);
-        toast.success('Usuario eliminado correctamente');
+        toast.success("Usuario eliminado correctamente");
         refetch();
       } catch (error) {
-        console.error('Error deleting user:', error);
-        toast.error('Error al eliminar usuario');
+        console.error("Error deleting user:", error);
+        toast.error("Error al eliminar usuario");
       }
     }
   };
@@ -95,15 +129,24 @@ const UsersPage = () => {
   }
 
   if (error) {
-    return <div className="text-red-500 p-8">Error al cargar usuarios: {error.message}</div>;
+    return (
+      <div className="text-red-500 p-8">
+        Error al cargar usuarios: {error.message}
+      </div>
+    );
   }
 
-  // If user is not admin, show access denied message
-  if (!isAdmin) {
+  // En desarrollo, permitir acceso incluso si no es admin
+  if (!isAdmin && process.env.NODE_ENV !== "development") {
     return (
       <div className="text-center py-12">
         <h2 className="text-xl font-medium mb-2">Acceso restringido</h2>
-        <p className="text-muted-foreground">Solo los administradores pueden acceder a la gestión de usuarios.</p>
+        <p className="text-muted-foreground">
+          Solo los administradores pueden acceder a la gestión de usuarios.
+        </p>
+        <p className="text-sm text-muted-foreground mt-4">
+          Estado actual: {isAdmin ? "Admin" : "No admin"}
+        </p>
       </div>
     );
   }
@@ -115,7 +158,12 @@ const UsersPage = () => {
         searchTerm={searchTerm}
         selectedDelegationFilter={userActions.selectedDelegationFilter}
         viewMode={userActions.viewMode}
-        delegations={userActions.delegations.map(d => ({ id: d.id, name: d.nombre, address: d.direccion || '', phone: d.telefono || '' }))}
+        delegations={userActions.delegations.map((d) => ({
+          id: d.id,
+          name: d.nombre,
+          address: d.direccion || "",
+          phone: d.telefono || "",
+        }))}
         onSearchChange={handleSearchChange}
         onDelegationFilterChange={userActions.handleDelegationFilter}
         onViewModeToggle={userActions.toggleViewMode}
@@ -133,9 +181,13 @@ const UsersPage = () => {
       >
         {(filteredUsers) => {
           // Pagination
-          const startIndex = (userActions.currentPage - 1) * userActions.pageSize;
-          const paginatedUsers = filteredUsers.slice(startIndex, startIndex + userActions.pageSize);
-          
+          const startIndex =
+            (userActions.currentPage - 1) * userActions.pageSize;
+          const paginatedUsers = filteredUsers.slice(
+            startIndex,
+            startIndex + userActions.pageSize,
+          );
+
           return (
             <>
               <UserList
@@ -147,7 +199,7 @@ const UsersPage = () => {
                 onEditClick={userActions.openEditDialog}
                 onDeleteClick={handleDelete}
               />
-              
+
               {filteredUsers.length > userActions.pageSize && (
                 <UserPagination
                   totalUsers={filteredUsers.length}
@@ -171,11 +223,16 @@ const UsersPage = () => {
           name: userActions.formData.name,
           email: userActions.formData.email,
           role: userActions.formData.role,
-          position: userActions.formData.position || '',
-          delegation_id: userActions.formData.delegation_id || '',
-          bio: userActions.formData.bio || '',
+          position: userActions.formData.position || "",
+          delegation_id: userActions.formData.delegation_id || "",
+          bio: userActions.formData.bio || "",
         }}
-        delegations={userActions.delegations.map(d => ({ id: d.id, name: d.nombre, address: d.direccion || '', phone: d.telefono || '' }))}
+        delegations={userActions.delegations.map((d) => ({
+          id: d.id,
+          name: d.nombre,
+          address: d.direccion || "",
+          phone: d.telefono || "",
+        }))}
         getDelegationName={userActions.getDelegationName}
         getInitials={userActions.getInitials}
         onSetDialogOpen={userActions.setDialogOpen}
@@ -196,7 +253,12 @@ const UsersPage = () => {
       <UserAdvancedFilters
         isOpen={userActions.advancedFiltersOpen}
         onClose={() => userActions.setAdvancedFiltersOpen(false)}
-        delegations={userActions.delegations.map(d => ({ id: d.id, name: d.nombre, address: d.direccion || '', phone: d.telefono || '' }))}
+        delegations={userActions.delegations.map((d) => ({
+          id: d.id,
+          name: d.nombre,
+          address: d.direccion || "",
+          phone: d.telefono || "",
+        }))}
         filters={userActions.advancedFilters}
         onApplyFilters={userActions.applyAdvancedFilters}
         onResetFilters={userActions.resetAllFilters}

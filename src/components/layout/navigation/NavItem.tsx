@@ -1,7 +1,6 @@
-
-import React from 'react';
-import { Link } from 'react-router-dom';
-import { cn } from '@/lib/utils';
+import React from "react";
+import { Link } from "react-router-dom";
+import { cn } from "@/lib/utils";
 
 type NavItemProps = {
   href: string;
@@ -16,15 +15,22 @@ const NavItem = ({ href, title, icon, isActive, onClick }: NavItemProps) => {
     <Link
       to={href}
       className={cn(
-        "flex items-center px-4 py-2 text-sm font-medium rounded-md hover:bg-secondary hover:text-foreground transition-colors",
-        isActive 
-          ? "bg-primary/10 text-primary" 
-          : "text-muted-foreground"
+        "flex items-center px-4 py-3 text-sm font-medium rounded-md transition-all duration-200",
+        isActive
+          ? "bg-red text-white shadow-md transform scale-[1.02]"
+          : "text-white/90 hover:bg-darkBlue/70 hover:text-white hover:translate-x-1",
       )}
       onClick={onClick}
     >
-      {icon}
-      <span className="ml-2">{title}</span>
+      <span
+        className={cn(
+          "mr-3 transition-transform duration-200",
+          isActive ? "text-white" : "text-white/80",
+        )}
+      >
+        {icon}
+      </span>
+      <span>{title}</span>
     </Link>
   );
 };
