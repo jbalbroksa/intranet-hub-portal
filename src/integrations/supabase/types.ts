@@ -7,464 +7,14 @@ export type Json =
   | Json[]
 
 export type Database = {
+  // Allows to automatically instantiate createClient with right options
+  // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)
+  __InternalSupabase: {
+    PostgrestVersion: "13.0.5"
+  }
   public: {
     Tables: {
-      caracteristicas_productos: {
-        Row: {
-          created_at: string | null
-          id: string
-          nombre: string
-          producto_id: string
-        }
-        Insert: {
-          created_at?: string | null
-          id?: string
-          nombre: string
-          producto_id: string
-        }
-        Update: {
-          created_at?: string | null
-          id?: string
-          nombre?: string
-          producto_id?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "caracteristicas_productos_producto_id_fkey"
-            columns: ["producto_id"]
-            isOneToOne: false
-            referencedRelation: "productos"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      categorias_companias: {
-        Row: {
-          created_at: string | null
-          id: string
-          nombre: string
-          slug: string
-        }
-        Insert: {
-          created_at?: string | null
-          id?: string
-          nombre: string
-          slug: string
-        }
-        Update: {
-          created_at?: string | null
-          id?: string
-          nombre?: string
-          slug?: string
-        }
-        Relationships: []
-      }
-      categorias_productos: {
-        Row: {
-          created_at: string | null
-          es_subcategoria: boolean | null
-          id: string
-          nivel: number | null
-          nombre: string
-          parent_id: string | null
-          slug: string
-        }
-        Insert: {
-          created_at?: string | null
-          es_subcategoria?: boolean | null
-          id?: string
-          nivel?: number | null
-          nombre: string
-          parent_id?: string | null
-          slug: string
-        }
-        Update: {
-          created_at?: string | null
-          es_subcategoria?: boolean | null
-          id?: string
-          nivel?: number | null
-          nombre?: string
-          parent_id?: string | null
-          slug?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "categorias_productos_parent_id_fkey"
-            columns: ["parent_id"]
-            isOneToOne: false
-            referencedRelation: "categorias_productos"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      companias: {
-        Row: {
-          categoria: string | null
-          created_at: string | null
-          descripcion: string | null
-          direccion: string | null
-          email: string | null
-          id: string
-          logo_url: string | null
-          nombre: string
-          sitio_web: string | null
-          telefono: string | null
-          updated_at: string | null
-        }
-        Insert: {
-          categoria?: string | null
-          created_at?: string | null
-          descripcion?: string | null
-          direccion?: string | null
-          email?: string | null
-          id?: string
-          logo_url?: string | null
-          nombre: string
-          sitio_web?: string | null
-          telefono?: string | null
-          updated_at?: string | null
-        }
-        Update: {
-          categoria?: string | null
-          created_at?: string | null
-          descripcion?: string | null
-          direccion?: string | null
-          email?: string | null
-          id?: string
-          logo_url?: string | null
-          nombre?: string
-          sitio_web?: string | null
-          telefono?: string | null
-          updated_at?: string | null
-        }
-        Relationships: []
-      }
-      delegaciones: {
-        Row: {
-          ciudad: string | null
-          codigo_postal: string | null
-          created_at: string | null
-          direccion: string | null
-          email: string | null
-          id: string
-          nombre: string
-          pais: string | null
-          responsable: string | null
-          telefono: string | null
-          updated_at: string | null
-        }
-        Insert: {
-          ciudad?: string | null
-          codigo_postal?: string | null
-          created_at?: string | null
-          direccion?: string | null
-          email?: string | null
-          id?: string
-          nombre: string
-          pais?: string | null
-          responsable?: string | null
-          telefono?: string | null
-          updated_at?: string | null
-        }
-        Update: {
-          ciudad?: string | null
-          codigo_postal?: string | null
-          created_at?: string | null
-          direccion?: string | null
-          email?: string | null
-          id?: string
-          nombre?: string
-          pais?: string | null
-          responsable?: string | null
-          telefono?: string | null
-          updated_at?: string | null
-        }
-        Relationships: []
-      }
-      documentos: {
-        Row: {
-          archivo_url: string | null
-          categoria: string | null
-          created_at: string | null
-          descripcion: string | null
-          fecha_subida: string | null
-          id: string
-          nombre: string
-          updated_at: string | null
-        }
-        Insert: {
-          archivo_url?: string | null
-          categoria?: string | null
-          created_at?: string | null
-          descripcion?: string | null
-          fecha_subida?: string | null
-          id?: string
-          nombre: string
-          updated_at?: string | null
-        }
-        Update: {
-          archivo_url?: string | null
-          categoria?: string | null
-          created_at?: string | null
-          descripcion?: string | null
-          fecha_subida?: string | null
-          id?: string
-          nombre?: string
-          updated_at?: string | null
-        }
-        Relationships: []
-      }
-      eventos: {
-        Row: {
-          color: string | null
-          created_at: string | null
-          descripcion: string | null
-          fecha_fin: string
-          fecha_inicio: string
-          id: string
-          titulo: string
-          todo_el_dia: boolean | null
-          ubicacion: string | null
-          updated_at: string | null
-        }
-        Insert: {
-          color?: string | null
-          created_at?: string | null
-          descripcion?: string | null
-          fecha_fin: string
-          fecha_inicio: string
-          id?: string
-          titulo: string
-          todo_el_dia?: boolean | null
-          ubicacion?: string | null
-          updated_at?: string | null
-        }
-        Update: {
-          color?: string | null
-          created_at?: string | null
-          descripcion?: string | null
-          fecha_fin?: string
-          fecha_inicio?: string
-          id?: string
-          titulo?: string
-          todo_el_dia?: boolean | null
-          ubicacion?: string | null
-          updated_at?: string | null
-        }
-        Relationships: []
-      }
-      noticias: {
-        Row: {
-          autor: string | null
-          contenido: string | null
-          created_at: string | null
-          es_destacada: boolean | null
-          fecha_publicacion: string | null
-          id: string
-          imagen_url: string | null
-          titulo: string
-          updated_at: string | null
-        }
-        Insert: {
-          autor?: string | null
-          contenido?: string | null
-          created_at?: string | null
-          es_destacada?: boolean | null
-          fecha_publicacion?: string | null
-          id?: string
-          imagen_url?: string | null
-          titulo: string
-          updated_at?: string | null
-        }
-        Update: {
-          autor?: string | null
-          contenido?: string | null
-          created_at?: string | null
-          es_destacada?: boolean | null
-          fecha_publicacion?: string | null
-          id?: string
-          imagen_url?: string | null
-          titulo?: string
-          updated_at?: string | null
-        }
-        Relationships: []
-      }
-      notificaciones: {
-        Row: {
-          created_at: string | null
-          es_leida: boolean | null
-          fecha_creacion: string | null
-          id: string
-          mensaje: string | null
-          tipo: string | null
-          titulo: string
-        }
-        Insert: {
-          created_at?: string | null
-          es_leida?: boolean | null
-          fecha_creacion?: string | null
-          id?: string
-          mensaje?: string | null
-          tipo?: string | null
-          titulo: string
-        }
-        Update: {
-          created_at?: string | null
-          es_leida?: boolean | null
-          fecha_creacion?: string | null
-          id?: string
-          mensaje?: string | null
-          tipo?: string | null
-          titulo?: string
-        }
-        Relationships: []
-      }
-      productos: {
-        Row: {
-          categoria: string | null
-          created_at: string | null
-          debilidades: string | null
-          descripcion: string | null
-          fortalezas: string | null
-          id: string
-          imagen_url: string | null
-          nivel3_id: string | null
-          nombre: string
-          observaciones: string | null
-          precio: number | null
-          stock: number | null
-          subcategoria_id: string | null
-          updated_at: string | null
-        }
-        Insert: {
-          categoria?: string | null
-          created_at?: string | null
-          debilidades?: string | null
-          descripcion?: string | null
-          fortalezas?: string | null
-          id?: string
-          imagen_url?: string | null
-          nivel3_id?: string | null
-          nombre: string
-          observaciones?: string | null
-          precio?: number | null
-          stock?: number | null
-          subcategoria_id?: string | null
-          updated_at?: string | null
-        }
-        Update: {
-          categoria?: string | null
-          created_at?: string | null
-          debilidades?: string | null
-          descripcion?: string | null
-          fortalezas?: string | null
-          id?: string
-          imagen_url?: string | null
-          nivel3_id?: string | null
-          nombre?: string
-          observaciones?: string | null
-          precio?: number | null
-          stock?: number | null
-          subcategoria_id?: string | null
-          updated_at?: string | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "productos_nivel3_id_fkey"
-            columns: ["nivel3_id"]
-            isOneToOne: false
-            referencedRelation: "categorias_productos"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "productos_subcategoria_id_fkey"
-            columns: ["subcategoria_id"]
-            isOneToOne: false
-            referencedRelation: "categorias_productos"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      productos_companias: {
-        Row: {
-          compania_id: string
-          created_at: string | null
-          id: string
-          producto_id: string
-        }
-        Insert: {
-          compania_id: string
-          created_at?: string | null
-          id?: string
-          producto_id: string
-        }
-        Update: {
-          compania_id?: string
-          created_at?: string | null
-          id?: string
-          producto_id?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "productos_companias_compania_id_fkey"
-            columns: ["compania_id"]
-            isOneToOne: false
-            referencedRelation: "companias"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "productos_companias_producto_id_fkey"
-            columns: ["producto_id"]
-            isOneToOne: false
-            referencedRelation: "productos"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      users: {
-        Row: {
-          bio: string | null
-          created_at: string | null
-          delegation_id: string | null
-          email: string
-          id: string
-          last_login: string | null
-          name: string
-          position: string | null
-          role: string
-        }
-        Insert: {
-          bio?: string | null
-          created_at?: string | null
-          delegation_id?: string | null
-          email: string
-          id: string
-          last_login?: string | null
-          name: string
-          position?: string | null
-          role: string
-        }
-        Update: {
-          bio?: string | null
-          created_at?: string | null
-          delegation_id?: string | null
-          email?: string
-          id?: string
-          last_login?: string | null
-          name?: string
-          position?: string | null
-          role?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "users_delegation_id_fkey"
-            columns: ["delegation_id"]
-            isOneToOne: false
-            referencedRelation: "delegaciones"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
+      [_ in never]: never
     }
     Views: {
       [_ in never]: never
@@ -481,21 +31,25 @@ export type Database = {
   }
 }
 
-type DefaultSchema = Database[Extract<keyof Database, "public">]
+type DatabaseWithoutInternals = Omit<Database, "__InternalSupabase">
+
+type DefaultSchema = DatabaseWithoutInternals[Extract<keyof Database, "public">]
 
 export type Tables<
   DefaultSchemaTableNameOrOptions extends
     | keyof (DefaultSchema["Tables"] & DefaultSchema["Views"])
-    | { schema: keyof Database },
+    | { schema: keyof DatabaseWithoutInternals },
   TableName extends DefaultSchemaTableNameOrOptions extends {
-    schema: keyof Database
+    schema: keyof DatabaseWithoutInternals
   }
-    ? keyof (Database[DefaultSchemaTableNameOrOptions["schema"]]["Tables"] &
-        Database[DefaultSchemaTableNameOrOptions["schema"]]["Views"])
+    ? keyof (DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"] &
+        DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Views"])
     : never = never,
-> = DefaultSchemaTableNameOrOptions extends { schema: keyof Database }
-  ? (Database[DefaultSchemaTableNameOrOptions["schema"]]["Tables"] &
-      Database[DefaultSchemaTableNameOrOptions["schema"]]["Views"])[TableName] extends {
+> = DefaultSchemaTableNameOrOptions extends {
+  schema: keyof DatabaseWithoutInternals
+}
+  ? (DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"] &
+      DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Views"])[TableName] extends {
       Row: infer R
     }
     ? R
@@ -513,14 +67,16 @@ export type Tables<
 export type TablesInsert<
   DefaultSchemaTableNameOrOptions extends
     | keyof DefaultSchema["Tables"]
-    | { schema: keyof Database },
+    | { schema: keyof DatabaseWithoutInternals },
   TableName extends DefaultSchemaTableNameOrOptions extends {
-    schema: keyof Database
+    schema: keyof DatabaseWithoutInternals
   }
-    ? keyof Database[DefaultSchemaTableNameOrOptions["schema"]]["Tables"]
+    ? keyof DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"]
     : never = never,
-> = DefaultSchemaTableNameOrOptions extends { schema: keyof Database }
-  ? Database[DefaultSchemaTableNameOrOptions["schema"]]["Tables"][TableName] extends {
+> = DefaultSchemaTableNameOrOptions extends {
+  schema: keyof DatabaseWithoutInternals
+}
+  ? DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"][TableName] extends {
       Insert: infer I
     }
     ? I
@@ -536,14 +92,16 @@ export type TablesInsert<
 export type TablesUpdate<
   DefaultSchemaTableNameOrOptions extends
     | keyof DefaultSchema["Tables"]
-    | { schema: keyof Database },
+    | { schema: keyof DatabaseWithoutInternals },
   TableName extends DefaultSchemaTableNameOrOptions extends {
-    schema: keyof Database
+    schema: keyof DatabaseWithoutInternals
   }
-    ? keyof Database[DefaultSchemaTableNameOrOptions["schema"]]["Tables"]
+    ? keyof DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"]
     : never = never,
-> = DefaultSchemaTableNameOrOptions extends { schema: keyof Database }
-  ? Database[DefaultSchemaTableNameOrOptions["schema"]]["Tables"][TableName] extends {
+> = DefaultSchemaTableNameOrOptions extends {
+  schema: keyof DatabaseWithoutInternals
+}
+  ? DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"][TableName] extends {
       Update: infer U
     }
     ? U
@@ -559,14 +117,16 @@ export type TablesUpdate<
 export type Enums<
   DefaultSchemaEnumNameOrOptions extends
     | keyof DefaultSchema["Enums"]
-    | { schema: keyof Database },
+    | { schema: keyof DatabaseWithoutInternals },
   EnumName extends DefaultSchemaEnumNameOrOptions extends {
-    schema: keyof Database
+    schema: keyof DatabaseWithoutInternals
   }
-    ? keyof Database[DefaultSchemaEnumNameOrOptions["schema"]]["Enums"]
+    ? keyof DatabaseWithoutInternals[DefaultSchemaEnumNameOrOptions["schema"]]["Enums"]
     : never = never,
-> = DefaultSchemaEnumNameOrOptions extends { schema: keyof Database }
-  ? Database[DefaultSchemaEnumNameOrOptions["schema"]]["Enums"][EnumName]
+> = DefaultSchemaEnumNameOrOptions extends {
+  schema: keyof DatabaseWithoutInternals
+}
+  ? DatabaseWithoutInternals[DefaultSchemaEnumNameOrOptions["schema"]]["Enums"][EnumName]
   : DefaultSchemaEnumNameOrOptions extends keyof DefaultSchema["Enums"]
     ? DefaultSchema["Enums"][DefaultSchemaEnumNameOrOptions]
     : never
@@ -574,14 +134,16 @@ export type Enums<
 export type CompositeTypes<
   PublicCompositeTypeNameOrOptions extends
     | keyof DefaultSchema["CompositeTypes"]
-    | { schema: keyof Database },
+    | { schema: keyof DatabaseWithoutInternals },
   CompositeTypeName extends PublicCompositeTypeNameOrOptions extends {
-    schema: keyof Database
+    schema: keyof DatabaseWithoutInternals
   }
-    ? keyof Database[PublicCompositeTypeNameOrOptions["schema"]]["CompositeTypes"]
+    ? keyof DatabaseWithoutInternals[PublicCompositeTypeNameOrOptions["schema"]]["CompositeTypes"]
     : never = never,
-> = PublicCompositeTypeNameOrOptions extends { schema: keyof Database }
-  ? Database[PublicCompositeTypeNameOrOptions["schema"]]["CompositeTypes"][CompositeTypeName]
+> = PublicCompositeTypeNameOrOptions extends {
+  schema: keyof DatabaseWithoutInternals
+}
+  ? DatabaseWithoutInternals[PublicCompositeTypeNameOrOptions["schema"]]["CompositeTypes"][CompositeTypeName]
   : PublicCompositeTypeNameOrOptions extends keyof DefaultSchema["CompositeTypes"]
     ? DefaultSchema["CompositeTypes"][PublicCompositeTypeNameOrOptions]
     : never
