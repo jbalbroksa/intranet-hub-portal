@@ -72,7 +72,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const fetchUserDetails = async (userId: string) => {
     try {
       const { data, error } = await supabase
-        .from('users')
+        .from('profiles')
         .select('*')
         .eq('id', userId)
         .single();
@@ -83,8 +83,17 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         return;
       }
 
-      setUserDetails(data as UserDetails);
-      setIsAdmin(data.role === 'admin');
+      // Map profiles table to UserDetails type
+      const userDetails: UserDetails = {
+        id: data.id,
+        name: data.nombre,
+        email: data.email,
+        role: data.rol as 'admin' | 'user',
+        delegation_id: data.delegacion_id
+      };
+
+      setUserDetails(userDetails);
+      setIsAdmin(data.rol === 'admin');
       setIsLoading(false);
     } catch (error) {
       console.error('Error in fetchUserDetails:', error);
@@ -111,12 +120,15 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const signUp = async (email: string, password: string, name: string) => {
     try {
+      const redirectUrl = `${window.location.origin}/`;
+      
       const { error } = await supabase.auth.signUp({
         email,
         password,
         options: {
+          emailRedirectTo: redirectUrl,
           data: {
-            name,
+            nombre: name,
           },
         },
       });

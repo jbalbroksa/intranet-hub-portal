@@ -43,12 +43,11 @@ export const useUserMutations = () => {
 
       // Update the user record with additional information
       const { error: updateError } = await supabase
-        .from('users')
+        .from('profiles')
         .update({
-          position: userData.position,
-          delegation_id: userData.delegation_id || null,
-          bio: userData.bio,
-          role: userData.role
+          telefono: userData.phone,
+          delegacion_id: userData.delegation_id || null,
+          rol: userData.role
         })
         .eq('id', authData.user.id);
 
